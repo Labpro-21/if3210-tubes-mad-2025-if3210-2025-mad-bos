@@ -5,10 +5,12 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.tubesmobdev.util.EncryptionManager
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
-class AuthPreferences(private val context: Context): IAuthPreferences {
+class AuthPreferences @Inject constructor(@ApplicationContext private val context: Context): IAuthPreferences {
     private val Context.dataStore by preferencesDataStore(name = "auth_datastore")
     private val encryptionManager = EncryptionManager(context)
 

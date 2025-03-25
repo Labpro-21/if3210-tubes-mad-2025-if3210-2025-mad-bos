@@ -1,5 +1,6 @@
 package com.example.tubesmobdev.data.repository
 
+import android.content.Context
 import android.util.Log
 import com.example.tubesmobdev.data.local.preferences.IAuthPreferences
 import com.example.tubesmobdev.data.remote.api.AuthApi
@@ -8,11 +9,14 @@ import com.example.tubesmobdev.data.remote.request.RefreshTokenRequest
 import com.example.tubesmobdev.data.remote.response.LoginResponse
 import com.example.tubesmobdev.data.remote.response.TokenResponse
 import com.example.tubesmobdev.domain.model.AuthResult
+import com.example.tubesmobdev.util.ServiceUtil
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 class AuthRepository @Inject constructor(
     private val authApi: AuthApi,
-    private val authPreferences: IAuthPreferences
+    private val authPreferences: IAuthPreferences,
+    @ApplicationContext private val context: Context
 ): IAuthRepository {
 
     override suspend fun login(email: String, password: String): Result<AuthResult> {
@@ -26,6 +30,7 @@ class AuthRepository @Inject constructor(
                     authPreferences.saveAccessToken(body.accessToken)
                     authPreferences.saveRefreshToken(body.refreshToken)
 
+                    ServiceUtil.startTokenRefreshService(context)
                     Result.success(AuthResult.Success)
                 } else {
                     Result.success(AuthResult.Failure("Empty response body"))
@@ -104,6 +109,8 @@ class AuthRepository @Inject constructor(
 
     override suspend fun logout() {
         authPreferences.clearTokens()
+        ServiceUtil.stopTokenRefreshService(context)
+
     }
 
     override suspend fun isLoggedIn(): Boolean {

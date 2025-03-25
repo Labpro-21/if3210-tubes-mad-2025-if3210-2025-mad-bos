@@ -66,8 +66,9 @@ object AppModule {
     @Provides
     fun provideAuthRepository(
         authApi: AuthApi,
-        authPreferences: IAuthPreferences
+        authPreferences: IAuthPreferences,
+        @ApplicationContext context: Context
     ): IAuthRepository {
-        return AuthRepository(authApi, authPreferences)
+        return AuthRepository(authApi, authPreferences, context)
     }
 }

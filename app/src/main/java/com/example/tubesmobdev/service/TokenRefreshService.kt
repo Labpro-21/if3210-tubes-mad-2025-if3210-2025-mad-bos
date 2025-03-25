@@ -21,61 +21,55 @@ class TokenRefreshService : Service() {
     lateinit var authRepository: AuthRepository
 
     private val handler = Handler(Looper.getMainLooper())
-    private val checkInterval = 1 * 30 * 1000L // 4 minutes
+    private val checkInterval = 4 * 60 * 1000L // 4 minutes
 
     private val tokenCheckRunnable = object : Runnable {
         override fun run() {
             CoroutineScope(Dispatchers.IO).launch {
-                authRepository.verifyToken()
-                    .fold(
-                        onSuccess = { authResult ->
-                            when (authResult) {
-                                is AuthResult.Success ->
-                                    Log.d("TokenRefreshVerify", "Token valid")
-                                is AuthResult.Failure ->
-                                    Log.e("TokenRefreshVerify", "Error: ${authResult.message}")
-                                is AuthResult.TokenExpired -> {
-                                    authRepository.refreshToken().fold(
-                                        onSuccess = { authResult2 ->
-                                            when (authResult2) {
-                                                is AuthResult.Success -> Log.d("TokenRefresh", "Get Refresh Token valid")
-                                                is AuthResult.Failure ->
-                                                    Log.e("TokenRefresh", "Error: ${authResult2.message}")
-                                                is AuthResult.TokenExpired -> authRepository.logout()
-                                            }
-
-                                        },
-                                        onFailure = { e ->
-                                            Log.e("TokenRefresh", "Get Refresh Token failed", e)
-                                        }
-                                    )
-
-                                    Log.d("TokenRefreshVerify", "Token expired")
-                                }
-                            }
-                        },
-                        onFailure = { e ->
-                            Log.e("TokenRefresh", "Verify failed", e)
-                        }
-                    )
+                checkTokenValidity()
             }
             handler.postDelayed(this, checkInterval)
         }
     }
 
-    override fun onCreate() {
-        super.onCreate()
+    private suspend fun checkTokenValidity() {
+        authRepository.verifyToken().fold(
+            onSuccess = { result ->
+                when (result) {
+                    is AuthResult.Success -> Log.d("TokenRefresh", "Acesss Token valid")
+                    is AuthResult.TokenExpired -> refreshToken()
+                    is AuthResult.Failure -> Log.e("TokenRefresh", "Verification failed")
+                }
+            },
+            onFailure = { e -> Log.e("TokenRefresh", "Error", e) }
+        )
+    }
+
+    private suspend fun refreshToken() {
+        authRepository.refreshToken().fold(
+            onSuccess = { result ->
+                when (result) {
+                    is AuthResult.Success -> Log.d("TokenRefresh", "Token refreshed")
+                    is AuthResult.TokenExpired -> authRepository.logout()
+                    is AuthResult.Failure -> Log.e("TokenRefresh", "Refresh failed")
+                }
+            },
+            onFailure = { e -> Log.e("TokenRefresh", "Refresh error", e) }
+        )
+    }
+
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d("TokenRefresh", "Service started")
         handler.post(tokenCheckRunnable)
+        return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
         handler.removeCallbacks(tokenCheckRunnable)
+        Log.d("TokenRefresh", "Service stopped")
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        return START_STICKY
-    }
 }
