@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.example.tubesmobdev.data.repository.AuthRepository
+import com.example.tubesmobdev.data.repository.IAuthRepository
 import com.example.tubesmobdev.domain.model.AuthResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: IAuthRepository
 ) : ViewModel() {
     private val _loginErrorMessage = MutableStateFlow<String?>(null)
     val loginErrorMessage = _loginErrorMessage.asStateFlow()
