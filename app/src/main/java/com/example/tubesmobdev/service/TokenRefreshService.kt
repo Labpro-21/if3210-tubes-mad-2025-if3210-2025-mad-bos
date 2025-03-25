@@ -7,6 +7,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import com.example.tubesmobdev.data.repository.AuthRepository
+import com.example.tubesmobdev.domain.model.AuthResult
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,9 +27,37 @@ class TokenRefreshService : Service() {
         override fun run() {
             CoroutineScope(Dispatchers.IO).launch {
                 authRepository.verifyToken()
-                    .onFailure {
-                        Log.e("TokenRefreshService", "Token verification failed", it)
-                    }
+                    .fold(
+                        onSuccess = { authResult ->
+                            when (authResult) {
+                                is AuthResult.Success ->
+                                    Log.d("TokenRefreshVerify", "Token valid")
+                                is AuthResult.Failure ->
+                                    Log.e("TokenRefreshVerify", "Error: ${authResult.message}")
+                                is AuthResult.TokenExpired -> {
+                                    authRepository.refreshToken().fold(
+                                        onSuccess = { authResult2 ->
+                                            when (authResult2) {
+                                                is AuthResult.Success -> Log.d("TokenRefresh", "Get Refresh Token valid")
+                                                is AuthResult.Failure ->
+                                                    Log.e("TokenRefresh", "Error: ${authResult2.message}")
+                                                is AuthResult.TokenExpired -> authRepository.logout()
+                                            }
+
+                                        },
+                                        onFailure = { e ->
+                                            Log.e("TokenRefresh", "Get Refresh Token failed", e)
+                                        }
+                                    )
+
+                                    Log.d("TokenRefreshVerify", "Token expired")
+                                }
+                            }
+                        },
+                        onFailure = { e ->
+                            Log.e("TokenRefresh", "Verify failed", e)
+                        }
+                    )
             }
             handler.postDelayed(this, checkInterval)
         }

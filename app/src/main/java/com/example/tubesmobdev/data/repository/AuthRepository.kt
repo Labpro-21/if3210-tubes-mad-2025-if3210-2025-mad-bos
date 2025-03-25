@@ -59,7 +59,6 @@ class AuthRepository @Inject constructor(
                 val body: TokenResponse? = response.body()
                 if (body != null) {
                     authPreferences.saveAccessToken(body.accessToken)
-                    authPreferences.saveRefreshToken(body.refreshToken)
 
                     Result.success(AuthResult.Success)
                 } else {
@@ -67,7 +66,11 @@ class AuthRepository @Inject constructor(
                 }
             } else {
                 Log.e("AuthRepository", "Refresh failed with code: ${response.code()}")
-                Result.success(AuthResult.Failure("Token refresh failed: ${response.code()}"))
+                if (response.code() == 403) {
+                    Result.success(AuthResult.TokenExpired);
+                } else {
+                    Result.success(AuthResult.Failure("Token refresh failed: ${response.code()}"))
+                }
             }
         } catch (e: Exception) {
             Log.e("AuthRepository", "Refresh exception: ${e.message}")
@@ -84,8 +87,8 @@ class AuthRepository @Inject constructor(
             when {
                 response.isSuccessful -> Result.success(AuthResult.Success)
                 response.code() == 403 -> {
-                    // Token expired → coba refresh
-                    refreshToken()
+                    Log.e("AuthRepository", "Verify failed: ${response.code()}")
+                    Result.success(AuthResult.TokenExpired)
                 }
                 else -> {
                     Log.e("AuthRepository", "Verify failed: ${response.code()}")
