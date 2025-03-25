@@ -12,10 +12,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavController
 import com.example.tubesmobdev.ui.components.BottomNavigationBar
+import com.example.tubesmobdev.ui.components.ScreenHeader
 
 @Composable
 fun ProfileScreen(navController: NavController) {
     Scaffold (
+        topBar = { ScreenHeader("Profile") },
+
         bottomBar = { BottomNavigationBar(navController) }
 
     ) {
