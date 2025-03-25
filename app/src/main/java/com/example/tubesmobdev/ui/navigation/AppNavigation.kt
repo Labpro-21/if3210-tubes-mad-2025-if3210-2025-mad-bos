@@ -19,13 +19,11 @@ fun AppNavigation(authViewModel: NavigationViewModel = hiltViewModel()) {
 
     when (isLoggedIn.value) {
         null -> {
-            SplashScreen(navController = navController)
+            LoginScreen(navController = navController)
         }
         true -> {
             NavHost(navController = navController, startDestination = "home") {
-                composable("splash") {
-                    SplashScreen(navController = navController)
-                }
+
                 composable("login") {
                     LoginScreen(navController = navController)
                 }
@@ -37,9 +35,7 @@ fun AppNavigation(authViewModel: NavigationViewModel = hiltViewModel()) {
         }
         false -> {
             NavHost(navController = navController, startDestination = "login") {
-                composable("splash") {
-                    SplashScreen(navController = navController)
-                }
+
                 composable("login") {
                     LoginScreen(navController = navController)
                 }
