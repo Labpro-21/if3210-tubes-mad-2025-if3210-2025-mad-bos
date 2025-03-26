@@ -12,13 +12,13 @@ import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.ui.library.adapter.SongAdapter
 
 @Composable
-fun SongRecyclerView(songs: List<Song>) {
+fun SongRecyclerView(songs: List<Song>, onItemClick: (Song) -> Unit) {
     AndroidView(
         modifier = Modifier.fillMaxSize().padding(top = 10.dp),
         factory = { context ->
             RecyclerView(context).apply {
                 layoutManager = LinearLayoutManager(context)
-                adapter = SongAdapter(songs)
+                adapter = SongAdapter(songs, onItemClick)
                 setHasFixedSize(true)
             }
         },

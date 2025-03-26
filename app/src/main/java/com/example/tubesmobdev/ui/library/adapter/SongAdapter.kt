@@ -10,7 +10,10 @@ import com.bumptech.glide.Glide
 import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.R
 
-class SongAdapter(private var songs: List<Song>): RecyclerView.Adapter<SongAdapter.SongViewHolder>() {
+class SongAdapter(
+    private var songs: List<Song>,
+    private val onItemClick: (Song) -> Unit
+): RecyclerView.Adapter<SongAdapter.SongViewHolder>() {
     class SongViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val image: ImageView = itemView.findViewById(R.id.songImage)
         val title: TextView = itemView.findViewById(R.id.songTitle)
@@ -27,6 +30,9 @@ class SongAdapter(private var songs: List<Song>): RecyclerView.Adapter<SongAdapt
         holder.title.text = song.title
         holder.artist.text = song.artist
         Glide.with(holder.itemView.context).load(song.coverUrl).into(holder.image)
+        holder.itemView.setOnClickListener {
+            onItemClick(songs[position])
+        }
     }
 
     override fun getItemCount(): Int {

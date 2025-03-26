@@ -29,7 +29,8 @@ import com.example.tubesmobdev.ui.viewmodel.LoginViewModel
 @Composable
 fun LoginScreen(
     navController: NavController,
-    viewModel: LoginViewModel = hiltViewModel()
+    viewModel: LoginViewModel = hiltViewModel(),
+
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }

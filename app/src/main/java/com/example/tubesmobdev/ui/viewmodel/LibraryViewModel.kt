@@ -29,6 +29,7 @@ class LibraryViewModel @Inject constructor(
         fetchSongs()
     }
 
+
     private fun fetchSongs() {
         viewModelScope.launch {
             launch {
@@ -65,5 +66,9 @@ class LibraryViewModel @Inject constructor(
             val result = repository.insertSong(song)
             onResult(result)
         }
+    }
+
+    fun clearError() {
+        _errorMessage.value = null
     }
 }

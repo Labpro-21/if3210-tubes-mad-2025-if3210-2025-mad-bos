@@ -27,7 +27,7 @@ class LoginViewModel @Inject constructor(
                     onSuccess = { authResult ->
                         when (authResult) {
                             is AuthResult.Success -> {
-                                navController.navigate("home") {
+                                navController.navigate("main") {
                                     popUpTo("login") { inclusive = true }
                                 }
                             }

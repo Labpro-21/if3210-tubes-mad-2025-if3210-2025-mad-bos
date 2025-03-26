@@ -6,10 +6,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.tubesmobdev.ui.library.LibraryScreen
 import com.example.tubesmobdev.ui.auth.login.LoginScreen
-import com.example.tubesmobdev.ui.home.HomeScreen
-import com.example.tubesmobdev.ui.profile.ProfileScreen
+import com.example.tubesmobdev.ui.layout.MainLayout
 import com.example.tubesmobdev.ui.viewmodel.NavigationViewModel
 
 @Composable
@@ -17,51 +15,62 @@ fun AppNavigation(authViewModel: NavigationViewModel = hiltViewModel()) {
     val navController = rememberNavController()
     val isLoggedIn = authViewModel.isLoggedIn.collectAsState()
 
+//    when (isLoggedIn.value) {
+//        null -> {
+//            LoginScreen(navController = navController)
+//        }
+//        true -> {
+//            NavHost(navController = navController, startDestination = "home") {
+//
+//                composable("login") {
+//                    LoginScreen(navController = navController)
+//                }
+//
+//                composable("home") {
+//                    HomeScreen(navController = navController)
+//                }
+//
+//                composable("library") {
+//                    LibraryScreen(navController = navController, onSongClick = {})
+//                }
+//
+//                composable("profile") {
+//                    ProfileScreen(navController = navController)
+//                }
+//            }
+//        }
+//        false -> {
+//            NavHost(navController = navController, startDestination = "login") {
+//
+//                composable("login") {
+//                    LoginScreen(navController = navController)
+//                }
+//
+//                composable("home") {
+//                    HomeScreen(navController = navController)
+//                }
+//
+//                composable("library") {
+//                    LibraryScreen(navController = navController, onSongClick = {})
+//                }
+//
+//                composable("profile") {
+//                    ProfileScreen(navController = navController)
+//                }
+//            }
+//
+//        }
+//    }
 
-    when (isLoggedIn.value) {
-        null -> {
+    NavHost(
+        navController = navController,
+        startDestination = if (isLoggedIn.value == true) "main" else "login"
+    ) {
+        composable("login") {
             LoginScreen(navController = navController)
         }
-        true -> {
-            NavHost(navController = navController, startDestination = "home") {
-
-                composable("login") {
-                    LoginScreen(navController = navController)
-                }
-
-                composable("home") {
-                    HomeScreen(navController = navController)
-                }
-
-                composable("library") {
-                    LibraryScreen(navController = navController)
-                }
-
-                composable("profile") {
-                    ProfileScreen(navController = navController)
-                }
-            }
-        }
-        false -> {
-            NavHost(navController = navController, startDestination = "login") {
-
-                composable("login") {
-                    LoginScreen(navController = navController)
-                }
-
-                composable("home") {
-                    HomeScreen(navController = navController)
-                }
-
-                composable("library") {
-                    LibraryScreen(navController = navController)
-                }
-
-                composable("profile") {
-                    ProfileScreen(navController = navController)
-                }
-            }
-
+        composable("main") {
+            MainLayout()
         }
     }
 }
