@@ -8,7 +8,9 @@ import javax.inject.Inject
 class SongRepository @Inject constructor(
     private val songDao: SongDao
 ) {
-    fun getAllSongs(): Flow<List<Song>> = songDao.getAllSongs()
+    fun getAllSongs(): Flow<List<Song>> {
+        return songDao.getAllSongs()
+    }
     fun getLikedSongs(): Flow<List<Song>> {
        return  songDao.getLikedSongs()
     }

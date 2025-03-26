@@ -9,6 +9,7 @@ import com.example.tubesmobdev.data.repository.SongRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,14 +23,25 @@ class LibraryViewModel @Inject constructor(
     private val _likedSongs = MutableStateFlow<List<Song>>(emptyList())
     val likedSongs: StateFlow<List<Song>> get() = _likedSongs
 
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> get() = _errorMessage
     init {
         fetchSongs()
     }
 
     private fun fetchSongs() {
         viewModelScope.launch {
-            repository.getAllSongs().collect { _songs.value = it }
-            repository.getLikedSongs().collect { _likedSongs.value = it }
+            launch {
+                repository.getAllSongs()
+                    .catch { e -> _errorMessage.value = "Gagal memuat semua lagu: ${e.message}" }
+                    .collect { _songs.value = it }
+            }
+
+            launch {
+                repository.getLikedSongs()
+                    .catch { e -> _errorMessage.value = "Gagal memuat liked songs: ${e.message}" }
+                    .collect { _likedSongs.value = it }
+            }
         }
     }
 

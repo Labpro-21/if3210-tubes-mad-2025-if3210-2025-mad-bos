@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -34,14 +35,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.tubesmobdev.ui.components.AddSongDrawer
 import com.example.tubesmobdev.ui.components.BottomNavigationBar
 import com.example.tubesmobdev.ui.components.ScreenHeader
+import com.example.tubesmobdev.ui.viewmodel.LibraryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LibraryScreen(navController: NavController) {
+fun LibraryScreen(navController: NavController, viewModel: LibraryViewModel = hiltViewModel()) {
 
     val tabs = listOf("All", "Liked")
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
@@ -51,6 +54,9 @@ fun LibraryScreen(navController: NavController) {
     val snackbarHostState = remember { SnackbarHostState() }
     var snackbarMessage by rememberSaveable { mutableStateOf<String?>(null) }
 
+    val allSongs by viewModel.songs.collectAsState()
+    val likedSongs by viewModel.likedSongs.collectAsState()
+    val songsToShow = if (selectedTabIndex == 0) allSongs else likedSongs
     LaunchedEffect (snackbarMessage) {
         snackbarMessage?.let {
             snackbarHostState.showSnackbar(it)
@@ -109,16 +115,10 @@ fun LibraryScreen(navController: NavController) {
                     }
                 }
 
-                HorizontalDivider()
+                HorizontalDivider(color = Color(0xff212121))
 
 
-                Text(
-                    text = "Library",
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-
-                )
+                SongRecyclerView(songs = songsToShow)
             }
 
             if (isSheetOpen){

@@ -44,6 +44,11 @@ android {
 
 dependencies {
 
+    implementation(libs.glide)
+    kapt(libs.compiler)
+
+    implementation(libs.androidx.recyclerview)
+
     implementation(libs.coil.compose)
 
     implementation(libs.androidx.runtime.livedata)
