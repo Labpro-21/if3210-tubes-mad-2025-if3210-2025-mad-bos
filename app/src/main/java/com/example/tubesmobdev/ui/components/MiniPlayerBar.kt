@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.tubesmobdev.data.model.Song
+import com.example.tubesmobdev.util.rememberDominantColor
 
 @Composable
 fun MiniPlayerBar(
@@ -37,10 +38,11 @@ fun MiniPlayerBar(
     onTogglePlayPause: () -> Unit,
     onAddClicked: () -> Unit
 ) {
+    val dominantColor = rememberDominantColor(song.coverUrl ?: "").copy(alpha = 0.9f)
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF3B0B17))
+            .background(dominantColor)
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

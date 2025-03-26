@@ -44,6 +44,8 @@ android {
 
 dependencies {
 
+    implementation(libs.androidx.palette)
+
     implementation(libs.glide)
     kapt(libs.compiler)
 
