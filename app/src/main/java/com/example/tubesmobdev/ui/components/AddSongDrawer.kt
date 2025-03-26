@@ -22,13 +22,14 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SheetState
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -41,6 +42,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.tubesmobdev.ui.viewmodel.LibraryViewModel
 import com.example.tubesmobdev.util.SongUtil
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,7 +54,7 @@ fun AddSongDrawer(
     viewModel: LibraryViewModel = hiltViewModel(),
     onClose: () -> Unit,
     onDismissRequest: () -> Unit,
-
+    onResult: (Result<Unit>) -> Unit
 ) {
     var songUri by rememberSaveable  { mutableStateOf<Uri?>(null) }
     var imageUri by rememberSaveable  { mutableStateOf<Uri?>(null) }
@@ -92,18 +97,28 @@ fun AddSongDrawer(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Upload Photo & Upload File Buttons
         Row {
-            UploadBox(label = "Upload Photo", onClick = { imagePickerLauncher.launch("image/*") }, uri = imageUri, icon = Icons.Default.ImageSearch)
+            UploadBox(
+                label = "Upload Photo",
+                onClick = { imagePickerLauncher.launch("image/*") },
+                uri = imageUri,
+                icon = Icons.Default.ImageSearch,
+                duration = null
+            )
 
             Spacer(Modifier.width(16.dp))
 
-            UploadBox(label = "Upload File", onClick = { songPickerLauncher.launch("audio/*") }, uri = songUri, icon = Icons.Default.MusicNote)
+            UploadBox(
+                label = "Upload File",
+                onClick = { songPickerLauncher.launch("audio/*") },
+                uri = songUri,
+                icon = Icons.Default.MusicNote,
+                duration = duration
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Title Input Field
         OutlinedTextField(
             value = title,
             onValueChange = { title = it },
@@ -119,11 +134,8 @@ fun AddSongDrawer(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        if (songUri != null) {
-            Text("Duration: ${SongUtil.formatDuration(duration)}", color = Color.White, fontSize = 14.sp)
-        }
 
-        // Artist Input Field
+
         OutlinedTextField(
             value = artist,
             onValueChange = { artist = it },
@@ -157,8 +169,9 @@ fun AddSongDrawer(
             Button(
                 onClick = {
                     if (songUri != null && title.isNotEmpty() && artist.isNotEmpty()) {
-                        viewModel.insertSong(songUri!!, title, artist, imageUri)
-                        onClose()
+                        viewModel.insertSong(songUri!!, title, artist, imageUri) { result ->
+                            onResult(result)
+                        }
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),

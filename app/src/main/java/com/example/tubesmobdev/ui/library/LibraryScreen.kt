@@ -1,10 +1,9 @@
 package com.example.tubesmobdev.ui.library
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -13,19 +12,21 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -47,7 +48,15 @@ fun LibraryScreen(navController: NavController) {
     var sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isSheetOpen by rememberSaveable { mutableStateOf(false) }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    var snackbarMessage by rememberSaveable { mutableStateOf<String?>(null) }
 
+    LaunchedEffect (snackbarMessage) {
+        snackbarMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            snackbarMessage = null
+        }
+    }
 
     Scaffold (
         topBar = { ScreenHeader("Library", actions = {
@@ -57,62 +66,86 @@ fun LibraryScreen(navController: NavController) {
         }) },
 
         bottomBar = { BottomNavigationBar(navController) },
+        snackbarHost = {}
     ) {
             paddingValues ->
-        Column(
-            modifier = Modifier.padding(paddingValues),
+        Box (
+            modifier = Modifier.fillMaxSize().padding(paddingValues),
 
-        ) {
-            Box(
-                contentAlignment = Alignment.TopStart,
-                modifier = Modifier
-                    .padding(bottom = 10.dp, start = 10.dp, end = 10.dp, top = 10.dp)
-                    .width(150.dp)
+            ) {
 
-            ){
-                TabRow(
-                    selectedTabIndex = selectedTabIndex,
-                    divider = {},
-                    indicator = {}
+            Column {
+                Box(
+                    contentAlignment = Alignment.TopStart,
+                    modifier = Modifier
+                        .padding(bottom = 10.dp, start = 10.dp, end = 10.dp, top = 10.dp)
+                        .width(150.dp)
 
-                ) {
-                    tabs.forEachIndexed{index, title ->
-                        Tab(
-                            onClick = { selectedTabIndex = index },
-                            selected = selectedTabIndex == index,
-                            modifier = Modifier
-                                .background(Color.Transparent)
-                                .padding(end = 10.dp)
-                                .clip(shape = RoundedCornerShape(30.dp))
-                                .background(if (selectedTabIndex != index) Color(0xff212121) else MaterialTheme.colorScheme.primaryContainer)
-                        ) {
-                            Text(
-                                text = title,
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontSize = 13.sp,
-                                color = if (selectedTabIndex != index) Color.White else Color.Black
-                            )
+                ){
+                    TabRow(
+                        selectedTabIndex = selectedTabIndex,
+                        divider = {},
+                        indicator = {}
+
+                    ) {
+                        tabs.forEachIndexed{index, title ->
+                            Tab(
+                                onClick = { selectedTabIndex = index },
+                                selected = selectedTabIndex == index,
+                                modifier = Modifier
+                                    .background(Color.Transparent)
+                                    .padding(end = 10.dp)
+                                    .clip(shape = RoundedCornerShape(30.dp))
+                                    .background(if (selectedTabIndex != index) Color(0xff212121) else MaterialTheme.colorScheme.primaryContainer)
+                            ) {
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontSize = 13.sp,
+                                    color = if (selectedTabIndex != index) Color.White else Color.Black
+                                )
+                            }
                         }
                     }
                 }
+
+                HorizontalDivider()
+
+
+                Text(
+                    text = "Library",
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+
+                )
             }
 
-            HorizontalDivider()
+            if (isSheetOpen){
+                AddSongDrawer(
+                    sheetState = sheetState,
+                    onDismissRequest = { isSheetOpen = false },
+                    onClose = { isSheetOpen = false },
+                    onResult = { result: Result<Unit> ->
+                        snackbarMessage = if (result.isSuccess) {
+                            "Lagu berhasil ditambahkan"
+                        } else {
+                            "Gagal menambahkan lagu"
+                        }
+                        isSheetOpen = false
+                    }
+                )
+            }
 
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopCenter)
+            ) {
+                SnackbarHost(hostState = snackbarHostState)
+            }
 
-            Text(
-                text = "Library",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-
-            )
         }
-
-        if (isSheetOpen){
-            AddSongDrawer (sheetState = sheetState, onDismissRequest = { isSheetOpen = false }, onClose = { isSheetOpen = false })
-        }
-
     }
 
 }

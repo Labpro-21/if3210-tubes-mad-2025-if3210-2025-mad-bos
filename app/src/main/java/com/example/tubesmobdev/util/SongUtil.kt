@@ -30,4 +30,14 @@ object SongUtil {
         val seconds = totalSeconds % 60
         return String.format("%d:%02d", minutes, seconds)
     }
+
+
+    fun getMimeType(context: Context, uri: Uri): String? {
+        return context.contentResolver.getType(uri)
+    }
+
+    fun isAudioFile(context: Context, uri: Uri): Boolean {
+        val mimeType = getMimeType(context, uri)
+        return mimeType?.startsWith("audio/") == true
+    }
 }

@@ -14,9 +14,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.unit.dp
+
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.tubesmobdev.ui.navigation.BottomNavigationItem
@@ -32,11 +33,7 @@ fun BottomNavigationBar(
         containerColor = MaterialTheme.colorScheme.background ,
         modifier = Modifier
                 .fillMaxWidth()
-                .border(
-                    width = 1.dp,
-                    color = Color.Gray.copy(alpha = 0.3f),
-                    shape = RectangleShape
-                ),
+                .topBorder(Color(0xff535353), 2f),
     )  {
         BottomNavigationItem.allScreens.forEach { item ->
             NavigationBarItem(
@@ -78,4 +75,17 @@ fun BottomNavigationBar(
             )
         }
     }
+}
+
+fun Modifier.topBorder(
+    color: Color,
+    height: Float,
+) = this.drawWithContent {
+    drawContent()
+    drawLine(
+        color = color,
+        start = Offset(0f, 0f),
+        end = Offset(size.width, 0f),
+        strokeWidth = height,
+    )
 }

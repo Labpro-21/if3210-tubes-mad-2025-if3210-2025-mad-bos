@@ -13,8 +13,13 @@ class SongRepository @Inject constructor(
        return  songDao.getLikedSongs()
     }
 
-    suspend fun insertSong(song: Song) {
-        songDao.insertSong(song)
+    suspend fun insertSong(song: Song): Result<Unit> {
+        return try {
+            songDao.insertSong(song)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
     suspend fun deleteSong(song: Song) {
         songDao.deleteSong(song)
