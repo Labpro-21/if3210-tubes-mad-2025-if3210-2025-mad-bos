@@ -9,6 +9,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -19,7 +20,7 @@ fun ScreenHeader(
     actions: @Composable RowScope.() -> Unit = {}
 ) {
         TopAppBar(
-            title = { Text(text = title, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
+            title = { Text(text = title, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 28.sp)) },
             navigationIcon = navigationIcon,
             actions = actions,
             modifier = modifier,
