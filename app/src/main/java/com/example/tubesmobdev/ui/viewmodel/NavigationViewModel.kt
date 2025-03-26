@@ -8,23 +8,35 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class NavigationViewModel @Inject constructor(
     private val authPreferences: IAuthPreferences
 ) : ViewModel() {
-    private val _isLoggedIn = MutableStateFlow<Boolean?>(null)
-    val isLoggedIn: StateFlow<Boolean?> = _isLoggedIn.asStateFlow()
+//    private val _isLoggedIn = MutableStateFlow<Boolean?>(null)
+//    val isLoggedIn: StateFlow<Boolean?> = _isLoggedIn.asStateFlow()
 
-    init {
-        checkLoginStatus()
-    }
-
-    private fun checkLoginStatus() {
-        viewModelScope.launch {
-            val loggedIn = authPreferences.isLoggedIn()
-            _isLoggedIn.value = loggedIn
-        }
-    }
+    private val _isInitialized = MutableStateFlow(false)
+    val isInitialized: StateFlow<Boolean> = _isInitialized
+    val isLoggedIn: StateFlow<Boolean> = authPreferences.isLoggedInFlow
+        .onEach { _isInitialized.value = true }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
+//    init {
+//        checkLoginStatus()
+//    }
+//
+//    private fun checkLoginStatus() {
+//        viewModelScope.launch {
+//            val loggedIn = authPreferences.isLoggedIn()
+//            _isLoggedIn.value = loggedIn
+//        }
+//    }
 }

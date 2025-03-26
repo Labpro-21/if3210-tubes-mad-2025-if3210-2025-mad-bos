@@ -41,7 +41,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = hiltView
             )
             Spacer(modifier = Modifier.height(40.dp))
             Button(
-                onClick = { viewModel.logout(navController) },
+                onClick = { viewModel.logout() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),

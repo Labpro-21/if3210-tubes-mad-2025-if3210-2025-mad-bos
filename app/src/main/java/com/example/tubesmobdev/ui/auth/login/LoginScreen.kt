@@ -193,7 +193,7 @@ fun LoginScreen(
                     keyboardActions = KeyboardActions(
                         onDone = {
                             focusManager.clearFocus()
-                            viewModel.login(email, password, navController)
+                            viewModel.login(email, password)
                         }
                     ),
 
@@ -221,7 +221,7 @@ fun LoginScreen(
                 Button(
                     onClick = {
                         focusManager.clearFocus()
-                        viewModel.login(email, password, navController)
+                        viewModel.login(email, password)
                               },
                     modifier = Modifier
                         .fillMaxWidth()

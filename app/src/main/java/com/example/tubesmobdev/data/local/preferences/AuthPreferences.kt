@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.tubesmobdev.util.EncryptionManager
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -53,4 +54,10 @@ class AuthPreferences @Inject constructor(@ApplicationContext private val contex
     override suspend fun isLoggedIn(): Boolean {
         return getToken() != null
     }
+
+    override val isLoggedInFlow: Flow<Boolean>
+        get() = context.dataStore.data.map {
+            it[TOKEN_KEY]?.let { encryptionManager.decrypt(it) } != null
+        }
+
 }

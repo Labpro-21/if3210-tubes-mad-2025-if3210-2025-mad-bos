@@ -17,7 +17,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             TubesMobdevTheme {
-
                 AppNavigation()
             }
         }

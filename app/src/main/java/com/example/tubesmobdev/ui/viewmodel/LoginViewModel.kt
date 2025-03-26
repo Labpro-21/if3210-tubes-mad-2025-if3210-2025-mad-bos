@@ -19,7 +19,11 @@ class LoginViewModel @Inject constructor(
     private val _loginErrorMessage = MutableStateFlow<String?>(null)
     val loginErrorMessage = _loginErrorMessage.asStateFlow()
 
-    fun login(email: String, password: String, navController: NavController) {
+    fun login(
+        email: String,
+        password: String,
+//        navController: NavController
+    ) {
         viewModelScope.launch {
             _loginErrorMessage.value = null
             authRepository.login(email, password)
@@ -27,9 +31,9 @@ class LoginViewModel @Inject constructor(
                     onSuccess = { authResult ->
                         when (authResult) {
                             is AuthResult.Success -> {
-                                navController.navigate("main") {
-                                    popUpTo("login") { inclusive = true }
-                                }
+//                                navController.navigate("main") {
+//                                    popUpTo("login") { inclusive = true }
+//                                }
                             }
                             is AuthResult.Failure -> {
                                 _loginErrorMessage.value = authResult.message

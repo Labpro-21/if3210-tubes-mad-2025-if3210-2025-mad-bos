@@ -50,7 +50,10 @@ class TokenRefreshService : Service() {
             onSuccess = { result ->
                 when (result) {
                     is AuthResult.Success -> Log.d("TokenRefresh", "Token refreshed")
-                    is AuthResult.TokenExpired -> authRepository.logout()
+                    is AuthResult.TokenExpired -> {
+                        authRepository.logout()
+
+                    }
                     is AuthResult.Failure -> Log.e("TokenRefresh", "Refresh failed")
                 }
             },

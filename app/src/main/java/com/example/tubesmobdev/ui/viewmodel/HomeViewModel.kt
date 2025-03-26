@@ -26,13 +26,15 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun logout(navController: NavController) {
+    fun logout(
+//        navController: NavController
+    ) {
         viewModelScope.launch {
 
             authRepository.logout()
-            navController.navigate("login") {
-                popUpTo("main") { inclusive = true }
-            }
+//            navController.navigate("login") {
+//                popUpTo("main") { inclusive = true }
+//            }
         }
     }
 }
