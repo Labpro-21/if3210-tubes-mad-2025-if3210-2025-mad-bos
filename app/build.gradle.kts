@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
+    kotlin("kapt")
 }
 
 android {
@@ -42,6 +43,15 @@ android {
 }
 
 dependencies {
+
+    implementation(libs.coil.compose)
+
+    implementation(libs.androidx.runtime.livedata)
+    implementation(libs.androidx.room.runtime)
+    kapt (libs.androidx.room.compiler)
+    annotationProcessor (libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+
 
     implementation(libs.androidx.core.splashscreen)
 

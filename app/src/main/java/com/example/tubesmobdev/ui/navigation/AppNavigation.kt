@@ -6,11 +6,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.tubesmobdev.ui.LibraryScreen.LibraryScreen
+import com.example.tubesmobdev.ui.library.LibraryScreen
 import com.example.tubesmobdev.ui.auth.login.LoginScreen
 import com.example.tubesmobdev.ui.home.HomeScreen
 import com.example.tubesmobdev.ui.profile.ProfileScreen
-import com.example.tubesmobdev.ui.splash.SplashScreen
 import com.example.tubesmobdev.ui.viewmodel.NavigationViewModel
 
 @Composable

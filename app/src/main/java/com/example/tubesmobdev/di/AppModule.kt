@@ -1,12 +1,16 @@
 package com.example.tubesmobdev.di
 
 import android.content.Context
+import androidx.room.Room
+import com.example.tubesmobdev.data.local.dao.SongDao
+import com.example.tubesmobdev.data.local.database.SongDatabase
 import com.example.tubesmobdev.data.local.preferences.AuthPreferences
 import com.example.tubesmobdev.data.local.preferences.IAuthPreferences
 import com.example.tubesmobdev.data.remote.api.AuthApi
 import com.example.tubesmobdev.data.remote.interceptor.AuthInterceptor
 import com.example.tubesmobdev.data.repository.AuthRepository
 import com.example.tubesmobdev.data.repository.IAuthRepository
+import com.example.tubesmobdev.data.repository.SongRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -70,5 +74,23 @@ object AppModule {
         @ApplicationContext context: Context
     ): IAuthRepository {
         return AuthRepository(authApi, authPreferences, context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDatabase(@ApplicationContext context: Context): SongDatabase {
+        return Room.databaseBuilder(context, SongDatabase::class.java, "songs.db").build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSongRepository(songDao: SongDao): SongRepository {
+        return SongRepository(songDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSongDao(db: SongDatabase): SongDao {
+        return db.songDao()
     }
 }
