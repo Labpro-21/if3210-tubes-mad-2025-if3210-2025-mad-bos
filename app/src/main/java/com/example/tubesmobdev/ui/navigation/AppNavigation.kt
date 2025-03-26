@@ -70,7 +70,7 @@ fun AppNavigation(authViewModel: NavigationViewModel = hiltViewModel()) {
             LoginScreen(navController = navController)
         }
         composable("main") {
-            MainLayout()
+            MainLayout(navController)
         }
     }
 }

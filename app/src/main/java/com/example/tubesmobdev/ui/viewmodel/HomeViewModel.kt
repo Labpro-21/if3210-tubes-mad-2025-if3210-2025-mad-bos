@@ -31,7 +31,7 @@ class HomeViewModel @Inject constructor(
 
             authRepository.logout()
             navController.navigate("login") {
-                popUpTo("home") { inclusive = true }
+                popUpTo("main") { inclusive = true }
             }
         }
     }

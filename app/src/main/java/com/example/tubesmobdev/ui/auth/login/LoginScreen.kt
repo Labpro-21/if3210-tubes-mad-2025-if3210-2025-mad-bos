@@ -2,7 +2,10 @@ package com.example.tubesmobdev.ui.auth.login
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
@@ -11,10 +14,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -38,6 +45,8 @@ fun LoginScreen(
 
     val errorMessage by viewModel.loginErrorMessage.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val focusManager = LocalFocusManager.current
+    val passwordFocusRequester = remember { FocusRequester() }
 
     LaunchedEffect(errorMessage) {
         errorMessage?.let { message ->
@@ -53,6 +62,12 @@ fun LoginScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .clickable (
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) {
+                focusManager.clearFocus()
+            }
     ) {
 
         Image(
@@ -140,8 +155,12 @@ fun LoginScreen(
                     ),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardActions = KeyboardActions (
+                        onNext = { passwordFocusRequester.requestFocus() }
+                    ),
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -167,8 +186,17 @@ fun LoginScreen(
                         unfocusedContainerColor = Color(0xFF212121),
                     ),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
                     ),
+
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            focusManager.clearFocus()
+                            viewModel.login(email, password, navController)
+                        }
+                    ),
+
                     visualTransformation = if (passwordVisible) {
                         VisualTransformation.None
                     } else {
@@ -183,13 +211,18 @@ fun LoginScreen(
                             )
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(passwordFocusRequester)
                 )
 
                 Spacer(modifier = Modifier.height(40.dp))
 
                 Button(
-                    onClick = { viewModel.login(email, password, navController) },
+                    onClick = {
+                        focusManager.clearFocus()
+                        viewModel.login(email, password, navController)
+                              },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),

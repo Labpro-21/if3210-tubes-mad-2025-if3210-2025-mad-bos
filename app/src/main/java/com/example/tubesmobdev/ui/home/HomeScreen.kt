@@ -19,8 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.tubesmobdev.ui.components.BottomNavigationBar
-import com.example.tubesmobdev.ui.components.ScreenHeader
 import com.example.tubesmobdev.ui.viewmodel.HomeViewModel
 
 @Composable

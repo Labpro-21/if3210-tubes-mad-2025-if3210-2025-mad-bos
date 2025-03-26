@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -29,7 +30,7 @@ import com.example.tubesmobdev.ui.profile.ProfileScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainLayout() {
+fun MainLayout(outerNavController: NavController) {
     val navController = rememberNavController()
     val playerViewModel: PlayerViewModel = hiltViewModel()
 
@@ -87,7 +88,7 @@ fun MainLayout() {
                     topBarContent = {
                         ScreenHeader("Home")
                     }
-                    HomeScreen(navController = navController)
+                    HomeScreen(navController = outerNavController)
                 }
 
                 composable("profile") {
