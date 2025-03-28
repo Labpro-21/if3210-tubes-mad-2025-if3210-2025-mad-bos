@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
@@ -62,7 +63,11 @@ fun MiniPlayerBar(
             }
 
             IconButton(onClick = onAddClicked) {
-                Icon(Icons.Default.Add, contentDescription = "Add", tint = Color.White)
+                Icon(
+                    imageVector = if (song.isLiked) Icons.Default.Check else Icons.Default.Add,
+                    contentDescription = if (song.isLiked) "Liked" else "Add",
+                    tint = Color.White
+                )
             }
 
             IconButton(onClick = onTogglePlayPause) {

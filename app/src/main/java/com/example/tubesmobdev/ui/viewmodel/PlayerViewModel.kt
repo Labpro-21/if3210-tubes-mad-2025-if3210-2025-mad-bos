@@ -11,12 +11,14 @@ import android.media.MediaPlayer
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.tubesmobdev.data.repository.SongRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
-    private val app: Application
+    private val app: Application,
+    private val songRepository: SongRepository
 ) : AndroidViewModel(app) {
     private var mediaPlayer: MediaPlayer? = null
 
@@ -78,6 +80,16 @@ class PlayerViewModel @Inject constructor(
                     _progress.value = progress
                 }
                 delay(500)
+            }
+        }
+    }
+
+    fun toggleLike() {
+        currentSong.value?.let { song ->
+            val newLikedState = !song.isLiked
+            _currentSong.value = song.copy(isLiked = newLikedState)
+            viewModelScope.launch {
+                songRepository.updateLikedStatus(song.id, newLikedState)
             }
         }
     }

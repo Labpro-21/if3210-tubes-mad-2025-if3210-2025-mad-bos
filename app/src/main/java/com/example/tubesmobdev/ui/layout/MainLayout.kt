@@ -109,7 +109,7 @@ fun MainLayout(outerNavController: NavController) {
                         isPlaying = isPlaying,
                         progress = progress,
                         onTogglePlayPause = { playerViewModel.togglePlayPause() },
-                        onAddClicked = { }
+                        onAddClicked = { playerViewModel.toggleLike() }
                     )
                 }
             }
