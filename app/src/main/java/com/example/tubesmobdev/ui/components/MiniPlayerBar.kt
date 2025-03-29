@@ -1,5 +1,12 @@
 package com.example.tubesmobdev.ui.components
 
+import android.util.Log
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.with
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -17,15 +24,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import coil.compose.rememberAsyncImagePainter
 import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.util.rememberDominantColor
+import kotlinx.coroutines.launch
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun MiniPlayerBar(
     song: Song,
@@ -37,42 +51,83 @@ fun MiniPlayerBar(
     onSwipeRight: () -> Unit
 ) {
     val dominantColor = rememberDominantColor(song.coverUrl ?: "").copy(alpha = 0.9f)
-
-    val swipeThreshold = 100f
+    val swipeThreshold = 200f
     var offsetX by remember { mutableStateOf(0f) }
+    val swipeOffset = remember { Animatable(0f) }
+    val coroutineScope = rememberCoroutineScope()
+
+    val maxOffsetForAlpha = 300f
+    val alpha = 1f - (abs(swipeOffset.value) / maxOffsetForAlpha).coerceIn(0f, 0.7f)
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(dominantColor)
             .pointerInput(Unit) {
-                detectHorizontalDragGestures { _, dragAmount ->
-                    offsetX += dragAmount
-                    if (offsetX > swipeThreshold) {
-                        onSwipeRight()
+                detectHorizontalDragGestures(
+                    onHorizontalDrag = { _, dragAmount ->
+                        offsetX += dragAmount
+                        coroutineScope.launch {
+                            swipeOffset.snapTo(offsetX)
+                        }
+                    },
+                    onDragEnd = {
+                        when {
+                            offsetX > swipeThreshold -> {
+                                onSwipeRight()
+                            }
+                            offsetX < -swipeThreshold -> {
+                                onSwipeLeft()
+                            }
+                        }
                         offsetX = 0f
-                    } else if (offsetX < -swipeThreshold) {
-                        onSwipeLeft()
-                        offsetX = 0f
+                        coroutineScope.launch {
+                            swipeOffset.animateTo(0f, animationSpec = tween(300))
+                        }
                     }
-                }
+                )
             }
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+
+            // Gambar di atas teks
             Image(
                 painter = rememberAsyncImagePainter(song.coverUrl),
                 contentDescription = song.title,
                 modifier = Modifier
                     .size(48.dp)
                     .clip(RoundedCornerShape(8.dp))
+                    .zIndex(2f)
             )
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
-                Text(song.title, color = Color.White, fontSize = 14.sp)
-                Text(song.artist, color = Color.LightGray, fontSize = 12.sp)
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .offset { IntOffset(swipeOffset.value.roundToInt(), 0) }
+                    .alpha(alpha)
+                    .zIndex(1f)
+            ) {
+                AnimatedContent(
+                    targetState = song,
+                    transitionSpec = {
+                        if (targetState.id > initialState.id) {
+                            slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) with
+                                    slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300))
+                        } else {
+                            slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) with
+                                    slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300))
+                        }
+                    },
+                    label = "SongTextTransition"
+                ) { currentSong ->
+                    Column {
+                        Text(currentSong.title, color = Color.White, fontSize = 14.sp)
+                        Text(currentSong.artist, color = Color.LightGray, fontSize = 12.sp)
+                    }
+                }
             }
 
             IconButton(onClick = onAddClicked) {
