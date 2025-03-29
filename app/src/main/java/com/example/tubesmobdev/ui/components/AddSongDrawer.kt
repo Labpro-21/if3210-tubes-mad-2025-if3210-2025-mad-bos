@@ -169,7 +169,7 @@ fun AddSongDrawer(
             Button(
                 onClick = {
                     if (songUri != null && title.isNotEmpty() && artist.isNotEmpty()) {
-                        viewModel.insertSong(songUri!!, title, artist, imageUri) { result ->
+                        viewModel.insertSong(songUri!!, title, artist, imageUri, duration) { result ->
                             onResult(result)
                         }
                     }

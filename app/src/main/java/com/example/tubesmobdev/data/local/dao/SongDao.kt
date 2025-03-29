@@ -24,4 +24,7 @@ interface SongDao{
 
     @Query("UPDATE songs SET isLiked = :isLiked WHERE id = :songId")
     suspend fun updateLikedStatus(songId: Int, isLiked: Boolean)
+
+    @Query("UPDATE songs SET lastPlayed = :timestamp WHERE id = :songId")
+    suspend fun updateLastPlayed(songId: Int, timestamp: Long)
 }

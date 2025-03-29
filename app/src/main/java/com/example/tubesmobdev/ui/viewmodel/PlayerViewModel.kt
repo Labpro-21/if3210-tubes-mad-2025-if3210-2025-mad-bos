@@ -31,6 +31,21 @@ class PlayerViewModel @Inject constructor(
     private val _progress = MutableStateFlow(0.3f)
     val progress: StateFlow<Float> = _progress
 
+    private val _songList = MutableStateFlow<List<Song>>(emptyList())
+    val songList: StateFlow<List<Song>> = _songList
+
+    init {
+        fetchSongs()
+    }
+
+    private fun fetchSongs() {
+        viewModelScope.launch {
+            songRepository.getAllSongs().collect { songs ->
+                _songList.value = songs
+            }
+        }
+    }
+
     fun playSong(song: Song) {
         _currentSong.value = song
         mediaPlayer?.release()
@@ -43,6 +58,11 @@ class PlayerViewModel @Inject constructor(
                 start()
                 _isPlaying.value = true
                 startProgressUpdater()
+
+                viewModelScope.launch {
+                    val currentTimestamp = System.currentTimeMillis()
+                    songRepository.updateLastPlayed(song.id, currentTimestamp)
+                }
             }
 
             setOnCompletionListener {
@@ -91,6 +111,28 @@ class PlayerViewModel @Inject constructor(
             viewModelScope.launch {
                 songRepository.updateLikedStatus(song.id, newLikedState)
             }
+        }
+    }
+
+    fun playNext() {
+        val songs = _songList.value
+        val current = _currentSong.value ?: return
+        val currentIndex = songs.indexOfFirst { it.id == current.id }
+
+        if (songs.isNotEmpty()) {
+            val nextIndex = (currentIndex + 1) % songs.size
+            playSong(songs[nextIndex])
+        }
+    }
+
+    fun playPrevious() {
+        val songs = _songList.value
+        val current = _currentSong.value ?: return
+        val currentIndex = songs.indexOfFirst { it.id == current.id }
+
+        if (songs.isNotEmpty()) {
+            val prevIndex = if (currentIndex - 1 < 0) songs.lastIndex else currentIndex - 1
+            playSong(songs[prevIndex])
         }
     }
 }

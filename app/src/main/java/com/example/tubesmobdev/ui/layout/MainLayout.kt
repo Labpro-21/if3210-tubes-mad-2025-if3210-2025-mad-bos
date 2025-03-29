@@ -109,7 +109,9 @@ fun MainLayout(outerNavController: NavController) {
                         isPlaying = isPlaying,
                         progress = progress,
                         onTogglePlayPause = { playerViewModel.togglePlayPause() },
-                        onAddClicked = { playerViewModel.toggleLike() }
+                        onAddClicked = { playerViewModel.toggleLike() },
+                        onSwipeLeft = { playerViewModel.playNext() },
+                        onSwipeRight = { playerViewModel.playPrevious() }
                     )
                 }
             }

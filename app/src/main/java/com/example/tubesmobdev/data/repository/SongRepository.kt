@@ -29,4 +29,8 @@ class SongRepository @Inject constructor(
     suspend fun updateLikedStatus(songId: Int, isLiked: Boolean) {
         songDao.updateLikedStatus(songId, isLiked)
     }
+
+    suspend fun updateLastPlayed(songId: Int, timestamp: Long) {
+        songDao.updateLastPlayed(songId, timestamp)
+    }
 }

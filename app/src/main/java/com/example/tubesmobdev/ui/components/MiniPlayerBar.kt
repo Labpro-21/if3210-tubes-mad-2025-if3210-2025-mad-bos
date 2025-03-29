@@ -2,14 +2,8 @@ package com.example.tubesmobdev.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -20,11 +14,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
@@ -37,13 +32,31 @@ fun MiniPlayerBar(
     isPlaying: Boolean,
     progress: Float,
     onTogglePlayPause: () -> Unit,
-    onAddClicked: () -> Unit
+    onAddClicked: () -> Unit,
+    onSwipeLeft: () -> Unit,
+    onSwipeRight: () -> Unit
 ) {
     val dominantColor = rememberDominantColor(song.coverUrl ?: "").copy(alpha = 0.9f)
+
+    val swipeThreshold = 100f
+    var offsetX by remember { mutableStateOf(0f) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(dominantColor)
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures { _, dragAmount ->
+                    offsetX += dragAmount
+                    if (offsetX > swipeThreshold) {
+                        onSwipeRight()
+                        offsetX = 0f
+                    } else if (offsetX < -swipeThreshold) {
+                        onSwipeLeft()
+                        offsetX = 0f
+                    }
+                }
+            }
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
