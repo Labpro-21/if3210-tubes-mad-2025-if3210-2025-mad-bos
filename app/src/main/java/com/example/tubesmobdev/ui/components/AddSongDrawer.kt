@@ -1,5 +1,6 @@
 package com.example.tubesmobdev.ui.components
 
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -64,8 +65,16 @@ fun AddSongDrawer(
     val context = LocalContext.current
 
     val songPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? -> songUri = uri }
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let {
+            // Persist read permission so the URI remains accessible later.
+            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+            context.contentResolver.takePersistableUriPermission(it, flags)
+            songUri = it
+        }
+    }
+
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -110,11 +119,12 @@ fun AddSongDrawer(
 
             UploadBox(
                 label = "Upload File",
-                onClick = { songPickerLauncher.launch("audio/*") },
+                onClick = { songPickerLauncher.launch(arrayOf("audio/*")) },
                 uri = songUri,
                 icon = Icons.Default.MusicNote,
                 duration = duration
             )
+
         }
 
         Spacer(modifier = Modifier.height(16.dp))

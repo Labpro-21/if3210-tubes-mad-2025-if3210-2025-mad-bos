@@ -20,8 +20,6 @@ class AuthRepository @Inject constructor(
 ): IAuthRepository {
 
     override suspend fun login(email: String, password: String): Result<AuthResult> {
-
-
         return try {
             val response = authApi.login(LoginRequest(email, password))
             if (response.isSuccessful) {

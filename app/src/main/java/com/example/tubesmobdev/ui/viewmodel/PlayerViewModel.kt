@@ -15,6 +15,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.tubesmobdev.data.repository.SongRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.core.net.toUri
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
@@ -51,25 +52,34 @@ class PlayerViewModel @Inject constructor(
         _currentSong.value = song
         mediaPlayer?.release()
 
-        val uri = Uri.parse(song.filePath)
-        mediaPlayer = MediaPlayer.create(app, uri)
-
-        mediaPlayer?.apply {
-            setOnPreparedListener {
-                start()
-                _isPlaying.value = true
-                startProgressUpdater()
-
-                viewModelScope.launch {
-                    val currentTimestamp = System.currentTimeMillis()
-                    songRepository.updateLastPlayed(song.id, currentTimestamp)
+        val uri = song.filePath.toUri()
+        Log.d("Debug", "playSong: $uri")
+        try {
+            // Open a file descriptor using the ContentResolver.
+            // This requires that you already have permission for the URI (typically granted via ACTION_OPEN_DOCUMENT)
+            app.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+                mediaPlayer = MediaPlayer().apply {
+                    setDataSource(pfd.fileDescriptor)
+                    setOnPreparedListener {
+                        start()
+                        _isPlaying.value = true
+                        startProgressUpdater()
+                        viewModelScope.launch {
+                            val currentTimestamp = System.currentTimeMillis()
+                            songRepository.updateLastPlayed(song.id, currentTimestamp)
+                        }
+                    }
+                    setOnCompletionListener {
+                        _isPlaying.value = false
+                        _progress.value = 1f
+                    }
+                    prepareAsync()  // Prepare asynchronously to avoid blocking the UI thread.
                 }
-            }
-
-            setOnCompletionListener {
-                _isPlaying.value = false
-                _progress.value = 1f
-            }
+            } ?: Log.e("PlayerViewModel", "Could not open file descriptor for $uri")
+        } catch (e: SecurityException) {
+            Log.e("PlayerViewModel", "SecurityException: ${e.message}")
+        } catch (e: Exception) {
+            Log.e("PlayerViewModel", "Error playing song: $uri", e)
         }
     }
 
