@@ -1,6 +1,7 @@
 package com.example.tubesmobdev.data.local.preferences
 
 import android.content.Context
+import android.util.Base64
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -9,6 +10,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import org.json.JSONObject
 import javax.inject.Inject
 
 class AuthPreferences @Inject constructor(@ApplicationContext private val context: Context): IAuthPreferences {
@@ -18,6 +20,7 @@ class AuthPreferences @Inject constructor(@ApplicationContext private val contex
     companion object {
         private val TOKEN_KEY = stringPreferencesKey("jwt_token")
         private val REFRESH_TOKEN_KEY = stringPreferencesKey("refresh_token")
+        private val USER_ID_KEY = stringPreferencesKey("user_id")
     }
 
     override suspend fun saveAccessToken(token: String) {
@@ -25,6 +28,8 @@ class AuthPreferences @Inject constructor(@ApplicationContext private val contex
         context.dataStore.edit { prefs ->
             prefs[TOKEN_KEY] = encrypted
         }
+        // Extract and store the userId from the token
+        setUserIdFromToken(token)
     }
 
     override suspend fun getToken(): String? {
@@ -48,6 +53,7 @@ class AuthPreferences @Inject constructor(@ApplicationContext private val contex
         context.dataStore.edit { prefs ->
             prefs.remove(TOKEN_KEY)
             prefs.remove(REFRESH_TOKEN_KEY)
+            prefs.remove(USER_ID_KEY)
         }
     }
 
@@ -60,4 +66,28 @@ class AuthPreferences @Inject constructor(@ApplicationContext private val contex
             it[TOKEN_KEY]?.let { encryptionManager.decrypt(it) } != null
         }
 
+    private suspend fun setUserIdFromToken(token: String) {
+        try {
+            val parts = token.split(".")
+            if (parts.size >= 2) {
+                val payloadEncoded = parts[1]
+                val decodedBytes = Base64.decode(payloadEncoded, Base64.URL_SAFE or Base64.NO_WRAP)
+                val payloadJson = String(decodedBytes, Charsets.UTF_8)
+                val jsonObject = JSONObject(payloadJson)
+                val userId = jsonObject.optString("id")
+                if (userId != "") {
+                    context.dataStore.edit { prefs ->
+                        prefs[USER_ID_KEY] = userId
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // Retrieve the stored userId from the datastore.
+    override suspend fun getUserId(): Long? {
+        return context.dataStore.data.map { it[USER_ID_KEY] }.first()?.toLong()
+    }
 }

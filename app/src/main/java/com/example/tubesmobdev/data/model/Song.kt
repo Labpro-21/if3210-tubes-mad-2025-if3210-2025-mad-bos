@@ -13,6 +13,6 @@ data class Song(
     val duration: Long,
     val isLiked: Boolean = false,
     val lastPlayed: Long? = null,
-    val createdAt: Long? = null
-
+    val createdAt: Long? = null,
+    var creatorId: Long? = null,
 )

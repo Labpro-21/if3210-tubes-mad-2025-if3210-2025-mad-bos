@@ -95,8 +95,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideSongRepository(songDao: SongDao): SongRepository {
-        return SongRepository(songDao)
+    fun provideSongRepository(songDao: SongDao, authPreferences: IAuthPreferences,): SongRepository {
+        return SongRepository(songDao, authPreferences)
     }
 
     @Provides
