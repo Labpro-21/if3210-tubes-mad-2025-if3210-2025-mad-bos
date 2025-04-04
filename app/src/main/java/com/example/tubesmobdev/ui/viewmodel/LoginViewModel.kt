@@ -1,9 +1,7 @@
 package com.example.tubesmobdev.ui.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
 import com.example.tubesmobdev.data.repository.IAuthRepository
 import com.example.tubesmobdev.domain.model.AuthResult
 import dagger.hilt.android.lifecycle.HiltViewModel
