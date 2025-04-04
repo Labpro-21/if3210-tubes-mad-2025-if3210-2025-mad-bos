@@ -7,8 +7,10 @@ import com.example.tubesmobdev.data.local.database.SongDatabase
 import com.example.tubesmobdev.data.local.preferences.AuthPreferences
 import com.example.tubesmobdev.data.local.preferences.IAuthPreferences
 import com.example.tubesmobdev.data.remote.api.AuthApi
+import com.example.tubesmobdev.data.remote.api.ProfileApi
 import com.example.tubesmobdev.data.remote.interceptor.AuthInterceptor
 import com.example.tubesmobdev.data.repository.AuthRepository
+import com.example.tubesmobdev.data.repository.ProfileRepository
 import com.example.tubesmobdev.data.repository.IAuthRepository
 import com.example.tubesmobdev.data.repository.SongRepository
 import dagger.Module
@@ -65,7 +67,11 @@ object AppModule {
     fun provideAuthApi(retrofit: Retrofit): AuthApi {
         return retrofit.create(AuthApi::class.java)
     }
-
+    @Provides
+    @Singleton
+    fun provideProfileApi(retrofit: Retrofit): ProfileApi {
+        return retrofit.create(ProfileApi::class.java)
+    }
     @Singleton
     @Provides
     fun provideAuthRepository(
@@ -74,6 +80,11 @@ object AppModule {
         @ApplicationContext context: Context
     ): IAuthRepository {
         return AuthRepository(authApi, authPreferences, context)
+    }
+    @Provides
+    @Singleton
+    fun provideProfileRepository(profileApi: ProfileApi): ProfileRepository {
+        return ProfileRepository(profileApi)
     }
 
     @Provides
