@@ -78,7 +78,12 @@ fun AddSongDrawer(
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? -> imageUri = uri }
+    ) { uri: Uri? ->uri?.let {
+        // Persist read permission so the URI remains accessible later.
+        val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+        context.contentResolver.takePersistableUriPermission(it, flags)
+        imageUri = it
+    }}
 
     LaunchedEffect(songUri) {
         songUri?.let { uri ->
