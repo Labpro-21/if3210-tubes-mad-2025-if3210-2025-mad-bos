@@ -1,63 +1,76 @@
 package com.example.tubesmobdev.ui.home
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.ui.viewmodel.HomeViewModel
 
 @Composable
-fun HomeScreen(navController: NavController, viewModel: HomeViewModel = hiltViewModel()) {
-
-
-
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+fun HomeScreen(
+    navController: NavController,
+    viewModel: HomeViewModel = hiltViewModel()
+) {
+    val newestSongs by viewModel.newestSongs.collectAsState()
+    val recentlyPlayedSongs by viewModel.recentlyPlayedSongs.collectAsState()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp, vertical = 24.dp)
     ) {
-        Column (
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Home",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(40.dp))
-            Button(
-                onClick = { viewModel.logout() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            ) {
-                Text(
-                    text = "Log out",
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
-                )
-            }
-        }
+        // "New songs" Section (Horizontal)
+        Text(
+            text = "New songs",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Start,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        SongRecyclerView(
+            songs = newestSongs,
+            onItemClick = { song ->
+                // Handle horizontal song click
+            },
+            isHorizontal = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // "Recently played" Section (Vertical)
+        Text(
+            text = "Recently played",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Start,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // For the vertical list, wrap it with a weight to occupy available space
+        SongRecyclerView(
+            songs = recentlyPlayedSongs,
+            onItemClick = { song ->
+                // Handle vertical song click
+            },
+            isHorizontal = false,
+            modifier = Modifier.weight(1f)
+        )
+
+
     }
 }
