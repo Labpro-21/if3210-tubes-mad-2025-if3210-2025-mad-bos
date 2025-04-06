@@ -88,7 +88,7 @@ fun MainLayout(outerNavController: NavController) {
                     topBarContent = {
                         ScreenHeader("Home")
                     }
-                    HomeScreen(navController = outerNavController)
+                    HomeScreen(navController = outerNavController, onSongClick = { playerViewModel.playSong(it) },)
                 }
 
                 composable("profile") {

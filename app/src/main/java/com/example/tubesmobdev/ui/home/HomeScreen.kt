@@ -19,7 +19,8 @@ import com.example.tubesmobdev.ui.viewmodel.HomeViewModel
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    onSongClick: (Song) -> Unit,
 ) {
     val newestSongs by viewModel.newestSongs.collectAsState()
     val recentlyPlayedSongs by viewModel.recentlyPlayedSongs.collectAsState()
@@ -64,9 +65,7 @@ fun HomeScreen(
         // For the vertical list, wrap it with a weight to occupy available space
         SongRecyclerView(
             songs = recentlyPlayedSongs,
-            onItemClick = { song ->
-                // Handle vertical song click
-            },
+            onItemClick = onSongClick,
             isHorizontal = false,
             modifier = Modifier.weight(1f)
         )
