@@ -21,7 +21,7 @@ class TokenRefreshService : Service() {
     lateinit var authRepository: AuthRepository
 
     private val handler = Handler(Looper.getMainLooper())
-    private val checkInterval = 1 * 60 * 1000L // 1 minutes
+    private val checkInterval = 3 * 60 * 1000L // 1 minutes
 
     private val tokenCheckRunnable = object : Runnable {
         override fun run() {
