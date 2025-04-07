@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import androidx.lifecycle.viewModelScope
+import com.example.tubesmobdev.service.ConnectivityObserver
+import com.example.tubesmobdev.service.ConnectivityStatus
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
@@ -15,7 +17,9 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class NavigationViewModel @Inject constructor(
-    private val authPreferences: IAuthPreferences
+    private val authPreferences: IAuthPreferences,
+//    cek sinyal mau taruh disini aja gpp??
+    private val connectivityObserver: ConnectivityObserver,
 ) : ViewModel() {
 //    private val _isLoggedIn = MutableStateFlow<Boolean?>(null)
 //    val isLoggedIn: StateFlow<Boolean?> = _isLoggedIn.asStateFlow()
@@ -28,6 +32,13 @@ class NavigationViewModel @Inject constructor(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = false
+        )
+
+    val connectivityStatus: StateFlow<ConnectivityStatus> =
+        connectivityObserver.observe().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = ConnectivityStatus.Available
         )
 //    init {
 //        checkLoginStatus()

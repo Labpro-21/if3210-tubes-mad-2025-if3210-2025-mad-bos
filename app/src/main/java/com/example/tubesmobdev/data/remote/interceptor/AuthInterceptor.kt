@@ -1,18 +1,27 @@
 package com.example.tubesmobdev.data.remote.interceptor
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import com.example.tubesmobdev.data.local.preferences.IAuthPreferences
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 import javax.inject.Inject
 import android.util.Log
+import dagger.hilt.android.qualifiers.ApplicationContext
 import org.json.JSONObject
+import java.io.IOException
 import java.util.Base64
 
 class AuthInterceptor @Inject constructor(
-    private val authPreferences: IAuthPreferences
+    private val authPreferences: IAuthPreferences,
+    @ApplicationContext private val context: Context
 ): Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
+        if (!isNetworkAvailable()) {
+            throw IOException("No internet connection")
+        }
         val request = chain.request()
 
         if (request.url.encodedPath.contains("login") ||
@@ -49,5 +58,13 @@ class AuthInterceptor @Inject constructor(
             Log.e("AuthRepository", "Failed to parse token expiration: ${e.message}")
             0L
         }
+    }
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val networkCapabilities =
+            connectivityManager.getNetworkCapabilities(network) ?: return false
+        return networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 }
