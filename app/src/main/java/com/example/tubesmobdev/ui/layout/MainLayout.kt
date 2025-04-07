@@ -17,22 +17,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.tubesmobdev.service.ConnectivityStatus
 import com.example.tubesmobdev.ui.components.BottomNavigationBar
 import com.example.tubesmobdev.ui.components.MiniPlayerBar
 import com.example.tubesmobdev.ui.components.ScreenHeader
-import com.example.tubesmobdev.ui.viewmodel.PlayerViewModel
-import com.example.tubesmobdev.ui.library.LibraryScreen
 import com.example.tubesmobdev.ui.home.HomeScreen
+import com.example.tubesmobdev.ui.library.LibraryScreen
 import com.example.tubesmobdev.ui.profile.ProfileScreen
+import com.example.tubesmobdev.ui.viewmodel.NavigationViewModel
+import com.example.tubesmobdev.ui.viewmodel.PlayerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainLayout(outerNavController: NavController) {
     val navController = rememberNavController()
     val playerViewModel: PlayerViewModel = hiltViewModel()
+    // Global navigation view model that also exposes connectivity status
+    val navigationViewModel: NavigationViewModel = hiltViewModel()
+    val connectivityStatus by navigationViewModel.connectivityStatus.collectAsState()
 
     val currentSong by playerViewModel.currentSong.collectAsState()
     val isPlaying by playerViewModel.isPlaying.collectAsState()
@@ -40,7 +45,7 @@ fun MainLayout(outerNavController: NavController) {
 
     var topBarContent by remember  { mutableStateOf<@Composable () -> Unit>({}) }
     var isSheetOpen by rememberSaveable { mutableStateOf(false) }
-    var sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val snackbarHostState = remember { SnackbarHostState() }
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
@@ -52,10 +57,19 @@ fun MainLayout(outerNavController: NavController) {
         }
     }
 
+    LaunchedEffect(connectivityStatus) {
+        if (connectivityStatus is ConnectivityStatus.Unavailable) {
+            snackbarHostState.showSnackbar("No internet connection")
+        } else {
+            snackbarHostState.currentSnackbarData?.dismiss()
+        }
+    }
+
     Scaffold(
         topBar = { topBarContent() },
         bottomBar = { BottomNavigationBar(navController) },
-        snackbarHost = {}
+//        mau diatas apa dibawah??
+//        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { padding ->
         Box(
             modifier = Modifier
@@ -69,8 +83,8 @@ fun MainLayout(outerNavController: NavController) {
                 composable("library") {
                     topBarContent = {
                         ScreenHeader("Library", actions = {
-                            IconButton (onClick = { isSheetOpen = true }) {
-                                Icon(Icons.Default.Add, "Add")
+                            IconButton(onClick = { isSheetOpen = true }) {
+                                Icon(Icons.Default.Add, contentDescription = "Add")
                             }
                         })
                     }
@@ -85,24 +99,23 @@ fun MainLayout(outerNavController: NavController) {
                 }
 
                 composable("home") {
-                    topBarContent = {
-                        ScreenHeader("Home")
-                    }
-                    HomeScreen(navController = outerNavController, onSongClick = { playerViewModel.playSong(it) },)
+                    topBarContent = { ScreenHeader("Home") }
+                    HomeScreen(
+                        navController = outerNavController,
+                        onSongClick = { playerViewModel.playSong(it) }
+                    )
                 }
 
                 composable("profile") {
-                    topBarContent = {
-                        ScreenHeader("Profile")
-                    }
+                    topBarContent = { ScreenHeader("Profile") }
                     ProfileScreen(navController = navController)
                 }
             }
 
+            // Display the mini player at the bottom if a song is selected.
             currentSong?.let { song ->
                 Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
+                    modifier = Modifier.align(Alignment.BottomCenter)
                 ) {
                     MiniPlayerBar(
                         song = song,
