@@ -114,22 +114,43 @@ fun MainLayout(outerNavController: NavController) {
                     topBarContent = { ScreenHeader("Profile") }
                     ProfileScreen(navController = navController)
                 }
+                composable("fullplayer") {
+                    topBarContent = {}
+                    currentSong?.let { song ->
+                        FullPlayerScreen(
+                            song = song,
+                            isPlaying = isPlaying,
+                            progress = progress,
+                            onTogglePlayPause = { playerViewModel.togglePlayPause() },
+                            onAddClicked = { playerViewModel.toggleLike() },
+                            onSkipPrevious = { playerViewModel.playPrevious() },
+                            onSkipNext = { playerViewModel.playNext() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                }
             }
-
-            currentSong?.let { song ->
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                ) {
-                    MiniPlayerBar(
-                        song = song,
-                        isPlaying = isPlaying,
-                        progress = progress,
-                        onTogglePlayPause = { playerViewModel.togglePlayPause() },
-                        onAddClicked = { playerViewModel.toggleLike() },
-                        onSwipeLeft = { playerViewModel.playNext() },
-                        onSwipeRight = { playerViewModel.playPrevious() }
-                    )
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentRoute = navBackStackEntry?.destination?.route
+            if (currentRoute != "fullplayer") {
+                currentSong?.let { song ->
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .clickable {
+                                navController.navigate("fullplayer")
+                            }
+                    ) {
+                        MiniPlayerBar(
+                            song = song,
+                            isPlaying = isPlaying,
+                            progress = progress,
+                            onTogglePlayPause = { playerViewModel.togglePlayPause() },
+                            onAddClicked = { playerViewModel.toggleLike() },
+                            onSwipeLeft = { playerViewModel.playNext() },
+                            onSwipeRight = { playerViewModel.playPrevious() }
+                        )
+                    }
                 }
             }
 
