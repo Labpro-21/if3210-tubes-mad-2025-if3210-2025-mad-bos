@@ -88,7 +88,7 @@ fun MainLayout(outerNavController: NavController) {
                     topBarContent = {
                         ScreenHeader("Library", actions = {
                             IconButton (onClick = { isSheetOpen = true }) {
-                                Icon(Icons.Default.Add, "Add")
+                                Icon(Icons.Default.Add, contentDescription = "Add")
                             }
                         })
                     }
@@ -103,10 +103,11 @@ fun MainLayout(outerNavController: NavController) {
                 }
 
                 composable("home") {
-                    topBarContent = {
-                        ScreenHeader("Home")
-                    }
-                    HomeScreen(navController = outerNavController, onSongClick = { playerViewModel.playSong(it) },)
+                    topBarContent = { ScreenHeader("Home") }
+                    HomeScreen(
+                        navController = outerNavController,
+                        onSongClick = { playerViewModel.playSong(it) }
+                    )
                 }
 
                 composable("profile") {
