@@ -1,5 +1,7 @@
 package com.example.tubesmobdev.ui.layout
 
+import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -20,7 +22,9 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.tubesmobdev.ui.components.BottomNavigationBar
+import com.example.tubesmobdev.ui.components.FullPlayerScreen
 import com.example.tubesmobdev.ui.components.MiniPlayerBar
 import com.example.tubesmobdev.ui.components.ScreenHeader
 import com.example.tubesmobdev.ui.viewmodel.PlayerViewModel
@@ -69,7 +73,7 @@ fun MainLayout(outerNavController: NavController) {
                 composable("library") {
                     topBarContent = {
                         ScreenHeader("Library", actions = {
-                            IconButton (onClick = { isSheetOpen = true }) {
+                            IconButton(onClick = { isSheetOpen = true }) {
                                 Icon(Icons.Default.Add, "Add")
                             }
                         })
@@ -88,7 +92,10 @@ fun MainLayout(outerNavController: NavController) {
                     topBarContent = {
                         ScreenHeader("Home")
                     }
-                    HomeScreen(navController = outerNavController, onSongClick = { playerViewModel.playSong(it) },)
+                    HomeScreen(
+                        navController = outerNavController,
+                        onSongClick = { playerViewModel.playSong(it) },
+                    )
                 }
 
                 composable("profile") {
@@ -97,22 +104,49 @@ fun MainLayout(outerNavController: NavController) {
                     }
                     ProfileScreen(navController = navController)
                 }
+
+                composable("fullplayer") {
+                    topBarContent = {}
+                    currentSong?.let { song ->
+                        FullPlayerScreen(
+                            song = song,
+                            isPlaying = isPlaying,
+                            progress = progress,
+                            onTogglePlayPause = { playerViewModel.togglePlayPause() },
+                            onAddClicked = { playerViewModel.toggleLike() },
+                            onSkipPrevious = { playerViewModel.playPrevious() },
+                            onSkipNext = { playerViewModel.playNext() },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                }
             }
 
-            currentSong?.let { song ->
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                ) {
-                    MiniPlayerBar(
-                        song = song,
-                        isPlaying = isPlaying,
-                        progress = progress,
-                        onTogglePlayPause = { playerViewModel.togglePlayPause() },
-                        onAddClicked = { playerViewModel.toggleLike() },
-                        onSwipeLeft = { playerViewModel.playNext() },
-                        onSwipeRight = { playerViewModel.playPrevious() }
-                    )
+            // Determine the current route
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentRoute = navBackStackEntry?.destination?.route
+
+            // Only show the MiniPlayerBar if not in full player mode
+            if (currentRoute != "fullplayer") {
+                currentSong?.let { song ->
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .clickable {
+                                // Navigate to the full player screen when clicked
+                                navController.navigate("fullplayer")
+                            }
+                    ) {
+                        MiniPlayerBar(
+                            song = song,
+                            isPlaying = isPlaying,
+                            progress = progress,
+                            onTogglePlayPause = { playerViewModel.togglePlayPause() },
+                            onAddClicked = { playerViewModel.toggleLike() },
+                            onSwipeLeft = { playerViewModel.playNext() },
+                            onSwipeRight = { playerViewModel.playPrevious() }
+                        )
+                    }
                 }
             }
 
@@ -126,4 +160,3 @@ fun MainLayout(outerNavController: NavController) {
         }
     }
 }
-
