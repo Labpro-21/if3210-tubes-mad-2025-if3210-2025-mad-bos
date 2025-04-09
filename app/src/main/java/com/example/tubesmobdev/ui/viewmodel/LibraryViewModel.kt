@@ -25,6 +25,10 @@ class LibraryViewModel @Inject constructor(
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> get() = _errorMessage
+
+    private val _searchResults = MutableStateFlow<List<Song>>(emptyList())
+    val searchResults: StateFlow<List<Song>> = _searchResults
+
     init {
         fetchSongs()
     }
@@ -43,12 +47,6 @@ class LibraryViewModel @Inject constructor(
                     .catch { e -> _errorMessage.value = "Gagal memuat liked songs: ${e.message}" }
                     .collect { _likedSongs.value = it }
             }
-        }
-    }
-
-    fun updateLikeStatus(song: Song) {
-        viewModelScope.launch {
-            repository.updateLikedStatus(song.id, !song.isLiked)
         }
     }
 
@@ -82,6 +80,14 @@ class LibraryViewModel @Inject constructor(
     fun updateSong(song: Song) {
         viewModelScope.launch {
             repository.updateSong(song)
+        }
+    }
+
+    fun searchSongs(query: String) {
+        viewModelScope.launch {
+            repository.searchSongs(query).collect { results ->
+                _searchResults.value = results
+            }
         }
     }
 }

@@ -17,7 +17,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -56,8 +55,8 @@ fun LibraryScreen(
     val songsToShow = if (selectedTabIndex == 0) allSongs else likedSongs
     val errorMessage by viewModel.errorMessage.collectAsState()
 
-    var songToDelete by remember { mutableStateOf<Song?>(null) }
-    var songToEdit by remember { mutableStateOf<Song?>(null) }
+    var songToDelete by rememberSaveable  { mutableStateOf<Song?>(null) }
+    var songToEdit by rememberSaveable { mutableStateOf<Song?>(null) }
 
     LaunchedEffect(snackbarMessage, errorMessage) {
         snackbarMessage?.let {

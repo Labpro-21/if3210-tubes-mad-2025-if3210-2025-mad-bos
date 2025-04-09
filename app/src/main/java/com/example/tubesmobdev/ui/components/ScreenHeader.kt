@@ -49,7 +49,7 @@ dominantColor :Color = MaterialTheme.colorScheme.background
                 }
             },
             actions = {
-                IconButton(onClick = { /* TODO: More options */ }) {
+                IconButton(onClick = {  }) {
                     Icon(Icons.Default.MoreVert, contentDescription = "Menu")
                 }
             },
@@ -57,7 +57,8 @@ dominantColor :Color = MaterialTheme.colorScheme.background
                 containerColor = Color.Transparent,
                 titleContentColor = Color.White
             ),
-            modifier = modifier.background(dominantColor)
+            modifier = modifier.background(dominantColor),
+
         )
     }
 

@@ -27,8 +27,10 @@ import com.example.tubesmobdev.ui.components.BottomNavigationBar
 import com.example.tubesmobdev.ui.components.FullPlayerScreen
 import com.example.tubesmobdev.ui.components.MiniPlayerBar
 import com.example.tubesmobdev.ui.components.ScreenHeader
+import com.example.tubesmobdev.ui.components.SearchTopBar
 import com.example.tubesmobdev.ui.home.HomeScreen
 import com.example.tubesmobdev.ui.library.LibraryScreen
+import com.example.tubesmobdev.ui.library.SearchLibraryScreen
 import com.example.tubesmobdev.ui.profile.ProfileScreen
 import com.example.tubesmobdev.ui.viewmodel.ConnectionViewModel
 import com.example.tubesmobdev.ui.viewmodel.PlayerViewModel
@@ -54,6 +56,8 @@ fun MainLayout(outerNavController: NavController) {
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
 
     val dominantColor = rememberDominantColor(currentSong?.coverUrl ?: "").copy(alpha = 0.9f)
+
+    var searchQuery by rememberSaveable { mutableStateOf("") }
 
     LaunchedEffect(snackbarMessage) {
         snackbarMessage?.let {
@@ -81,12 +85,12 @@ fun MainLayout(outerNavController: NavController) {
         ) {
             NavHost(
                 navController = navController,
-                startDestination = "library"
+                startDestination = "home"
             ) {
                 composable("library") {
                     topBarContent = {
                         ScreenHeader("Library", actions = {
-                            IconButton(onClick = { navController.navigate("search") }) {
+                            IconButton(onClick = { navController.navigate("searchLibrary") }) {
                                 Icon(
                                     Icons.Default.Search,
                                     contentDescription = "Search"
@@ -148,6 +152,24 @@ fun MainLayout(outerNavController: NavController) {
                             onSkipNext = { playerViewModel.playNext() },
                         )
                     }
+                }
+                composable("searchLibrary") {
+                    topBarContent = {
+                        SearchTopBar (
+                            query = searchQuery,
+                            onQueryChange = { searchQuery = it },
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    SearchLibraryScreen(
+                        navController = navController,
+                        query = searchQuery,
+                        onSongClick = { playerViewModel.playSong(it) },
+                        onSongDelete = { playerViewModel.stopIfPlaying(it) },
+                        onSongUpdate = { playerViewModel.updateCurrentSongIfMatches(it) },
+                        onShowSnackbar = { message -> snackbarMessage = message }
+
+                    )
                 }
             }
             val navBackStackEntry by navController.currentBackStackEntryAsState()

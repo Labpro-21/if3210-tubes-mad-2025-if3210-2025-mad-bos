@@ -71,4 +71,9 @@ class SongRepository @Inject constructor(
     suspend fun updateSong(song: Song) {
         songDao.updateSong(song)
     }
+
+    fun searchSongs(query: String): Flow<List<Song>> {
+        return songDao.searchSongs(query)
+    }
+
 }

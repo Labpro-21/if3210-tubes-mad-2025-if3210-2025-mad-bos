@@ -38,4 +38,7 @@ interface SongDao {
     @Update
     suspend fun updateSong(song: Song)
 
+    @Query("SELECT * FROM songs WHERE LOWER(title) LIKE LOWER('%' || :query || '%') OR LOWER(artist) LIKE LOWER('%' || :query || '%')")
+    fun searchSongs(query: String): Flow<List<Song>>
+
 }
