@@ -2,6 +2,7 @@ package com.example.tubesmobdev.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.data.repository.AuthRepository
 import com.example.tubesmobdev.data.repository.SongRepository
@@ -47,4 +48,10 @@ class HomeViewModel @Inject constructor(
                 .collect { _recentlyPlayedSongs.value = it }
         }
     }
+
+//    public fun logout() {
+//        viewModelScope.launch {
+//            authRepository.logout()
+//        }
+//    }
 }

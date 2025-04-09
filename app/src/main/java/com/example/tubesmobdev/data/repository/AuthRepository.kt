@@ -57,7 +57,7 @@ class AuthRepository @Inject constructor(
         return try {
             val refreshToken = authPreferences.getRefreshToken()
                 ?: return Result.failure(Exception("No refresh token available"))
-            Log.d("Refresh tokennya","$refreshToken")
+            Log.d("Refresh tokennya", refreshToken)
             val response = authApi.refreshToken(RefreshTokenRequest(refreshToken))
             if (response.isSuccessful) {
                 val body: TokenResponse? = response.body()
@@ -86,15 +86,15 @@ class AuthRepository @Inject constructor(
         return try {
             val token = authPreferences.getToken()
                 ?: return Result.failure(Exception("No token available"))
-            Log.d("Ini untuk error code token pada verify", "$token")
+            Log.d("Ini untuk error code token pada verify", token)
             val response = authApi.verifyToken("Bearer $token")
             when {
                 response.isSuccessful -> {
                     // Check token duration left in seconds.
                     val durationLeftSeconds = getTokenDurationLeft(token)
                     Log.d("AuthRepository", "Token duration left: $durationLeftSeconds seconds")
-                    if (durationLeftSeconds < 3 * 60) { // Less than 4 minutes
-                        Log.e("AuthRepository", "Token considered expired because duration left is less than 4 minutes")
+                    if (durationLeftSeconds < 1 * 60) { // Less than 4 minutes
+                        Log.e("AuthRepository", "Token considered expired because duration left is less than 1 minutes")
                         Result.success(AuthResult.TokenExpired)
                     } else {
                         Result.success(AuthResult.Success)

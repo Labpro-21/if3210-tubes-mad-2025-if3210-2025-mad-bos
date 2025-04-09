@@ -1,6 +1,7 @@
 package com.example.tubesmobdev.ui.home
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -70,6 +71,10 @@ fun HomeScreen(
             modifier = Modifier.weight(1f)
         )
 
-
+//        Button(onClick = {
+//            viewModel.logout()
+//        }) {
+//            Text("Klik Saya")
+//        }
     }
 }

@@ -21,7 +21,7 @@ class TokenRefreshService : Service() {
     lateinit var authRepository: AuthRepository
 
     private val handler = Handler(Looper.getMainLooper())
-    private val checkInterval = 3 * 60 * 1000L // 1 minutes
+    private val checkInterval = 3 * 60 * 1000L
 
     private val tokenCheckRunnable = object : Runnable {
         override fun run() {
@@ -38,7 +38,10 @@ class TokenRefreshService : Service() {
                 when (result) {
                     is AuthResult.Success -> Log.d("TokenRefresh", "Acesss Token valid")
                     is AuthResult.TokenExpired -> refreshToken()
-                    is AuthResult.Failure -> Log.e("TokenRefresh", "Verification failed")
+                    is AuthResult.Failure -> {
+                        Log.e("TokenRefresh", "Verification failed")
+                        authRepository.logout()
+                    }
                 }
             },
             onFailure = { e -> Log.e("TokenRefresh", "Error", e) }
@@ -52,9 +55,11 @@ class TokenRefreshService : Service() {
                     is AuthResult.Success -> Log.d("TokenRefresh", "Token refreshed")
                     is AuthResult.TokenExpired -> {
                         authRepository.logout()
-
                     }
-                    is AuthResult.Failure -> Log.e("TokenRefresh", "Refresh failed")
+                    is AuthResult.Failure -> {
+                        Log.e("TokenRefresh", "Refresh failed")
+                        authRepository.logout()
+                    }
                 }
             },
             onFailure = { e -> Log.e("TokenRefresh", "Refresh error", e) }
