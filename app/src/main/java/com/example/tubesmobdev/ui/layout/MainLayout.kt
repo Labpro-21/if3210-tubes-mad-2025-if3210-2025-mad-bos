@@ -157,7 +157,9 @@ fun MainLayout(outerNavController: NavController) {
                             isShuffle = isShuffle,
                             onSeekTo = { newProgress ->
                                 playerViewModel.seekToPosition(newProgress)
-                            }
+                            },
+                            onSwipeLeft = { playerViewModel.playNext() },
+                            onSwipeRight = { playerViewModel.playPrevious() }
                         )
                     }
                 }

@@ -1,25 +1,31 @@
 package com.example.tubesmobdev.ui.components
-
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.tubesmobdev.data.model.Song
+import com.example.tubesmobdev.ui.components.SeekSlider
 import com.example.tubesmobdev.util.RepeatMode
 import com.example.tubesmobdev.util.rememberDominantColor
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
@@ -36,7 +42,9 @@ fun FullPlayerScreen(
     onCycleRepeat: () -> Unit,
     isShuffle: Boolean,
     repeatMode: RepeatMode,
-    onSeekTo: (Float) -> Unit
+    onSeekTo: (Float) -> Unit,
+    onSwipeLeft: () -> Unit,
+    onSwipeRight: () -> Unit
 ) {
     val dominantColor = rememberDominantColor(song.coverUrl ?: "").copy(alpha = 0.9f)
     val totalDurationMillis = song.duration.toInt()
@@ -47,10 +55,40 @@ fun FullPlayerScreen(
         val s = seconds % 60
         return "%d:%02d".format(m, s)
     }
+    val coroutineScope = rememberCoroutineScope()
+    var offsetX by remember { mutableStateOf(0f) }
+    val swipeOffset = remember { Animatable(0f) }
+    val swipeThreshold = 100f
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(dominantColor)
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures(
+                    onHorizontalDrag = { _, dragAmount ->
+                        offsetX += dragAmount
+                        coroutineScope.launch {
+                            swipeOffset.snapTo(offsetX)
+                        }
+                    },
+                    onDragEnd = {
+                        when {
+                            offsetX > swipeThreshold -> {
+                                onSwipeRight()
+                            }
+                            offsetX < -swipeThreshold -> {
+                                onSwipeLeft()
+                            }
+                        }
+                        offsetX = 0f
+                        coroutineScope.launch {
+                            swipeOffset.animateTo(0f, animationSpec = tween(300))
+                        }
+                    }
+                )
+            }
+            .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Column(
             modifier = Modifier
@@ -58,28 +96,34 @@ fun FullPlayerScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                painter = rememberAsyncImagePainter(song.coverUrl),
-                contentDescription = song.title,
-                contentScale = ContentScale.Crop,
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(0.6f)
-                    .clip(RoundedCornerShape(12.dp))
-                    .size(300.dp)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = song.title,
-                color = Color.White,
-                fontSize = 20.sp
-            )
-            Text(
-                text = song.artist,
-                color = Color.LightGray,
-                fontSize = 14.sp
-            )
-
+                    .offset { IntOffset(swipeOffset.value.roundToInt(), 0) }.size(450.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painter = rememberAsyncImagePainter(song.coverUrl),
+                    contentDescription = song.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(0.6f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .size(200.dp)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = song.title,
+                    color = Color.White,
+                    fontSize = 20.sp
+                )
+                Text(
+                    text = song.artist,
+                    color = Color.LightGray,
+                    fontSize = 14.sp
+                )
+            }
             Spacer(modifier = Modifier.height(16.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -94,7 +138,6 @@ fun FullPlayerScreen(
                 onSeekFinished = onSeekTo,
                 modifier = Modifier.fillMaxWidth()
             )
-
             Spacer(modifier = Modifier.height(16.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -108,23 +151,20 @@ fun FullPlayerScreen(
                         tint = if (isShuffle) Color.Yellow else Color.White
                     )
                 }
-
                 IconButton(onClick = onSkipPrevious) {
                     Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", tint = Color.White)
                 }
-
                 IconButton(onClick = onTogglePlayPause) {
                     Icon(
                         imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = "Play/Pause",
-                        tint = Color.White
+                        tint = Color.White,
+                        modifier = Modifier.size(32.dp)
                     )
                 }
-
                 IconButton(onClick = onSkipNext) {
-                    Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = Color.White)
+                    Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = Color.White,modifier = Modifier.size(32.dp))
                 }
-
                 IconButton(onClick = onCycleRepeat) {
                     val repeatIcon = when (repeatMode) {
                         RepeatMode.REPEAT_ONE -> Icons.Default.RepeatOne
@@ -133,19 +173,18 @@ fun FullPlayerScreen(
                     Icon(
                         imageVector = repeatIcon,
                         contentDescription = "Repeat",
-                        tint = Color.White
-                    )
+                        tint = Color.White,
+                        modifier = Modifier.size(32.dp)                    )
                 }
-
                 IconButton(onClick = onAddClicked) {
                     Icon(
                         imageVector = if (song.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = "Like/Unlike",
-                        tint = Color.White
+                        tint = Color.White,
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }
         }
     }
 }
-
