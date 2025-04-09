@@ -15,21 +15,24 @@ import com.example.tubesmobdev.R
 class SongAdapter(
     private var songs: List<Song>,
     private val onItemClick: (Song) -> Unit,
-    private val layoutRes: Int = R.layout.item_song
+    private val layoutRes: Int = R.layout.item_song,
+    // New parameter to control the visibility of the delete icon
+    private val showDeleteIcon: Boolean = false
 ) : RecyclerView.Adapter<SongAdapter.SongViewHolder>(), Parcelable {
 
     class SongViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val image: ImageView = itemView.findViewById(R.id.songImage)
         val title: TextView = itemView.findViewById(R.id.songTitle)
         val artist: TextView = itemView.findViewById(R.id.songArtist)
+        val deleteIcon: ImageView? = itemView.findViewById(R.id.deleteIcon)
     }
 
     constructor(parcel: Parcel) : this(
-        TODO("songs"),
-        TODO("onItemClick"),
-        parcel.readInt()
-    ) {
-    }
+        songs = emptyList(),
+        onItemClick = { },
+        layoutRes = parcel.readInt(),
+        showDeleteIcon = parcel.readByte() != 0.toByte()
+    )
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(layoutRes, parent, false)
@@ -40,12 +43,18 @@ class SongAdapter(
         val song = songs[position]
         holder.title.text = song.title
         holder.artist.text = song.artist
+
+        // Load the cover image using Glide
         Glide.with(holder.itemView.context)
             .load(song.coverUrl)
             .into(holder.image)
+
         holder.itemView.setOnClickListener {
             onItemClick(song)
         }
+
+        holder.deleteIcon?.visibility = if (showDeleteIcon) View.VISIBLE else View.GONE
+
     }
 
     override fun getItemCount(): Int = songs.size
@@ -57,6 +66,7 @@ class SongAdapter(
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeInt(layoutRes)
+        parcel.writeByte(if (showDeleteIcon) 1 else 0)
     }
 
     override fun describeContents(): Int {

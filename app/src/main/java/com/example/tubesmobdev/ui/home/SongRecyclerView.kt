@@ -32,7 +32,8 @@ fun SongRecyclerView(
                 adapter = SongAdapter(
                     songs,
                     onItemClick,
-                    layoutRes = if (isHorizontal) R.layout.home_item_song else R.layout.item_song
+                    layoutRes = if (isHorizontal) R.layout.home_item_song else R.layout.item_song,
+                    showDeleteIcon = false
                 )
                 setHasFixedSize(true)
             }

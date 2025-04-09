@@ -106,9 +106,14 @@ fun MainLayout(outerNavController: NavController) {
                     topBarContent = { ScreenHeader("Home") }
                     HomeScreen(
                         navController = outerNavController,
+                        onHomeSongClick = { song ->
+                            playerViewModel.playSong(song)
+                            navController.navigate("fullplayer")
+                        },
                         onSongClick = { playerViewModel.playSong(it) }
                     )
                 }
+
 
                 composable("profile") {
                     topBarContent = { ScreenHeader("Profile") }

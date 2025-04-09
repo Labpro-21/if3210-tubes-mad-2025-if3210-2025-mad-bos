@@ -22,6 +22,7 @@ fun HomeScreen(
     navController: NavController,
     viewModel: HomeViewModel = hiltViewModel(),
     onSongClick: (Song) -> Unit,
+    onHomeSongClick: (Song) -> Unit,
 ) {
     val newestSongs by viewModel.newestSongs.collectAsState()
     val recentlyPlayedSongs by viewModel.recentlyPlayedSongs.collectAsState()
@@ -43,9 +44,7 @@ fun HomeScreen(
 
         SongRecyclerView(
             songs = newestSongs,
-            onItemClick = { song ->
-                // Handle horizontal song click
-            },
+            onItemClick = onHomeSongClick,
             isHorizontal = true,
             modifier = Modifier.fillMaxWidth()
         )
