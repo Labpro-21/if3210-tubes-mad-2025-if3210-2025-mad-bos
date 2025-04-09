@@ -31,6 +31,7 @@ import com.example.tubesmobdev.ui.components.ScreenHeader
 import com.example.tubesmobdev.ui.home.HomeScreen
 import com.example.tubesmobdev.ui.library.LibraryScreen
 import com.example.tubesmobdev.ui.profile.ProfileScreen
+import com.example.tubesmobdev.ui.viewmodel.ConnectionViewModel
 import com.example.tubesmobdev.ui.viewmodel.NavigationViewModel
 import com.example.tubesmobdev.ui.viewmodel.PlayerViewModel
 import com.example.tubesmobdev.util.rememberDominantColor
@@ -40,9 +41,8 @@ import com.example.tubesmobdev.util.rememberDominantColor
 fun MainLayout(outerNavController: NavController) {
     val navController = rememberNavController()
     val playerViewModel: PlayerViewModel = hiltViewModel()
-    // Global navigation view model that also exposes connectivity status
-    val navigationViewModel: NavigationViewModel = hiltViewModel()
-    val connectivityStatus by navigationViewModel.connectivityStatus.collectAsState()
+    val connectionViewModel: ConnectionViewModel = hiltViewModel()
+    val connectivityStatus by connectionViewModel.connectivityStatus.collectAsState()
 
     val currentSong by playerViewModel.currentSong.collectAsState()
     val isPlaying by playerViewModel.isPlaying.collectAsState()
@@ -75,8 +75,6 @@ fun MainLayout(outerNavController: NavController) {
     Scaffold(
         topBar = { topBarContent() },
         bottomBar = { BottomNavigationBar(navController) },
-//        mau diatas apa dibawah??
-//        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { padding ->
         Box(
             modifier = Modifier
