@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -85,8 +86,17 @@ fun MainLayout(outerNavController: NavController) {
                 composable("library") {
                     topBarContent = {
                         ScreenHeader("Library", actions = {
-                            IconButton (onClick = { isSheetOpen = true }) {
-                                Icon(Icons.Default.Add, contentDescription = "Add")
+                            IconButton(onClick = { navController.navigate("search") }) {
+                                Icon(
+                                    Icons.Default.Search,
+                                    contentDescription = "Search"
+                                )
+                            }
+                            IconButton(onClick = { isSheetOpen = true }) {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = "Add"
+                                )
                             }
                         })
                     }
