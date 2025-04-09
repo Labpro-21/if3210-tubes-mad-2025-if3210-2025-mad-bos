@@ -18,13 +18,17 @@ import com.example.tubesmobdev.ui.library.adapter.SongAdapter
  * @param onItemClick A lambda invoked when an item is clicked.
  */
 @Composable
-fun SongRecyclerView(songs: List<Song>, onItemClick: (Song) -> Unit) {
+fun SongRecyclerView(
+    songs: List<Song>,
+    onItemClick: (Song) -> Unit,
+    onDeleteClick: (Song) -> Unit
+) {
     AndroidView(
         modifier = Modifier.fillMaxSize().padding(top = 10.dp),
         factory = { context ->
             RecyclerView(context).apply {
                 layoutManager = LinearLayoutManager(context)
-                adapter = SongAdapter(songs, onItemClick)
+                adapter = SongAdapter(songs, onItemClick, onDeleteClick)
                 setHasFixedSize(true)
             }
         },

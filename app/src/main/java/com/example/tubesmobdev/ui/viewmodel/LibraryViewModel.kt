@@ -72,4 +72,10 @@ class LibraryViewModel @Inject constructor(
     fun clearError() {
         _errorMessage.value = null
     }
+
+    fun deleteSong(song: Song) {
+        viewModelScope.launch {
+            repository.deleteSong(song)
+        }
+    }
 }

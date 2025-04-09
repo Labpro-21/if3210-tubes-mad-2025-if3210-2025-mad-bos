@@ -49,9 +49,9 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-//    public fun logout() {
-//        viewModelScope.launch {
-//            authRepository.logout()
-//        }
-//    }
+    public fun logout() {
+        viewModelScope.launch {
+            authRepository.logout()
+        }
+    }
 }

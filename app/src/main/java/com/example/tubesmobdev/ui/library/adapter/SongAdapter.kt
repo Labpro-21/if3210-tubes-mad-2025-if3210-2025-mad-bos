@@ -12,12 +12,14 @@ import com.example.tubesmobdev.R
 
 class SongAdapter(
     private var songs: List<Song>,
-    private val onItemClick: (Song) -> Unit
+    private val onItemClick: (Song) -> Unit,
+    private val onDeleteClick: ((Song) -> Unit)? = null
 ): RecyclerView.Adapter<SongAdapter.SongViewHolder>() {
     class SongViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val image: ImageView = itemView.findViewById(R.id.songImage)
         val title: TextView = itemView.findViewById(R.id.songTitle)
         val artist: TextView = itemView.findViewById(R.id.songArtist)
+        val deleteIcon: ImageView = itemView.findViewById(R.id.deleteIcon)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongViewHolder {
@@ -32,6 +34,14 @@ class SongAdapter(
         Glide.with(holder.itemView.context).load(song.coverUrl).into(holder.image)
         holder.itemView.setOnClickListener {
             onItemClick(songs[position])
+        }
+        if (onDeleteClick != null) {
+            holder.deleteIcon.visibility = View.VISIBLE
+            holder.deleteIcon.setOnClickListener {
+                onDeleteClick.invoke(song)
+            }
+        } else {
+            holder.deleteIcon.visibility = View.GONE
         }
     }
 

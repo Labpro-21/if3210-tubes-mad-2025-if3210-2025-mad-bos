@@ -62,6 +62,9 @@ fun LibraryScreen(
     val songsToShow = if (selectedTabIndex == 0) allSongs else likedSongs
     val errorMessage by viewModel.errorMessage.collectAsState()
 
+    var songToDelete by remember { mutableStateOf<Song?>(null) }
+
+
     LaunchedEffect(snackbarMessage, errorMessage) {
         snackbarMessage?.let {
             onShowSnackbar(it)
@@ -109,7 +112,7 @@ fun LibraryScreen(
                 }
             }
             HorizontalDivider(color = Color(0xff212121))
-            SongRecyclerView(songs = songsToShow, onSongClick)
+            SongRecyclerView(songs = songsToShow, onSongClick,  onDeleteClick = { songToDelete = it })
         }
         if (isSheetOpen){
             AddSongDrawer(
@@ -126,6 +129,29 @@ fun LibraryScreen(
                 }
             )
         }
+
+        songToDelete?.let { song ->
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { songToDelete = null },
+                title = { Text("Hapus Lagu") },
+                text = { Text("Apakah kamu yakin ingin menghapus '${song.title}'?") },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(onClick = {
+                        viewModel.deleteSong(song)
+                        songToDelete = null
+                        snackbarMessage = "Lagu dihapus"
+                    }) {
+                        Text("Hapus")
+                    }
+                },
+                dismissButton = {
+                    androidx.compose.material3.TextButton(onClick = { songToDelete = null }) {
+                        Text("Batal")
+                    }
+                }
+            )
+        }
+
     }
 
 
