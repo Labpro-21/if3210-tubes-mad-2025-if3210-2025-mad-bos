@@ -6,16 +6,20 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tubesmobdev.data.remote.response.ProfileResponse
-import com.example.tubesmobdev.data.repository.ProfileRepository
 import com.example.tubesmobdev.data.repository.IAuthRepository
+import com.example.tubesmobdev.data.repository.ProfileRepository
+import com.example.tubesmobdev.data.repository.SongRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val profileRepository: ProfileRepository, // Injecting concrete class directly
-    private val authRepository: IAuthRepository
+    private val profileRepository: ProfileRepository,
+    private val authRepository: IAuthRepository,
+    private val songRepository: SongRepository
 ) : ViewModel() {
 
     var profile: ProfileResponse? by mutableStateOf(null)
@@ -26,9 +30,40 @@ class ProfileViewModel @Inject constructor(
 
     var errorMessage: String? by mutableStateOf(null)
         private set
+    var allSongsCount by mutableStateOf(0)
+        private set
+
+    var likedSongsCount by mutableStateOf(0)
+        private set
+    var listenedSongsCount by mutableStateOf(0)
+        private set
 
     init {
         fetchProfile()
+        fetchSongCounts()
+    }
+
+    private fun fetchSongCounts() {
+        viewModelScope.launch {
+            launch {
+                songRepository.getAllSongsCount()
+                    .collect { count ->
+                        allSongsCount = count
+                    }
+            }
+            launch {
+                songRepository.getLikedSongsCount()
+                    .collect { count ->
+                        likedSongsCount = count
+                    }
+            }
+            launch {
+                songRepository.getPlayedSongsCount()
+                    .collect { count ->
+                        listenedSongsCount = count
+                    }
+            }
+        }
     }
 
     fun fetchProfile() {

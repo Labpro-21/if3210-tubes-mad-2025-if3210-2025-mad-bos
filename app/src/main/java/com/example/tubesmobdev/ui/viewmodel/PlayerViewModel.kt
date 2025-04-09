@@ -119,6 +119,7 @@ class PlayerViewModel @Inject constructor(
             } else {
                 it.start()
                 _isPlaying.value = true
+                startProgressUpdater()
             }
         }
     }

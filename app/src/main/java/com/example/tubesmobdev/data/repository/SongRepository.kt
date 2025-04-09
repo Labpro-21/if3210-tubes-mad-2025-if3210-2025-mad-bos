@@ -6,6 +6,7 @@ import com.example.tubesmobdev.data.local.preferences.IAuthPreferences
 import com.example.tubesmobdev.data.model.Song
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class SongRepository @Inject constructor(
@@ -18,6 +19,14 @@ class SongRepository @Inject constructor(
             songDao.getAllSongs(userId)
         } else {
             flowOf(emptyList())
+        }
+    }
+    suspend fun getPlayedSongsCount(): Flow<Int> {
+        val userId = authPreferences.getUserId()
+        return if (userId != null) {
+            songDao.countPlayedSongs(userId)
+        } else {
+            flowOf(0)
         }
     }
     suspend fun getLikedSongs(): Flow<List<Song>> {
@@ -46,7 +55,13 @@ class SongRepository @Inject constructor(
             flowOf(emptyList())
         }
     }
+    suspend fun getAllSongsCount(): Flow<Int> {
+        return getAllSongs().map { it.size }
+    }
 
+    suspend fun getLikedSongsCount(): Flow<Int> {
+        return getLikedSongs().map { it.size }
+    }
     suspend fun insertSong(song: Song): Result<Unit> {
         val userId = authPreferences.getUserId()
         userId.also { song.creatorId = it }

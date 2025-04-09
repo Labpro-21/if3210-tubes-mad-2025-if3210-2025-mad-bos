@@ -41,4 +41,7 @@ interface SongDao {
     @Query("SELECT * FROM songs WHERE LOWER(title) LIKE LOWER('%' || :query || '%') OR LOWER(artist) LIKE LOWER('%' || :query || '%')")
     fun searchSongs(query: String): Flow<List<Song>>
 
+    @Query("SELECT COUNT(*) FROM songs WHERE creatorId = :userId AND lastPlayed IS NOT NULL")
+    fun countPlayedSongs(userId: Long): Flow<Int>
+
 }
