@@ -21,14 +21,15 @@ import com.example.tubesmobdev.ui.library.adapter.SongAdapter
 fun SongRecyclerView(
     songs: List<Song>,
     onItemClick: (Song) -> Unit,
-    onDeleteClick: (Song) -> Unit
+    onDeleteClick: ((Song) -> Unit)? = null,
+    onEditClick: ((Song) -> Unit)? = null,
 ) {
     AndroidView(
         modifier = Modifier.fillMaxSize().padding(top = 10.dp),
         factory = { context ->
             RecyclerView(context).apply {
                 layoutManager = LinearLayoutManager(context)
-                adapter = SongAdapter(songs, onItemClick, onDeleteClick)
+                adapter = SongAdapter(songs, onItemClick, onDeleteClick, onEditClick)
                 setHasFixedSize(true)
             }
         },

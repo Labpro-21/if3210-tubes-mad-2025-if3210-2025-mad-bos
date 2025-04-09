@@ -50,13 +50,13 @@ class PlayerViewModel @Inject constructor(
 
     fun playSong(song: Song) {
         _currentSong.value = song
+
         mediaPlayer?.release()
 
         val uri = song.filePath.toUri()
         Log.d("Debug", "playSong: $uri")
         try {
-            // Open a file descriptor using the ContentResolver.
-            // This requires that you already have permission for the URI (typically granted via ACTION_OPEN_DOCUMENT)
+
             app.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
                 mediaPlayer = MediaPlayer().apply {
                     setDataSource(pfd.fileDescriptor)
@@ -73,7 +73,7 @@ class PlayerViewModel @Inject constructor(
                         _isPlaying.value = false
                         _progress.value = 1f
                     }
-                    prepareAsync()  // Prepare asynchronously to avoid blocking the UI thread.
+                    prepareAsync()
                 }
             } ?: Log.e("PlayerViewModel", "Could not open file descriptor for $uri")
         } catch (e: SecurityException) {
@@ -101,6 +101,13 @@ class PlayerViewModel @Inject constructor(
         _currentSong.value = null
         _isPlaying.value = false
         _progress.value = 0f
+    }
+
+    fun stopIfPlaying(song: Song) {
+        val song2 = _currentSong.value.toString()
+        if (_currentSong.value?.id == song.id) {
+            clearSong()
+        }
     }
 
     private fun startProgressUpdater() {
@@ -146,4 +153,12 @@ class PlayerViewModel @Inject constructor(
             playSong(songs[prevIndex])
         }
     }
+
+    fun updateCurrentSongIfMatches(updatedSong: Song) {
+        val current = _currentSong.value
+        if (current != null && current.id == updatedSong.id) {
+            _currentSong.value = updatedSong
+        }
+    }
+
 }

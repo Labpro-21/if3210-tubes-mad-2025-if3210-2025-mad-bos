@@ -67,4 +67,8 @@ class SongRepository @Inject constructor(
     suspend fun updateLastPlayed(songId: Int, timestamp: Long) {
         songDao.updateLastPlayed(songId, timestamp)
     }
+
+    suspend fun updateSong(song: Song) {
+        songDao.updateSong(song)
+    }
 }

@@ -41,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.ui.viewmodel.LibraryViewModel
 import com.example.tubesmobdev.util.SongUtil
 import kotlinx.coroutines.CoroutineScope
@@ -55,20 +56,23 @@ fun AddSongDrawer(
     viewModel: LibraryViewModel = hiltViewModel(),
     onClose: () -> Unit,
     onDismissRequest: () -> Unit,
-    onResult: (Result<Unit>) -> Unit
+    onResult: (Result<Unit>) -> Unit,
+    onSongUpdate: (Song) -> Unit,
+    songToEdit: Song? = null
 ) {
-    var songUri by rememberSaveable  { mutableStateOf<Uri?>(null) }
-    var imageUri by rememberSaveable  { mutableStateOf<Uri?>(null) }
-    var title by rememberSaveable  { mutableStateOf("") }
-    var artist by rememberSaveable  { mutableStateOf("") }
-    var duration by rememberSaveable  { mutableLongStateOf(0L) }
+    var songUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+    val initialImageUri = songToEdit?.coverUrl?.let { Uri.parse(it) }
+    var imageUri by rememberSaveable { mutableStateOf(initialImageUri) }
+    var title by rememberSaveable { mutableStateOf(songToEdit?.title ?: "") }
+    var artist by rememberSaveable { mutableStateOf(songToEdit?.artist ?: "") }
+    var duration by rememberSaveable { mutableLongStateOf(songToEdit?.duration ?: 0L) }
     val context = LocalContext.current
+    val isEditMode = songToEdit != null
 
     val songPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let {
-            // Persist read permission so the URI remains accessible later.
             val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
             context.contentResolver.takePersistableUriPermission(it, flags)
             songUri = it
@@ -79,7 +83,6 @@ fun AddSongDrawer(
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->uri?.let {
-        // Persist read permission so the URI remains accessible later.
         val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
         context.contentResolver.takePersistableUriPermission(it, flags)
         imageUri = it
@@ -124,12 +127,15 @@ fun AddSongDrawer(
 
             UploadBox(
                 label = "Upload File",
-                onClick = { songPickerLauncher.launch(arrayOf("audio/*")) },
+                onClick = {
+                    if (!isEditMode) {
+                        songPickerLauncher.launch(arrayOf("audio/*"))
+                    }
+                },
                 uri = songUri,
                 icon = Icons.Default.MusicNote,
                 duration = duration
             )
-
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -148,8 +154,6 @@ fun AddSongDrawer(
         )
 
         Spacer(modifier = Modifier.height(8.dp))
-
-
 
         OutlinedTextField(
             value = artist,
@@ -183,10 +187,25 @@ fun AddSongDrawer(
 
             Button(
                 onClick = {
-                    if (songUri != null && title.isNotEmpty() && artist.isNotEmpty()) {
-                        viewModel.insertSong(songUri!!, title, artist, imageUri, duration) { result ->
-                            onResult(result)
+                    if (title.isNotEmpty() && artist.isNotEmpty()) {
+                        if (songToEdit != null) {
+                            val songUpdated = songToEdit.copy(
+                                title = title,
+                                artist = artist,
+                                coverUrl = imageUri?.toString()
+                            )
+                            viewModel.updateSong(songUpdated)
+                            onSongUpdate(songUpdated)
+
+                            onResult(Result.success(Unit))
+                        } else {
+                            if (songUri != null) {
+                                viewModel.insertSong(songUri!!, title, artist, imageUri, duration) { result ->
+                                    onResult(result)
+                                }
+                            }
                         }
+                        onClose()
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),

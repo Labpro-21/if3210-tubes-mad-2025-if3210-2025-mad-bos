@@ -1,6 +1,5 @@
 package com.example.tubesmobdev.ui.home
 
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -18,7 +17,9 @@ fun SongRecyclerView(
     songs: List<Song>,
     onItemClick: (Song) -> Unit,
     isHorizontal: Boolean = false,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onDeleteClick: ((Song) -> Unit)? = null,
+    onEditClick: ((Song) -> Unit)? = null,
 ) {
     AndroidView(
         modifier = modifier.padding(top = 10.dp),
@@ -32,6 +33,8 @@ fun SongRecyclerView(
                 adapter = SongAdapter(
                     songs,
                     onItemClick,
+                    onDeleteClick,
+                    onEditClick,
                     layoutRes = if (isHorizontal) R.layout.home_item_song else R.layout.item_song
                 )
                 setHasFixedSize(true)

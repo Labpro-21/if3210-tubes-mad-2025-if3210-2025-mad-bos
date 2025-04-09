@@ -4,6 +4,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.ListView
+import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -13,13 +15,14 @@ import com.example.tubesmobdev.R
 class SongAdapter(
     private var songs: List<Song>,
     private val onItemClick: (Song) -> Unit,
-    private val onDeleteClick: ((Song) -> Unit)? = null
+    private val onDeleteClick: ((Song) -> Unit)? = null,
+    private val onEditClick: ((Song) -> Unit)? = null
 ): RecyclerView.Adapter<SongAdapter.SongViewHolder>() {
     class SongViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val image: ImageView = itemView.findViewById(R.id.songImage)
         val title: TextView = itemView.findViewById(R.id.songTitle)
         val artist: TextView = itemView.findViewById(R.id.songArtist)
-        val deleteIcon: ImageView = itemView.findViewById(R.id.deleteIcon)
+        val menuIcon: ImageView = itemView.findViewById(R.id.menuIcon)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongViewHolder {
@@ -35,13 +38,38 @@ class SongAdapter(
         holder.itemView.setOnClickListener {
             onItemClick(songs[position])
         }
-        if (onDeleteClick != null) {
-            holder.deleteIcon.visibility = View.VISIBLE
-            holder.deleteIcon.setOnClickListener {
-                onDeleteClick.invoke(song)
+        if (onEditClick != null || onDeleteClick != null) {
+            holder.menuIcon.visibility = View.VISIBLE
+            holder.menuIcon.setOnClickListener { view ->
+                val popup = PopupMenu(view.context, view)
+                val menu = popup.menu
+
+                if (onEditClick != null) {
+                    menu.add("Edit")
+                }
+                if (onDeleteClick != null) {
+                    menu.add("Delete")
+                }
+
+                popup.setOnMenuItemClickListener { item ->
+                    when (item.title) {
+                        "Edit" -> {
+                            onEditClick?.invoke(song)
+                            true
+                        }
+                        "Delete" -> {
+                            onDeleteClick?.invoke(song)
+                            true
+                        }
+                        else -> false
+                    }
+                }
+                popup.show()
+
+
             }
         } else {
-            holder.deleteIcon.visibility = View.GONE
+            holder.menuIcon.visibility = View.GONE
         }
     }
 
@@ -55,3 +83,4 @@ class SongAdapter(
     }
 
 }
+

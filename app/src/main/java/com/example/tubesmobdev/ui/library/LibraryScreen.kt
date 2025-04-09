@@ -3,23 +3,14 @@ package com.example.tubesmobdev.ui.library
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -40,12 +31,15 @@ import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.ui.components.AddSongDrawer
 import com.example.tubesmobdev.ui.viewmodel.LibraryViewModel
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(
     navController: NavController,
     viewModel: LibraryViewModel = hiltViewModel(),
     onSongClick: (Song) -> Unit,
+    onSongDelete: (Song) -> Unit,
+    onSongUpdate: (Song) -> Unit,
     isSheetOpen: Boolean,
     sheetState: SheetState,
     onCloseSheet: () -> Unit,
@@ -63,7 +57,7 @@ fun LibraryScreen(
     val errorMessage by viewModel.errorMessage.collectAsState()
 
     var songToDelete by remember { mutableStateOf<Song?>(null) }
-
+    var songToEdit by remember { mutableStateOf<Song?>(null) }
 
     LaunchedEffect(snackbarMessage, errorMessage) {
         snackbarMessage?.let {
@@ -112,23 +106,38 @@ fun LibraryScreen(
                 }
             }
             HorizontalDivider(color = Color(0xff212121))
-            SongRecyclerView(songs = songsToShow, onSongClick,  onDeleteClick = { songToDelete = it })
-        }
-        if (isSheetOpen){
-            AddSongDrawer(
-                sheetState = sheetState,
-                onDismissRequest = onCloseSheet,
-                onClose = onCloseSheet,
-                onResult = { result: Result<Unit> ->
-                    snackbarMessage = if (result.isSuccess) {
-                        "Lagu berhasil ditambahkan"
-                    } else {
-                        "Gagal menambahkan lagu"
-                    }
-                    onCloseSheet()
-                }
+            SongRecyclerView(
+                songs = songsToShow,
+                onItemClick = onSongClick,
+                onDeleteClick = { songToDelete = it },
+                onEditClick = { songToEdit = it }
             )
         }
+        if (isSheetOpen || songToEdit != null) {
+            AddSongDrawer(
+                sheetState = sheetState,
+                onDismissRequest = {
+                    songToEdit = null
+                    onCloseSheet()
+                },
+                onClose = {
+                    songToEdit = null
+                    onCloseSheet()
+                },
+                onResult = { result: Result<Unit> ->
+                    snackbarMessage = if (result.isSuccess) {
+                        "Lagu berhasil disimpan"
+                    } else {
+                        "Gagal menyimpan lagu"
+                    }
+                    songToEdit = null
+                    onCloseSheet()
+                },
+                songToEdit = songToEdit,
+                onSongUpdate = { onSongUpdate(it) }
+            )
+        }
+
 
         songToDelete?.let { song ->
             androidx.compose.material3.AlertDialog(
@@ -137,6 +146,7 @@ fun LibraryScreen(
                 text = { Text("Apakah kamu yakin ingin menghapus '${song.title}'?") },
                 confirmButton = {
                     androidx.compose.material3.TextButton(onClick = {
+                        onSongDelete(song)
                         viewModel.deleteSong(song)
                         songToDelete = null
                         snackbarMessage = "Lagu dihapus"

@@ -95,6 +95,8 @@ fun MainLayout(outerNavController: NavController) {
                     LibraryScreen(
                         navController = navController,
                         onSongClick = { playerViewModel.playSong(it) },
+                        onSongDelete = { playerViewModel.stopIfPlaying(it) },
+                        onSongUpdate = { playerViewModel.updateCurrentSongIfMatches(it) },
                         isSheetOpen = isSheetOpen,
                         sheetState = sheetState,
                         onCloseSheet = { isSheetOpen = false },

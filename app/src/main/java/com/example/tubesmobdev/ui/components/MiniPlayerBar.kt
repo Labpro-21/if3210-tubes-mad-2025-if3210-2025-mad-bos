@@ -1,6 +1,5 @@
 package com.example.tubesmobdev.ui.components
 
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -91,7 +90,7 @@ fun MiniPlayerBar(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
 
-            // Gambar di atas teks
+
             Image(
                 painter = rememberAsyncImagePainter(song.coverUrl),
                 contentDescription = song.title,
@@ -124,8 +123,21 @@ fun MiniPlayerBar(
                     label = "SongTextTransition"
                 ) { currentSong ->
                     Column {
-                        Text(currentSong.title, color = Color.White, fontSize = 14.sp)
-                        Text(currentSong.artist, color = Color.LightGray, fontSize = 12.sp)
+                        Text(
+                            text = currentSong.title,
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+
+                        Text(
+                            text = currentSong.artist,
+                            color = Color.LightGray,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
                     }
                 }
             }

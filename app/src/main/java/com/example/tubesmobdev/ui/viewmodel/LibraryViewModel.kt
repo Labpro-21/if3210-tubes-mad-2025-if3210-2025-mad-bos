@@ -78,4 +78,10 @@ class LibraryViewModel @Inject constructor(
             repository.deleteSong(song)
         }
     }
+
+    fun updateSong(song: Song) {
+        viewModelScope.launch {
+            repository.updateSong(song)
+        }
+    }
 }

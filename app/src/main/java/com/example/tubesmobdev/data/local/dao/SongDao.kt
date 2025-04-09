@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.example.tubesmobdev.data.model.Song
 import kotlinx.coroutines.flow.Flow
 
@@ -33,4 +34,8 @@ interface SongDao {
 
     @Query("UPDATE songs SET lastPlayed = :timestamp WHERE id = :songId")
     suspend fun updateLastPlayed(songId: Int, timestamp: Long)
+
+    @Update
+    suspend fun updateSong(song: Song)
+
 }

@@ -1,34 +1,29 @@
 package com.example.tubesmobdev.ui.home.adapter
 
-import android.os.Parcel
-import android.os.Parcelable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.R
+import com.example.tubesmobdev.data.model.Song
 
 class SongAdapter(
     private var songs: List<Song>,
     private val onItemClick: (Song) -> Unit,
+    private val onDeleteClick: ((Song) -> Unit)? = null,
+    private val onEditClick: ((Song) -> Unit)? = null,
     private val layoutRes: Int = R.layout.item_song
-) : RecyclerView.Adapter<SongAdapter.SongViewHolder>(), Parcelable {
+) : RecyclerView.Adapter<SongAdapter.SongViewHolder>() {
 
     class SongViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val image: ImageView = itemView.findViewById(R.id.songImage)
         val title: TextView = itemView.findViewById(R.id.songTitle)
         val artist: TextView = itemView.findViewById(R.id.songArtist)
-    }
-
-    constructor(parcel: Parcel) : this(
-        TODO("songs"),
-        TODO("onItemClick"),
-        parcel.readInt()
-    ) {
+        val menuIcon: ImageView? = itemView.findViewById(R.id.menuIcon)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongViewHolder {
@@ -38,13 +33,51 @@ class SongAdapter(
 
     override fun onBindViewHolder(holder: SongViewHolder, position: Int) {
         val song = songs[position]
+
         holder.title.text = song.title
         holder.artist.text = song.artist
+
         Glide.with(holder.itemView.context)
             .load(song.coverUrl)
             .into(holder.image)
+
         holder.itemView.setOnClickListener {
             onItemClick(song)
+        }
+
+        holder.menuIcon?.let { icon ->
+            if (onEditClick != null || onDeleteClick != null) {
+                icon.visibility = View.VISIBLE
+                icon.setOnClickListener { view ->
+                    val popup = PopupMenu(view.context, view)
+                    val menu = popup.menu
+
+                    if (onEditClick != null) {
+                        menu.add("Edit")
+                    }
+                    if (onDeleteClick != null) {
+                        menu.add("Delete")
+                    }
+
+                    popup.setOnMenuItemClickListener { item ->
+                        when (item.title) {
+                            "Edit" -> {
+                                onEditClick?.invoke(song)
+                                true
+                            }
+                            "Delete" -> {
+                                onDeleteClick?.invoke(song)
+                                true
+                            }
+                            else -> false
+                        }
+                    }
+
+                    popup.show()
+                }
+            } else {
+                icon.visibility = View.GONE
+            }
         }
     }
 
@@ -53,23 +86,5 @@ class SongAdapter(
     fun updateSongs(newSongs: List<Song>) {
         songs = newSongs
         notifyDataSetChanged()
-    }
-
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeInt(layoutRes)
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
-
-    companion object CREATOR : Parcelable.Creator<SongAdapter> {
-        override fun createFromParcel(parcel: Parcel): SongAdapter {
-            return SongAdapter(parcel)
-        }
-
-        override fun newArray(size: Int): Array<SongAdapter?> {
-            return arrayOfNulls(size)
-        }
     }
 }

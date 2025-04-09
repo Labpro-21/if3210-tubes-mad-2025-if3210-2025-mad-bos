@@ -48,6 +48,8 @@ fun UploadBox(label: String, onClick: () -> Unit, uri: Uri?, icon: ImageVector, 
         if (uri != null) {
             if (SongUtil.isAudioFile(LocalContext.current, uri)){
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(label, fontSize = 12.sp, color = Color(0xff535353))
+                    Spacer(Modifier.height(15.dp))
                     Icon(
                         imageVector = icon,
                         contentDescription = label,
@@ -83,6 +85,14 @@ fun UploadBox(label: String, onClick: () -> Unit, uri: Uri?, icon: ImageVector, 
                     tint = Color(0xff535353),
                     modifier = Modifier.size(40.dp)
                 )
+                duration?.let {
+                    Text(
+                        text = "Duration: ${SongUtil.formatDuration(it)}",
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
             }
         }
     }
