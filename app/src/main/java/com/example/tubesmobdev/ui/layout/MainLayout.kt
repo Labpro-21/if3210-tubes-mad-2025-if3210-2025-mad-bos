@@ -1,4 +1,4 @@
-package com.example.tubesmobdev.ui.layout
+    package com.example.tubesmobdev.ui.layout
 
 import android.util.Log
 import androidx.compose.foundation.clickable
@@ -33,6 +33,7 @@ import com.example.tubesmobdev.ui.library.LibraryScreen
 import com.example.tubesmobdev.ui.profile.ProfileScreen
 import com.example.tubesmobdev.ui.viewmodel.NavigationViewModel
 import com.example.tubesmobdev.ui.viewmodel.PlayerViewModel
+import com.example.tubesmobdev.util.rememberDominantColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,6 +54,8 @@ fun MainLayout(outerNavController: NavController) {
 
     val snackbarHostState = remember { SnackbarHostState() }
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
+
+    val dominantColor = rememberDominantColor(currentSong?.coverUrl ?: "").copy(alpha = 0.9f)
 
     LaunchedEffect(snackbarMessage) {
         snackbarMessage?.let {
@@ -120,7 +123,13 @@ fun MainLayout(outerNavController: NavController) {
                     ProfileScreen(navController = navController)
                 }
                 composable("fullplayer") {
-                    topBarContent = {}
+                    topBarContent = {
+                        ScreenHeader(
+                            isMainMenu = false,
+                            title = "fullplayer",
+                            onBack = { navController.popBackStack() },
+                            dominantColor = dominantColor)
+                    }
                     currentSong?.let { song ->
                         FullPlayerScreen(
                             song = song,
@@ -130,7 +139,6 @@ fun MainLayout(outerNavController: NavController) {
                             onAddClicked = { playerViewModel.toggleLike() },
                             onSkipPrevious = { playerViewModel.playPrevious() },
                             onSkipNext = { playerViewModel.playNext() },
-                            onBack = { navController.popBackStack() }
                         )
                     }
                 }
