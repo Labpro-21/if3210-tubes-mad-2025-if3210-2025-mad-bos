@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
@@ -60,10 +61,12 @@ fun FullPlayerScreen(
             Image(
                 painter = rememberAsyncImagePainter(song.coverUrl),
                 contentDescription = song.title,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(0.6f)
                     .clip(RoundedCornerShape(12.dp))
+                    .size(300.dp)
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
