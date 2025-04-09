@@ -18,13 +18,14 @@ fun SongRecyclerView(
     onItemClick: (Song) -> Unit,
     onDeleteClick: ((Song) -> Unit)? = null,
     onEditClick: ((Song) -> Unit)? = null,
+    onAddQueueClick :(Song) -> Unit,
 ) {
     AndroidView(
         modifier = Modifier.fillMaxSize().padding(top = 10.dp),
         factory = { context ->
             RecyclerView(context).apply {
                 layoutManager = LinearLayoutManager(context)
-                adapter = SongAdapter(songs, onItemClick, onDeleteClick, onEditClick)
+                adapter = SongAdapter(songs, onItemClick, onDeleteClick, onEditClick, onAddQueueClick)
                 setHasFixedSize(true)
             }
         },

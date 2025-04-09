@@ -16,7 +16,8 @@ class SongAdapter(
     private var songs: List<Song>,
     private val onItemClick: (Song) -> Unit,
     private val onDeleteClick: ((Song) -> Unit)? = null,
-    private val onEditClick: ((Song) -> Unit)? = null
+    private val onEditClick: ((Song) -> Unit)? = null,
+    private val onAddQueueClick: (Song) -> Unit ,
 ): RecyclerView.Adapter<SongAdapter.SongViewHolder>() {
     class SongViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val image: ImageView = itemView.findViewById(R.id.songImage)
@@ -50,6 +51,7 @@ class SongAdapter(
                 if (onDeleteClick != null) {
                     menu.add("Delete")
                 }
+                menu.add("Add to queue")
 
                 popup.setOnMenuItemClickListener { item ->
                     when (item.title) {
@@ -59,6 +61,10 @@ class SongAdapter(
                         }
                         "Delete" -> {
                             onDeleteClick?.invoke(song)
+                            true
+                        }
+                        "Add to queue" -> {
+                            onAddQueueClick?.invoke(song)
                             true
                         }
                         else -> false

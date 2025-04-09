@@ -1,27 +1,28 @@
 package com.example.tubesmobdev.ui.viewmodel
 
 import android.app.Application
-import androidx.lifecycle.ViewModel
-import com.example.tubesmobdev.data.model.Song
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import javax.inject.Inject
 import android.media.MediaPlayer
 import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.data.repository.SongRepository
+import com.example.tubesmobdev.util.RepeatMode
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import androidx.core.net.toUri
+import javax.inject.Inject
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
     private val app: Application,
     private val songRepository: SongRepository
 ) : AndroidViewModel(app) {
+
     private var mediaPlayer: MediaPlayer? = null
 
     private val _currentSong = MutableStateFlow<Song?>(null)
@@ -36,6 +37,17 @@ class PlayerViewModel @Inject constructor(
     private val _songList = MutableStateFlow<List<Song>>(emptyList())
     val songList: StateFlow<List<Song>> = _songList
 
+    private val _currentQueue = MutableStateFlow<List<Song>>(emptyList())
+    val currentQueue: StateFlow<List<Song>> = _currentQueue
+
+    private var currentQueueIndex = 0
+
+    private val _repeatMode = MutableStateFlow(RepeatMode.NONE)
+    val repeatMode: StateFlow<RepeatMode> = _repeatMode
+
+    private val _isShuffle = MutableStateFlow(false)
+    val isShuffle: StateFlow<Boolean> = _isShuffle
+
     init {
         fetchSongs()
     }
@@ -44,6 +56,8 @@ class PlayerViewModel @Inject constructor(
         viewModelScope.launch {
             songRepository.getAllSongs().collect { songs ->
                 _songList.value = songs
+
+                _currentQueue.value = emptyList()
             }
         }
     }
@@ -53,10 +67,15 @@ class PlayerViewModel @Inject constructor(
 
         mediaPlayer?.release()
 
+        if (_currentQueue.value.isNotEmpty()) {
+            val queue = _currentQueue.value
+            val index = queue.indexOfFirst { it.id == song.id }
+            currentQueueIndex = if (index != -1) index else 0
+        }
+
         val uri = song.filePath.toUri()
         Log.d("Debug", "playSong: $uri")
         try {
-
             app.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
                 mediaPlayer = MediaPlayer().apply {
                     setDataSource(pfd.fileDescriptor)
@@ -70,8 +89,11 @@ class PlayerViewModel @Inject constructor(
                         }
                     }
                     setOnCompletionListener {
-                        _isPlaying.value = false
                         _progress.value = 1f
+                        viewModelScope.launch {
+                            delay(500)
+                            playNext()
+                        }
                     }
                     prepareAsync()
                 }
@@ -104,7 +126,6 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun stopIfPlaying(song: Song) {
-        val song2 = _currentSong.value.toString()
         if (_currentSong.value?.id == song.id) {
             clearSong()
         }
@@ -132,25 +153,102 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
-    fun playNext() {
-        val songs = _songList.value
-        val current = _currentSong.value ?: return
-        val currentIndex = songs.indexOfFirst { it.id == current.id }
+    fun toggleShuffle() {
+        _isShuffle.value = !_isShuffle.value
+        if (_isShuffle.value) {
+            val songs = _songList.value.toMutableList()
+            songs.shuffle()
+            _currentQueue.value = songs
+            _currentSong.value?.let { current ->
+                currentQueueIndex = songs.indexOfFirst { it.id == current.id }.takeIf { it != -1 } ?: 0
+            }
+        } else {
+            _currentQueue.value = emptyList()
+            currentQueueIndex = 0
+        }
+    }
 
-        if (songs.isNotEmpty()) {
-            val nextIndex = (currentIndex + 1) % songs.size
-            playSong(songs[nextIndex])
+    fun cycleRepeatMode() {
+        _repeatMode.value = when (_repeatMode.value) {
+            RepeatMode.NONE -> RepeatMode.REPEAT_ALL
+            RepeatMode.REPEAT_ALL -> RepeatMode.REPEAT_ONE
+            RepeatMode.REPEAT_ONE -> RepeatMode.NONE
+        }
+    }
+
+
+    private fun getNextSong(): Song? {
+        return if (_currentQueue.value.isNotEmpty()) {
+            Log.d("Debug", "getNextSong using queue ")
+            val queue = _currentQueue.value
+            if (currentQueueIndex < queue.size - 1) {
+                queue[currentQueueIndex + 1]
+            } else {
+                if (_songList.value.isNotEmpty()) _songList.value.random() else null
+            }
+        } else {
+            Log.d("Debug", "getNextSong without queue ")
+            val songs = _songList.value
+            val currentIndex = songs.indexOfFirst { it.id == _currentSong.value?.id }
+            songs[(currentIndex + 1) % songs.size]
+        }
+    }
+
+    private fun getPreviousSong(): Song? {
+        return if (_currentQueue.value.isNotEmpty()) {
+            Log.d("Debug", "getPrevSong using queue ")
+            val queue = _currentQueue.value
+            if (currentQueueIndex > 0) {
+                queue[currentQueueIndex - 1]
+            } else {
+                if (_songList.value.isNotEmpty()) _songList.value.random() else null
+            }
+        } else {
+            Log.d("Debug", "getPrevSong without queue ")
+            val songs = _songList.value
+            val currentIndex = songs.indexOfFirst { it.id == _currentSong.value?.id }
+            val prevIndex = if (currentIndex - 1 < 0) songs.lastIndex else currentIndex - 1
+            songs[prevIndex]
+        }
+    }
+
+    fun playNext() {
+        if (_repeatMode.value == RepeatMode.REPEAT_ONE) {
+            _currentSong.value?.let { playSong(it) }
+            return
+        }
+        val nextSong = getNextSong()
+        if (nextSong != null) {
+            if (_currentQueue.value.isNotEmpty()) {
+                val queue = _currentQueue.value
+                val index = queue.indexOfFirst { it.id == nextSong.id }
+                if (index != -1) {
+                    currentQueueIndex = index
+                }
+            }
+            playSong(nextSong)
+        } else {
+            _currentSong.value?.let { playSong(it) }
         }
     }
 
     fun playPrevious() {
-        val songs = _songList.value
-        val current = _currentSong.value ?: return
-        val currentIndex = songs.indexOfFirst { it.id == current.id }
-
-        if (songs.isNotEmpty()) {
-            val prevIndex = if (currentIndex - 1 < 0) songs.lastIndex else currentIndex - 1
-            playSong(songs[prevIndex])
+        if (_repeatMode.value == RepeatMode.REPEAT_ONE) {
+            _currentSong.value?.let { playSong(it) }
+            return
+        }
+        val previousSong = getPreviousSong()
+        if (previousSong != null) {
+            if (_currentQueue.value.isNotEmpty()) {
+                val queue = _currentQueue.value
+                val index = queue.indexOfFirst { it.id == previousSong.id }
+                if (index != -1) {
+                    currentQueueIndex = index
+                }
+            }
+            playSong(previousSong)
+        } else {
+            _currentSong.value?.let { playSong(it) }
         }
     }
 
@@ -161,4 +259,10 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
+    fun addQueue(newSong: Song) {
+        Log.d("Debug", "addQueue: "+newSong.title)
+        val updatedQueue = _currentQueue.value.toMutableList()
+        updatedQueue.add(newSong)
+        _currentQueue.value = updatedQueue
+    }
 }

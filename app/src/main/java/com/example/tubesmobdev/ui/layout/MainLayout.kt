@@ -45,6 +45,8 @@ fun MainLayout(outerNavController: NavController) {
     val connectivityStatus by connectionViewModel.connectivityStatus.collectAsState()
 
     val currentSong by playerViewModel.currentSong.collectAsState()
+    val repeatMode by playerViewModel.repeatMode.collectAsState()
+    val isShuffle by playerViewModel.isShuffle.collectAsState()
     val isPlaying by playerViewModel.isPlaying.collectAsState()
     val progress by playerViewModel.progress.collectAsState()
 
@@ -112,7 +114,8 @@ fun MainLayout(outerNavController: NavController) {
                         isSheetOpen = isSheetOpen,
                         sheetState = sheetState,
                         onCloseSheet = { isSheetOpen = false },
-                        onShowSnackbar = { message -> snackbarMessage = message }
+                        onShowSnackbar = { message -> snackbarMessage = message },
+                        onAddQueueClick = {playerViewModel.addQueue(it)}
                     )
                 }
 
@@ -150,6 +153,11 @@ fun MainLayout(outerNavController: NavController) {
                             onAddClicked = { playerViewModel.toggleLike() },
                             onSkipPrevious = { playerViewModel.playPrevious() },
                             onSkipNext = { playerViewModel.playNext() },
+                            repeatMode = repeatMode,
+                            onToggleShuffle = {playerViewModel.toggleShuffle()},
+                            onCycleRepeat = {playerViewModel.cycleRepeatMode()},
+                            isShuffle = isShuffle
+
                         )
                     }
                 }
@@ -167,8 +175,8 @@ fun MainLayout(outerNavController: NavController) {
                         onSongClick = { playerViewModel.playSong(it) },
                         onSongDelete = { playerViewModel.stopIfPlaying(it) },
                         onSongUpdate = { playerViewModel.updateCurrentSongIfMatches(it) },
-                        onShowSnackbar = { message -> snackbarMessage = message }
-
+                        onShowSnackbar = { message -> snackbarMessage = message },
+                        onAddQueueClick = {playerViewModel.addQueue(it)}
                     )
                 }
             }

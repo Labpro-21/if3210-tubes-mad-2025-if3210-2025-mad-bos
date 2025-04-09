@@ -11,10 +11,10 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SongDao {
-    @Query("SELECT * FROM songs WHERE creatorId = :userId")
+    @Query("SELECT * FROM songs WHERE creatorId = :userId ORDER BY createdAt")
     fun getAllSongs(userId: Long): Flow<List<Song>>
 
-    @Query("SELECT * FROM songs WHERE isLiked = 1 AND creatorId = :userId")
+    @Query("SELECT * FROM songs WHERE isLiked = 1 AND creatorId = :userId ORDER BY createdAt")
     fun getLikedSongs(userId: Long): Flow<List<Song>>
 
     @Query("SELECT * FROM songs WHERE creatorId = :userId ORDER BY createdAt DESC LIMIT 10")

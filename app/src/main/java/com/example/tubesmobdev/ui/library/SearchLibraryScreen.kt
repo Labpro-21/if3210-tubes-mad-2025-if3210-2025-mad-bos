@@ -34,6 +34,7 @@ fun SearchLibraryScreen(
     query: String,
     viewModel: LibraryViewModel = hiltViewModel(),
     onSongClick: (Song) -> Unit,
+    onAddQueueClick: (Song) -> Unit,
     onSongDelete: (Song) -> Unit,
     onSongUpdate: (Song) -> Unit,
     onShowSnackbar: (String) -> Unit
@@ -104,7 +105,8 @@ fun SearchLibraryScreen(
                 songs = searchResults,
                 onItemClick = onSongClick,
                 onDeleteClick = { songToDelete = it },
-                onEditClick = { songToEdit = it }
+                onEditClick = { songToEdit = it },
+                onAddQueueClick = onAddQueueClick
             )
         }
     }

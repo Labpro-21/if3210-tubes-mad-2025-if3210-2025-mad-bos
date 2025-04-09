@@ -37,6 +37,7 @@ fun LibraryScreen(
     navController: NavController,
     viewModel: LibraryViewModel = hiltViewModel(),
     onSongClick: (Song) -> Unit,
+    onAddQueueClick: (Song) -> Unit,
     onSongDelete: (Song) -> Unit,
     onSongUpdate: (Song) -> Unit,
     isSheetOpen: Boolean,
@@ -109,7 +110,8 @@ fun LibraryScreen(
                 songs = songsToShow,
                 onItemClick = onSongClick,
                 onDeleteClick = { songToDelete = it },
-                onEditClick = { songToEdit = it }
+                onEditClick = { songToEdit = it },
+                onAddQueueClick = onAddQueueClick
             )
         }
         if (isSheetOpen || songToEdit != null) {
