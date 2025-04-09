@@ -117,7 +117,7 @@ fun MainLayout(outerNavController: NavController) {
                 }
 
                 composable("home") {
-                    topBarContent = { ScreenHeader("Home") }
+                    topBarContent = { ScreenHeader("New Songs") }
                     HomeScreen(
                         navController = outerNavController,
                         onHomeSongClick = { song ->

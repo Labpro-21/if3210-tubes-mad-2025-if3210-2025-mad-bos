@@ -28,19 +28,7 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 24.dp)
     ) {
-        // "New songs" Section (Horizontal)
-        Text(
-            text = "New songs",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Start,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
         SongRecyclerView(
             songs = newestSongs,
             onItemClick = onHomeSongClick,
@@ -48,20 +36,16 @@ fun HomeScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        // "Recently played" Section (Vertical)
         Text(
             text = "Recently played",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Start,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().padding(start = 12.dp),
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // For the vertical list, wrap it with a weight to occupy available space
         SongRecyclerView(
             songs = recentlyPlayedSongs,
             onItemClick = onSongClick,

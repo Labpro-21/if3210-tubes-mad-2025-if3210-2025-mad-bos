@@ -10,7 +10,7 @@
         android:id="@+id/songImage"
         android:layout_width="90dp"
         android:layout_height="90dp"
-        android:scaleType="centerCrop"/>
+        android:scaleType="centerCrop" />
 
     <TextView
         android:id="@+id/songTitle"
@@ -21,7 +21,9 @@
         android:textColor="#FFFFFF"
         android:textSize="16sp"
         android:textStyle="bold"
+        android:gravity="center"
         android:layout_marginTop="8dp" />
+
 
     <TextView
         android:id="@+id/songArtist"
@@ -31,5 +33,6 @@
         android:maxLines="1"
         android:textColor="#AAAAAA"
         android:textSize="14sp"
+        android:gravity="center"
         android:layout_marginTop="4dp"/>
 </LinearLayout>
