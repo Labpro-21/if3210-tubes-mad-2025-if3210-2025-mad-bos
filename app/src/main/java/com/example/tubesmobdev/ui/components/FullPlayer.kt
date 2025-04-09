@@ -34,20 +34,18 @@ fun FullPlayerScreen(
     onToggleShuffle: () -> Unit,
     onCycleRepeat: () -> Unit,
     isShuffle: Boolean,
-    repeatMode: RepeatMode
+    repeatMode: RepeatMode,
+    onSeekTo: (Float) -> Unit
 ) {
-    // Compute the dominant color from the cover image and modify its alpha for a nice overlay
     val dominantColor = rememberDominantColor(song.coverUrl ?: "").copy(alpha = 0.9f)
-    val totalDurationSeconds = 210  // e.g. 3:30
+    val totalDurationMillis = song.duration.toInt()
+    val totalDurationSeconds = (totalDurationMillis / 1000L).toInt()
     val currentSeconds = (progress * totalDurationSeconds).roundToInt()
-
     fun formatTime(seconds: Int): String {
         val m = seconds / 60
         val s = seconds % 60
         return "%d:%02d".format(m, s)
     }
-
-    // Wrap the full screen content in a Box that sets the background to dominantColor.
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -59,7 +57,6 @@ fun FullPlayerScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Album cover image
             Image(
                 painter = rememberAsyncImagePainter(song.coverUrl),
                 contentDescription = song.title,
@@ -68,10 +65,7 @@ fun FullPlayerScreen(
                     .weight(0.6f)
                     .clip(RoundedCornerShape(12.dp))
             )
-
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Song title and artist information
             Text(
                 text = song.title,
                 color = Color.White,
@@ -84,8 +78,6 @@ fun FullPlayerScreen(
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Time indicators row (current time vs total duration)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -93,28 +85,19 @@ fun FullPlayerScreen(
                 Text(text = formatTime(currentSeconds), color = Color.White, fontSize = 12.sp)
                 Text(text = formatTime(totalDurationSeconds), color = Color.White, fontSize = 12.sp)
             }
-
-            // Slider for song progress (you can wire this up to a seek function)
-            Slider(
-                value = progress,
-                onValueChange = { /* TODO: Call viewmodel function to seek */ },
-                modifier = Modifier.fillMaxWidth(),
-                colors = SliderDefaults.colors(
-                    thumbColor = Color.White,
-                    activeTrackColor = Color.White,
-                    inactiveTrackColor = Color.Gray
-                )
+            SeekSlider(
+                progress = progress,
+                durationMillis = totalDurationMillis,
+                onSeekFinished = onSeekTo,
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Playback controls row with added shuffle and repeat buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Shuffle button
                 IconButton(onClick = onToggleShuffle) {
                     Icon(
                         imageVector = Icons.Default.Shuffle,
@@ -123,12 +106,10 @@ fun FullPlayerScreen(
                     )
                 }
 
-                // Previous button
                 IconButton(onClick = onSkipPrevious) {
                     Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", tint = Color.White)
                 }
 
-                // Play/Pause button
                 IconButton(onClick = onTogglePlayPause) {
                     Icon(
                         imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
@@ -137,12 +118,10 @@ fun FullPlayerScreen(
                     )
                 }
 
-                // Next button
                 IconButton(onClick = onSkipNext) {
                     Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = Color.White)
                 }
 
-                // Repeat button, which switches icon based on repeat mode
                 IconButton(onClick = onCycleRepeat) {
                     val repeatIcon = when (repeatMode) {
                         RepeatMode.REPEAT_ONE -> Icons.Default.RepeatOne
@@ -155,7 +134,6 @@ fun FullPlayerScreen(
                     )
                 }
 
-                // Like/Unlike button
                 IconButton(onClick = onAddClicked) {
                     Icon(
                         imageVector = if (song.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
@@ -167,3 +145,4 @@ fun FullPlayerScreen(
         }
     }
 }
+

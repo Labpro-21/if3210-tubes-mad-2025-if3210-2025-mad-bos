@@ -156,8 +156,10 @@ fun MainLayout(outerNavController: NavController) {
                             repeatMode = repeatMode,
                             onToggleShuffle = {playerViewModel.toggleShuffle()},
                             onCycleRepeat = {playerViewModel.cycleRepeatMode()},
-                            isShuffle = isShuffle
-
+                            isShuffle = isShuffle,
+                            onSeekTo = { newProgress ->
+                                playerViewModel.seekToPosition(newProgress)
+                            }
                         )
                     }
                 }

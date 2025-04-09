@@ -61,10 +61,16 @@ class PlayerViewModel @Inject constructor(
             }
         }
     }
-
+    fun seekToPosition(progress: Float) {
+        mediaPlayer?.let {
+            val newPosition = (it.duration * progress).toInt()
+            it.seekTo(newPosition)
+            _progress.value = progress
+        }
+    }
     fun playSong(song: Song) {
         _currentSong.value = song
-
+        _progress.value = 0f
         mediaPlayer?.release()
 
         if (_currentQueue.value.isNotEmpty()) {
