@@ -1,5 +1,6 @@
 package com.example.tubesmobdev.ui.layout
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -61,6 +62,9 @@ fun MainLayout(outerNavController: NavController) {
 
     var searchQuery by rememberSaveable { mutableStateOf("") }
 
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
     LaunchedEffect(snackbarMessage) {
         snackbarMessage?.let {
             snackbarHostState.showSnackbar(it)
@@ -74,6 +78,10 @@ fun MainLayout(outerNavController: NavController) {
         } else {
             snackbarHostState.currentSnackbarData?.dismiss()
         }
+    }
+
+    BackHandler(enabled = currentRoute != "home") {
+        navController.popBackStack()
     }
 
     Scaffold(
