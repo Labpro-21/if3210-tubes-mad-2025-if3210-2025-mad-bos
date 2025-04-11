@@ -136,7 +136,6 @@ fun MainLayout(outerNavController: NavController) {
                         verticalArrangement = Arrangement.SpaceBetween
                     ) {
                         SideNavigation(navController)
-
                         currentSong?.let {
                             MiniPlayerBar(
                                 song = it,
@@ -156,35 +155,60 @@ fun MainLayout(outerNavController: NavController) {
                         .weight(1f)
                         .fillMaxHeight()
                 ) {
-
-                        // Landscape / Tablet → Gak usah Scaffold
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-//                                .padding(WindowInsets.sy()) // biar aman dari statusbar
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                    ) {
+                        NavHost(
+                            navController = navController,
+                            startDestination = "home"
                         ) {
-                            NavHost(
-                                navController = navController,
-                                startDestination = "home"
-                            ) {
-                                composable("home") {
-                                    topBarContent = { ScreenHeader("New Songs") }
-                                    HomeScreen(
-                                        customTopBar = {ScreenHeader("New Songs", isCompact = isCompact)  },
-                                        navController = outerNavController,
-                                        isCompact = isCompact,
-                                        onHomeSongClick = {
-                                            playerViewModel.playSong(it)
-                                            if (isCompact) {
-                                                navController.navigate("fullplayer")
-                                            }
-                                        },
-                                        onSongClick = { playerViewModel.playSong(it) }
-                                    )
+                            composable("home") {
+                                topBarContent = { ScreenHeader("New Songs") }
+                                HomeScreen(
+                                    customTopBar = {ScreenHeader("New Songs", isCompact = isCompact)  },
+                                    navController = outerNavController,
+                                    isCompact = isCompact,
+                                    onHomeSongClick = {
+                                        playerViewModel.playSong(it)
+                                        if (isCompact) {
+                                            navController.navigate("fullplayer")
+                                        }
+                                    },
+                                    onSongClick = { playerViewModel.playSong(it) }
+                                )
+                            }
+                            composable("library") {
+                                topBarContent = {
+                                    ScreenHeader("Library", actions = {
+                                        IconButton(onClick = { navController.navigate("searchLibrary") }) {
+                                            Icon(
+                                                Icons.Default.Search,
+                                                contentDescription = "Search"
+                                            )
+                                        }
+                                        IconButton(onClick = { isSheetOpen = true }) {
+                                            Icon(Icons.Default.Add, contentDescription = "Add")
+                                        }
+                                    })
                                 }
-                                composable("library") {
-                                    topBarContent = {
-                                        ScreenHeader("Library", actions = {
+                                LibraryScreen(
+                                    navController,
+                                    onSongClick = { playerViewModel.playSong(it) },
+                                    onSongDelete = { playerViewModel.stopIfPlaying(it) },
+                                    onSongUpdate = {
+                                        playerViewModel.updateCurrentSongIfMatches(
+                                            it
+                                        )
+                                    },
+                                    isSheetOpen = isSheetOpen,
+                                    sheetState = sheetState,
+                                    onCloseSheet = { isSheetOpen = false },
+                                    onShowSnackbar = { snackbarMessage = it },
+                                    onAddQueueClick = { playerViewModel.addQueue(it) },
+                                    isCompact = isCompact,
+                                    customTopBar = {
+                                        ScreenHeader("Library", isCompact = isCompact, actions = {
                                             IconButton(onClick = { navController.navigate("searchLibrary") }) {
                                                 Icon(
                                                     Icons.Default.Search,
@@ -194,12 +218,49 @@ fun MainLayout(outerNavController: NavController) {
                                             IconButton(onClick = { isSheetOpen = true }) {
                                                 Icon(Icons.Default.Add, contentDescription = "Add")
                                             }
-                                        })
-                                    }
-                                    LibraryScreen(
-                                        navController,
-                                        onSongClick = { playerViewModel.playSong(it) },
-                                        onSongDelete = { playerViewModel.stopIfPlaying(it) },
+                                        })},
+                                )
+                            }
+                            composable("profile") {
+                                if (isCompact){
+                                    topBarContent = { ProfileHeaderContent() }
+                                }else{
+                                    ProfileHeaderContent()
+                                }
+                            }
+                            composable("fullplayer") {
+                                topBarContent = {
+                                    ScreenHeader(
+                                        isMainMenu = false,
+                                        title = "fullplayer",
+                                        onBack = { navController.popBackStack() },
+                                        dominantColor = dominantColor,
+                                        actions = {
+                                            IconButton(onClick = { isSheetOpen = true }) {
+                                                Icon(
+                                                    Icons.Default.Edit,
+                                                    contentDescription = "Edit"
+                                                )
+                                            }
+                                        }
+                                    )
+                                }
+                                currentSong?.let {
+                                    FullPlayerScreen(
+                                        song = it,
+                                        isPlaying = isPlaying,
+                                        progress = progress,
+                                        onTogglePlayPause = { playerViewModel.togglePlayPause() },
+                                        onAddClicked = { playerViewModel.toggleLike() },
+                                        onSkipPrevious = { playerViewModel.playPrevious() },
+                                        onSkipNext = { playerViewModel.playNext() },
+                                        repeatMode = repeatMode,
+                                        onToggleShuffle = { playerViewModel.toggleShuffle() },
+                                        onCycleRepeat = { playerViewModel.cycleRepeatMode() },
+                                        isShuffle = isShuffle,
+                                        onSeekTo = { playerViewModel.seekToPosition(it) },
+                                        onSwipeLeft = { playerViewModel.playNext() },
+                                        onSwipeRight = { playerViewModel.playPrevious() },
                                         onSongUpdate = {
                                             playerViewModel.updateCurrentSongIfMatches(
                                                 it
@@ -209,120 +270,55 @@ fun MainLayout(outerNavController: NavController) {
                                         sheetState = sheetState,
                                         onCloseSheet = { isSheetOpen = false },
                                         onShowSnackbar = { snackbarMessage = it },
-                                        onAddQueueClick = { playerViewModel.addQueue(it) },
-                                        isCompact = isCompact,
-                                        customTopBar = {
-                                            ScreenHeader("Library", isCompact = isCompact, actions = {
-                                                IconButton(onClick = { navController.navigate("searchLibrary") }) {
-                                                    Icon(
-                                                        Icons.Default.Search,
-                                                        contentDescription = "Search"
-                                                    )
-                                                }
-                                                IconButton(onClick = { isSheetOpen = true }) {
-                                                    Icon(Icons.Default.Add, contentDescription = "Add")
-                                                }
-                                            })},
-                                    )
-                                }
-                                composable("profile") {
-                                    if (isCompact){
-                                        topBarContent = { ProfileHeaderContent() }
-                                    }else{
-                                        ProfileHeaderContent()
-                                    }
-                                }
-                                composable("fullplayer") {
-                                    topBarContent = {
-                                        ScreenHeader(
-                                            isMainMenu = false,
-                                            title = "fullplayer",
-                                            onBack = { navController.popBackStack() },
-                                            dominantColor = dominantColor,
-                                            actions = {
-                                                IconButton(onClick = { isSheetOpen = true }) {
-                                                    Icon(
-                                                        Icons.Default.Edit,
-                                                        contentDescription = "Edit"
-                                                    )
-                                                }
-                                            }
-                                        )
-                                    }
-                                    currentSong?.let {
-                                        FullPlayerScreen(
-                                            song = it,
-                                            isPlaying = isPlaying,
-                                            progress = progress,
-                                            onTogglePlayPause = { playerViewModel.togglePlayPause() },
-                                            onAddClicked = { playerViewModel.toggleLike() },
-                                            onSkipPrevious = { playerViewModel.playPrevious() },
-                                            onSkipNext = { playerViewModel.playNext() },
-                                            repeatMode = repeatMode,
-                                            onToggleShuffle = { playerViewModel.toggleShuffle() },
-                                            onCycleRepeat = { playerViewModel.cycleRepeatMode() },
-                                            isShuffle = isShuffle,
-                                            onSeekTo = { playerViewModel.seekToPosition(it) },
-                                            onSwipeLeft = { playerViewModel.playNext() },
-                                            onSwipeRight = { playerViewModel.playPrevious() },
-                                            onSongUpdate = {
-                                                playerViewModel.updateCurrentSongIfMatches(
-                                                    it
-                                                )
-                                            },
-                                            isSheetOpen = isSheetOpen,
-                                            sheetState = sheetState,
-                                            onCloseSheet = { isSheetOpen = false },
-                                            onShowSnackbar = { snackbarMessage = it },
-                                        )
-                                    }
-                                }
-                                composable("searchLibrary") {
-                                    topBarContent = {
-                                        SearchTopBar(
-                                            query = searchQuery,
-                                            onQueryChange = { searchQuery = it },
-                                            onBack = { navController.popBackStack() }
-                                        )
-                                    }
-                                    SearchLibraryScreen(
-                                        navController,
-                                        query = searchQuery,
-                                        onSongClick = { playerViewModel.playSong(it) },
-                                        onSongDelete = { playerViewModel.stopIfPlaying(it) },
-                                        onSongUpdate = {
-                                            playerViewModel.updateCurrentSongIfMatches(
-                                                it
-                                            )
-                                        },
-                                        onShowSnackbar = { snackbarMessage = it },
-                                        onAddQueueClick = { playerViewModel.addQueue(it) }
                                     )
                                 }
                             }
-
-                            if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact && currentRoute != "fullplayer") {
-                                currentSong?.let {
-                                    Column(
-                                        modifier = Modifier
-                                            .align(Alignment.BottomCenter)
-                                            .clickable {  if (isCompact) {
-                                                navController.navigate("fullplayer")
-                                            } }
-                                    ) {
-                                        MiniPlayerBar(
-                                            song = it,
-                                            isPlaying = isPlaying,
-                                            progress = progress,
-                                            onTogglePlayPause = { playerViewModel.togglePlayPause() },
-                                            onAddClicked = { playerViewModel.toggleLike() },
-                                            onSwipeLeft = { playerViewModel.playNext() },
-                                            onSwipeRight = { playerViewModel.playPrevious() }
+                            composable("searchLibrary") {
+                                topBarContent = {
+                                    SearchTopBar(
+                                        query = searchQuery,
+                                        onQueryChange = { searchQuery = it },
+                                        onBack = { navController.popBackStack() }
+                                    )
+                                }
+                                SearchLibraryScreen(
+                                    navController,
+                                    query = searchQuery,
+                                    onSongClick = { playerViewModel.playSong(it) },
+                                    onSongDelete = { playerViewModel.stopIfPlaying(it) },
+                                    onSongUpdate = {
+                                        playerViewModel.updateCurrentSongIfMatches(
+                                            it
                                         )
-                                    }
+                                    },
+                                    onShowSnackbar = { snackbarMessage = it },
+                                    onAddQueueClick = { playerViewModel.addQueue(it) }
+                                )
+                            }
+                        }
+
+                        if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact && currentRoute != "fullplayer") {
+                            currentSong?.let {
+                                Column(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .clickable {  if (isCompact) {
+                                            navController.navigate("fullplayer")
+                                        } }
+                                ) {
+                                    MiniPlayerBar(
+                                        song = it,
+                                        isPlaying = isPlaying,
+                                        progress = progress,
+                                        onTogglePlayPause = { playerViewModel.togglePlayPause() },
+                                        onAddClicked = { playerViewModel.toggleLike() },
+                                        onSwipeLeft = { playerViewModel.playNext() },
+                                        onSwipeRight = { playerViewModel.playPrevious() }
+                                    )
                                 }
                             }
                         }
+                    }
                 }
             }
 
