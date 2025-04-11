@@ -63,6 +63,7 @@ fun MiniPlayerBar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
             .background(dominantColor)
             .pointerInput(Unit) {
                 detectHorizontalDragGestures(
@@ -88,7 +89,7 @@ fun MiniPlayerBar(
                     }
                 )
             }
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .padding(horizontal = 10.dp, vertical = 6.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
 
@@ -100,7 +101,7 @@ fun MiniPlayerBar(
                 },
                 contentDescription = song.title,
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(42.dp)
                     .aspectRatio(1f)
                     .clip(RoundedCornerShape(8.dp))
                     .zIndex(2f)
@@ -164,6 +165,8 @@ fun MiniPlayerBar(
                 )
             }
         }
+
+        Spacer(modifier = Modifier.height(4.dp))
 
         LinearProgressIndicator(
             progress = { progress },

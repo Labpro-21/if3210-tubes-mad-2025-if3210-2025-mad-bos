@@ -34,7 +34,6 @@ fun SeekSlider(
         }
     }
 
-    // Use 1000f to perform floating-point division.
     val currentSeconds = ((sliderPosition * durationMillis) / 1000f).roundToInt()
     val totalSeconds = (durationMillis / 1000f).roundToInt()
 
