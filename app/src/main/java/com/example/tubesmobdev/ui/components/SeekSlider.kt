@@ -1,10 +1,9 @@
 package com.example.tubesmobdev.ui.components
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -16,9 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 
@@ -36,7 +33,10 @@ fun SeekSlider(
             sliderPosition = progress
         }
     }
-    val currentSeconds = ((sliderPosition * durationMillis) / 1000).roundToInt()
+
+    // Use 1000f to perform floating-point division.
+    val currentSeconds = ((sliderPosition * durationMillis) / 1000f).roundToInt()
+    val totalSeconds = (durationMillis / 1000f).roundToInt()
 
     fun formatTime(seconds: Int): String {
         val m = seconds / 60
@@ -44,6 +44,7 @@ fun SeekSlider(
         return "%d:%02d".format(m, s)
     }
     val currentTimeText = formatTime(currentSeconds)
+    val totalTimeText = formatTime(totalSeconds)
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -73,14 +74,20 @@ fun SeekSlider(
                 )
             )
         }
-        Box(modifier = Modifier.height(24.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
                 text = currentTimeText,
                 fontSize = 14.sp,
-                color = Color.White,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .alpha(if (isDragging) 1f else 0f)
+                color = Color.White
+            )
+            Text(
+                text = totalTimeText,
+                fontSize = 14.sp,
+                color = Color.White
             )
         }
     }

@@ -134,8 +134,6 @@ fun FullPlayerScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = formatTime(currentSeconds), color = Color.White, fontSize = 12.sp)
-                Text(text = formatTime(totalDurationSeconds), color = Color.White, fontSize = 12.sp)
             }
             SeekSlider(
                 progress = progress,
