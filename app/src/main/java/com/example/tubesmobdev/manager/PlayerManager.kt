@@ -79,8 +79,17 @@ class PlayerManager(
 
     private fun startProgressUpdater() {
         Thread {
-            while (mediaPlayer?.isPlaying == true) {
-                _progress.value = mediaPlayer!!.currentPosition.toFloat() / mediaPlayer!!.duration
+            while (true) {
+                val mp = mediaPlayer ?: break
+
+                try {
+                    if (!mp.isPlaying) break
+
+                    _progress.value = mp.currentPosition.toFloat() / mp.duration
+                } catch (e: IllegalStateException) {
+                    break
+                }
+
                 Thread.sleep(500)
             }
         }.start()
