@@ -56,10 +56,10 @@ fun HomeScreen(
             modifier = Modifier.weight(1f)
         )
 
-        Button(onClick = {
-            viewModel.logout()
-        }) {
-            Text("Klik Saya")
-        }
+//        Button(onClick = {
+//            viewModel.logout()
+//        }) {
+//            Text("Klik Saya")
+//        }
     }
 }
