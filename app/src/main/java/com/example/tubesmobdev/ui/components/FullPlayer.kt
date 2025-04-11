@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,6 +30,7 @@ import kotlin.math.roundToInt
 import com.example.tubesmobdev.R
 import androidx.compose.ui.res.painterResource
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FullPlayerScreen(
     song: Song,
@@ -44,8 +46,15 @@ fun FullPlayerScreen(
     repeatMode: RepeatMode,
     onSeekTo: (Float) -> Unit,
     onSwipeLeft: () -> Unit,
-    onSwipeRight: () -> Unit
+    onSwipeRight: () -> Unit,
+    isSheetOpen: Boolean,
+    sheetState: SheetState,
+    onCloseSheet: () -> Unit,
+    onSongUpdate: (Song) -> Unit,
+    onShowSnackbar: (String) -> Unit
 ) {
+    var snackbarMessage by rememberSaveable { mutableStateOf<String?>(null) }
+
     val dominantColor = rememberDominantColor(song.coverUrl ?: "").copy(alpha = 0.9f)
     val totalDurationMillis = song.duration.toInt()
     val totalDurationSeconds = (totalDurationMillis / 1000L).toInt()
@@ -59,6 +68,13 @@ fun FullPlayerScreen(
     var offsetX by remember { mutableStateOf(0f) }
     val swipeOffset = remember { Animatable(0f) }
     val swipeThreshold = 100f
+
+    LaunchedEffect(snackbarMessage) {
+        snackbarMessage?.let {
+            onShowSnackbar(it)
+        }
+    }
+
 
     Box(
         modifier = Modifier
@@ -188,6 +204,23 @@ fun FullPlayerScreen(
                     )
                 }
             }
+        }
+        if (isSheetOpen) {
+            AddSongDrawer(
+                sheetState = sheetState,
+                onDismissRequest = onCloseSheet,
+                onClose = onCloseSheet,
+                onResult = { result: Result<Unit> ->
+                    snackbarMessage = if (result.isSuccess) {
+                        "Lagu berhasil disimpan"
+                    } else {
+                        "Gagal menyimpan lagu"
+                    }
+                    onCloseSheet()
+                },
+                songToEdit = song, // LANGSUNG current song aja
+                onSongUpdate = onSongUpdate
+            )
         }
     }
 }

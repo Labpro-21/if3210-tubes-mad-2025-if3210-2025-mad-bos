@@ -31,7 +31,8 @@ fun ScreenHeader(
     actions: @Composable RowScope.() -> Unit = {},
     isMainMenu: Boolean = true,
     onBack: () -> Unit = {},
-dominantColor :Color = MaterialTheme.colorScheme.background
+    onClick: () -> Unit = {},
+    dominantColor :Color = MaterialTheme.colorScheme.background
 ) {
     if (isMainMenu){
         TopAppBar(
@@ -52,11 +53,7 @@ dominantColor :Color = MaterialTheme.colorScheme.background
                     Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                 }
             },
-            actions = {
-                IconButton(onClick = {  }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "Menu")
-                }
-            },
+            actions = actions,
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = Color.Transparent,
                 titleContentColor = Color.White
