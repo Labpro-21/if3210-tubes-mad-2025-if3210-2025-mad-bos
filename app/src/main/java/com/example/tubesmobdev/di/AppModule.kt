@@ -6,6 +6,8 @@ import com.example.tubesmobdev.data.local.dao.SongDao
 import com.example.tubesmobdev.data.local.database.SongDatabase
 import com.example.tubesmobdev.data.local.preferences.AuthPreferences
 import com.example.tubesmobdev.data.local.preferences.IAuthPreferences
+import com.example.tubesmobdev.data.local.preferences.IPlayerPreferences
+import com.example.tubesmobdev.data.local.preferences.PlayerPreferences
 import com.example.tubesmobdev.data.remote.api.AuthApi
 import com.example.tubesmobdev.data.remote.api.ProfileApi
 import com.example.tubesmobdev.data.remote.interceptor.AuthInterceptor
@@ -62,6 +64,13 @@ object AppModule {
         return AuthPreferences(context)
     }
 
+    @Singleton
+    @Provides
+    fun providePlayerPreferences(@ApplicationContext context: Context): IPlayerPreferences {
+        return PlayerPreferences(context)
+    }
+
+
     @Provides
     @Singleton
     fun provideAuthApi(retrofit: Retrofit): AuthApi {
@@ -77,9 +86,10 @@ object AppModule {
     fun provideAuthRepository(
         authApi: AuthApi,
         authPreferences: IAuthPreferences,
+        playerPreferences: IPlayerPreferences,
         @ApplicationContext context: Context
     ): IAuthRepository {
-        return AuthRepository(authApi, authPreferences, context)
+        return AuthRepository(authApi, context, authPreferences, playerPreferences)
     }
     @Provides
     @Singleton
