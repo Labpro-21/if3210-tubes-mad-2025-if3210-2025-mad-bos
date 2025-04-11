@@ -27,7 +27,7 @@ import com.example.tubesmobdev.ui.navigation.BottomNavigationItem
 fun SideNavigation(navController: NavController) {
     Column (
         modifier = Modifier
-            .fillMaxHeight()
+//            .fillMaxHeight()
             .width(240.dp)
             .padding(top = 16.dp, bottom = 16.dp, start = 12.dp, end = 0.dp)
             .drawBehind {
