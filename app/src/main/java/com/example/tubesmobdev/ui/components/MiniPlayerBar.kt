@@ -96,6 +96,7 @@ fun MiniPlayerBar(
                 contentDescription = song.title,
                 modifier = Modifier
                     .size(48.dp)
+                    .aspectRatio(1f)
                     .clip(RoundedCornerShape(8.dp))
                     .zIndex(2f)
             )
