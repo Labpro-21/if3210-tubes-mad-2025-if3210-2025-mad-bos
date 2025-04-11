@@ -37,6 +37,8 @@ import com.example.tubesmobdev.util.rememberDominantColor
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import com.example.tubesmobdev.R
+import androidx.compose.ui.res.painterResource
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -90,9 +92,12 @@ fun MiniPlayerBar(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
 
-
             Image(
-                painter = rememberAsyncImagePainter(song.coverUrl),
+                painter = if (song.coverUrl.isNullOrEmpty()) {
+                    painterResource(id = R.drawable.music)
+                } else {
+                    rememberAsyncImagePainter(song.coverUrl)
+                },
                 contentDescription = song.title,
                 modifier = Modifier
                     .size(48.dp)

@@ -22,13 +22,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.tubesmobdev.data.model.Song
-import com.example.tubesmobdev.ui.components.SeekSlider
 import com.example.tubesmobdev.util.RepeatMode
 import com.example.tubesmobdev.util.rememberDominantColor
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import com.example.tubesmobdev.R
+import androidx.compose.ui.res.painterResource
 
-@OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun FullPlayerScreen(
     song: Song,
@@ -103,7 +103,11 @@ fun FullPlayerScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Image(
-                    painter = rememberAsyncImagePainter(song.coverUrl),
+                    painter = if (song.coverUrl.isNullOrEmpty()) {
+                        painterResource(id = R.drawable.music)
+                    } else {
+                        rememberAsyncImagePainter(song.coverUrl)
+                    },
                     contentDescription = song.title,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -111,6 +115,7 @@ fun FullPlayerScreen(
                         .weight(0.6f)
                         .clip(RoundedCornerShape(12.dp))
                         .size(200.dp)
+                        .aspectRatio(1f)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
