@@ -156,155 +156,7 @@ fun MainLayout(outerNavController: NavController) {
                         .weight(1f)
                         .fillMaxHeight()
                 ) {
-                    if (!isCompact) {
-                        Scaffold(
-                            topBar = { topBarContent() }
-                        ) { innerPadding ->
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(innerPadding)
-                            ) {
-                                NavHost(
-                                    navController = navController,
-                                    startDestination = "home"
-                                ) {
-                                    composable("home") {
-                                        topBarContent = { ScreenHeader("New Songs") }
-                                        HomeScreen(
-                                            navController = outerNavController,
-                                            onHomeSongClick = {
-                                                playerViewModel.playSong(it)
-                                                navController.navigate("fullplayer")
-                                            },
-                                            onSongClick = { playerViewModel.playSong(it) },
 
-                                        )
-                                    }
-                                    composable("library") {
-                                        topBarContent = {
-                                            ScreenHeader("Library", actions = {
-                                                IconButton(onClick = { navController.navigate("searchLibrary") }) {
-                                                    Icon(
-                                                        Icons.Default.Search,
-                                                        contentDescription = "Search"
-                                                    )
-                                                }
-                                                IconButton(onClick = { isSheetOpen = true }) {
-                                                    Icon(Icons.Default.Add, contentDescription = "Add")
-                                                }
-                                            })
-                                        }
-                                        LibraryScreen(
-                                            navController,
-                                            onSongClick = { playerViewModel.playSong(it) },
-                                            onSongDelete = { playerViewModel.stopIfPlaying(it) },
-                                            onSongUpdate = {
-                                                playerViewModel.updateCurrentSongIfMatches(
-                                                    it
-                                                )
-                                            },
-                                            isSheetOpen = isSheetOpen,
-                                            sheetState = sheetState,
-                                            onCloseSheet = { isSheetOpen = false },
-                                            onShowSnackbar = { snackbarMessage = it },
-                                            onAddQueueClick = { playerViewModel.addQueue(it) }
-                                        )
-                                    }
-                                    composable("profile") {
-                                        topBarContent = { ProfileHeaderContent() }
-                                    }
-                                    composable("fullplayer") {
-                                        topBarContent = {
-                                            ScreenHeader(
-                                                isMainMenu = false,
-                                                title = "fullplayer",
-                                                onBack = { navController.popBackStack() },
-                                                dominantColor = dominantColor,
-                                                actions = {
-                                                    IconButton(onClick = { isSheetOpen = true }) {
-                                                        Icon(
-                                                            Icons.Default.Edit,
-                                                            contentDescription = "Edit"
-                                                        )
-                                                    }
-                                                }
-                                            )
-                                        }
-                                        currentSong?.let {
-                                            FullPlayerScreen(
-                                                song = it,
-                                                isPlaying = isPlaying,
-                                                progress = progress,
-                                                onTogglePlayPause = { playerViewModel.togglePlayPause() },
-                                                onAddClicked = { playerViewModel.toggleLike() },
-                                                onSkipPrevious = { playerViewModel.playPrevious() },
-                                                onSkipNext = { playerViewModel.playNext() },
-                                                repeatMode = repeatMode,
-                                                onToggleShuffle = { playerViewModel.toggleShuffle() },
-                                                onCycleRepeat = { playerViewModel.cycleRepeatMode() },
-                                                isShuffle = isShuffle,
-                                                onSeekTo = { playerViewModel.seekToPosition(it) },
-                                                onSwipeLeft = { playerViewModel.playNext() },
-                                                onSwipeRight = { playerViewModel.playPrevious() },
-                                                onSongUpdate = {
-                                                    playerViewModel.updateCurrentSongIfMatches(
-                                                        it
-                                                    )
-                                                },
-                                                isSheetOpen = isSheetOpen,
-                                                sheetState = sheetState,
-                                                onCloseSheet = { isSheetOpen = false },
-                                                onShowSnackbar = { snackbarMessage = it },
-                                            )
-                                        }
-                                    }
-                                    composable("searchLibrary") {
-                                        topBarContent = {
-                                            SearchTopBar(
-                                                query = searchQuery,
-                                                onQueryChange = { searchQuery = it },
-                                                onBack = { navController.popBackStack() }
-                                            )
-                                        }
-                                        SearchLibraryScreen(
-                                            navController,
-                                            query = searchQuery,
-                                            onSongClick = { playerViewModel.playSong(it) },
-                                            onSongDelete = { playerViewModel.stopIfPlaying(it) },
-                                            onSongUpdate = {
-                                                playerViewModel.updateCurrentSongIfMatches(
-                                                    it
-                                                )
-                                            },
-                                            onShowSnackbar = { snackbarMessage = it },
-                                            onAddQueueClick = { playerViewModel.addQueue(it) }
-                                        )
-                                    }
-                                }
-
-                                if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact && currentRoute != "fullplayer") {
-                                    currentSong?.let {
-                                        Column(
-                                            modifier = Modifier
-                                                .align(Alignment.BottomCenter)
-                                                .clickable { navController.navigate("fullplayer") }
-                                        ) {
-                                            MiniPlayerBar(
-                                                song = it,
-                                                isPlaying = isPlaying,
-                                                progress = progress,
-                                                onTogglePlayPause = { playerViewModel.togglePlayPause() },
-                                                onAddClicked = { playerViewModel.toggleLike() },
-                                                onSwipeLeft = { playerViewModel.playNext() },
-                                                onSwipeRight = { playerViewModel.playPrevious() }
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    } else {
                         // Landscape / Tablet → Gak usah Scaffold
                         Box(
                             modifier = Modifier
@@ -318,10 +170,14 @@ fun MainLayout(outerNavController: NavController) {
                                 composable("home") {
                                     topBarContent = { ScreenHeader("New Songs") }
                                     HomeScreen(
+                                        customTopBar = {ScreenHeader("New Songs", isCompact = isCompact)  },
                                         navController = outerNavController,
+                                        isCompact = isCompact,
                                         onHomeSongClick = {
                                             playerViewModel.playSong(it)
-                                            navController.navigate("fullplayer")
+                                            if (isCompact) {
+                                                navController.navigate("fullplayer")
+                                            }
                                         },
                                         onSongClick = { playerViewModel.playSong(it) }
                                     )
@@ -353,11 +209,28 @@ fun MainLayout(outerNavController: NavController) {
                                         sheetState = sheetState,
                                         onCloseSheet = { isSheetOpen = false },
                                         onShowSnackbar = { snackbarMessage = it },
-                                        onAddQueueClick = { playerViewModel.addQueue(it) }
+                                        onAddQueueClick = { playerViewModel.addQueue(it) },
+                                        isCompact = isCompact,
+                                        customTopBar = {
+                                            ScreenHeader("Library", isCompact = isCompact, actions = {
+                                                IconButton(onClick = { navController.navigate("searchLibrary") }) {
+                                                    Icon(
+                                                        Icons.Default.Search,
+                                                        contentDescription = "Search"
+                                                    )
+                                                }
+                                                IconButton(onClick = { isSheetOpen = true }) {
+                                                    Icon(Icons.Default.Add, contentDescription = "Add")
+                                                }
+                                            })},
                                     )
                                 }
                                 composable("profile") {
-                                    topBarContent = { ProfileHeaderContent() }
+                                    if (isCompact){
+                                        topBarContent = { ProfileHeaderContent() }
+                                    }else{
+                                        ProfileHeaderContent()
+                                    }
                                 }
                                 composable("fullplayer") {
                                     topBarContent = {
@@ -433,7 +306,9 @@ fun MainLayout(outerNavController: NavController) {
                                     Column(
                                         modifier = Modifier
                                             .align(Alignment.BottomCenter)
-                                            .clickable { navController.navigate("fullplayer") }
+                                            .clickable {  if (isCompact) {
+                                                navController.navigate("fullplayer")
+                                            } }
                                     ) {
                                         MiniPlayerBar(
                                             song = it,
@@ -448,7 +323,6 @@ fun MainLayout(outerNavController: NavController) {
                                 }
                             }
                         }
-                    }
                 }
             }
 

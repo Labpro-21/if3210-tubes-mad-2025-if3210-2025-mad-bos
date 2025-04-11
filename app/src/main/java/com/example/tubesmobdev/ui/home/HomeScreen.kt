@@ -24,14 +24,21 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     onSongClick: (Song) -> Unit,
     onHomeSongClick: (Song) -> Unit,
+    customTopBar: @Composable (() -> Unit) = {},
+    isCompact: Boolean
 ) {
     val newestSongs by viewModel.newestSongs.collectAsState()
     val recentlyPlayedSongs by viewModel.recentlyPlayedSongs.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .padding(bottom = 80.dp) // optional biar ga ketutup mini player
     ) {
+        if (!isCompact){
+            customTopBar()
+        }
         SongRecyclerView(
             songs = newestSongs,
             onItemClick = onHomeSongClick,
@@ -46,20 +53,16 @@ fun HomeScreen(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Start,
-            modifier = Modifier.fillMaxWidth().padding(start = 12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 12.dp)
         )
 
         SongRecyclerView(
             songs = recentlyPlayedSongs,
             onItemClick = onSongClick,
             isHorizontal = false,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.fillMaxWidth()
         )
-
-//        Button(onClick = {
-//            viewModel.logout()
-//        }) {
-//            Text("Klik Saya")
-//        }
     }
 }

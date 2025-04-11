@@ -1,21 +1,13 @@
 package com.example.tubesmobdev.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -32,35 +24,77 @@ fun ScreenHeader(
     isMainMenu: Boolean = true,
     onBack: () -> Unit = {},
     onClick: () -> Unit = {},
-    dominantColor :Color = MaterialTheme.colorScheme.background
+    dominantColor: Color = MaterialTheme.colorScheme.background,
+    isCompact: Boolean = true // tambahan ini aja
 ) {
-    if (isMainMenu){
-        TopAppBar(
-            title = { Text(text = title, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 28.sp)) },
-            navigationIcon = navigationIcon,
-            actions = actions,
-            modifier = modifier,
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.background,
-                titleContentColor = MaterialTheme.colorScheme.onBackground
+    if (isCompact) {
+        // compact / hp / small screen
+        if (isMainMenu) {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 28.sp
+                        )
+                    )
+                },
+                navigationIcon = navigationIcon,
+                actions = actions,
+                modifier = modifier,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground
+                )
             )
-        )
+        } else {
+            TopAppBar(
+                title = {},
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = actions,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    titleContentColor = Color.White
+                ),
+                modifier = modifier.background(dominantColor),
+            )
+        }
     } else {
-        TopAppBar(
-            title = {},
-            navigationIcon = {
+        // landscape / tablet / large screen → manual layout
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .background(dominantColor)
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (!isMainMenu) {
                 IconButton(onClick = onBack) {
                     Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                 }
-            },
-            actions = actions,
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent,
-                titleContentColor = Color.White
-            ),
-            modifier = modifier.background(dominantColor),
+            }
 
-        )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 28.sp
+                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = if (!isMainMenu) 8.dp else 0.dp)
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically,
+                content = actions
+            )
+        }
     }
-
 }

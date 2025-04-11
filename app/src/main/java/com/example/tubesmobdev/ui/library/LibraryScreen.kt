@@ -43,7 +43,9 @@ fun LibraryScreen(
     isSheetOpen: Boolean,
     sheetState: SheetState,
     onCloseSheet: () -> Unit,
-    onShowSnackbar: (String) -> Unit
+    onShowSnackbar: (String) -> Unit,
+    customTopBar: @Composable (() -> Unit) = {},
+    isCompact: Boolean
 ) {
 
     val tabs = listOf("All", "Liked")
@@ -70,10 +72,14 @@ fun LibraryScreen(
         }
     }
 
+
     Box (
         modifier = Modifier.fillMaxSize(),
         ) {
         Column {
+            if (!isCompact){
+                customTopBar()
+            }
             Box(
                 contentAlignment = Alignment.TopStart,
                 modifier = Modifier
