@@ -7,6 +7,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -167,7 +169,8 @@ fun MainLayout(outerNavController: NavController) {
                                                 playerViewModel.playSong(it)
                                                 navController.navigate("fullplayer")
                                             },
-                                            onSongClick = { playerViewModel.playSong(it) }
+                                            onSongClick = { playerViewModel.playSong(it) },
+
                                         )
                                     }
                                     composable("library") {
@@ -209,7 +212,15 @@ fun MainLayout(outerNavController: NavController) {
                                                 isMainMenu = false,
                                                 title = "fullplayer",
                                                 onBack = { navController.popBackStack() },
-                                                dominantColor = dominantColor
+                                                dominantColor = dominantColor,
+                                                actions = {
+                                                    IconButton(onClick = { isSheetOpen = true }) {
+                                                        Icon(
+                                                            Icons.Default.Edit,
+                                                            contentDescription = "Edit"
+                                                        )
+                                                    }
+                                                }
                                             )
                                         }
                                         currentSong?.let {
@@ -227,7 +238,16 @@ fun MainLayout(outerNavController: NavController) {
                                                 isShuffle = isShuffle,
                                                 onSeekTo = { playerViewModel.seekToPosition(it) },
                                                 onSwipeLeft = { playerViewModel.playNext() },
-                                                onSwipeRight = { playerViewModel.playPrevious() }
+                                                onSwipeRight = { playerViewModel.playPrevious() },
+                                                onSongUpdate = {
+                                                    playerViewModel.updateCurrentSongIfMatches(
+                                                        it
+                                                    )
+                                                },
+                                                isSheetOpen = isSheetOpen,
+                                                sheetState = sheetState,
+                                                onCloseSheet = { isSheetOpen = false },
+                                                onShowSnackbar = { snackbarMessage = it },
                                             )
                                         }
                                     }
@@ -337,7 +357,15 @@ fun MainLayout(outerNavController: NavController) {
                                             isMainMenu = false,
                                             title = "fullplayer",
                                             onBack = { navController.popBackStack() },
-                                            dominantColor = dominantColor
+                                            dominantColor = dominantColor,
+                                            actions = {
+                                                IconButton(onClick = { isSheetOpen = true }) {
+                                                    Icon(
+                                                        Icons.Default.Edit,
+                                                        contentDescription = "Edit"
+                                                    )
+                                                }
+                                            }
                                         )
                                     }
                                     currentSong?.let {
@@ -355,7 +383,16 @@ fun MainLayout(outerNavController: NavController) {
                                             isShuffle = isShuffle,
                                             onSeekTo = { playerViewModel.seekToPosition(it) },
                                             onSwipeLeft = { playerViewModel.playNext() },
-                                            onSwipeRight = { playerViewModel.playPrevious() }
+                                            onSwipeRight = { playerViewModel.playPrevious() },
+                                            onSongUpdate = {
+                                                playerViewModel.updateCurrentSongIfMatches(
+                                                    it
+                                                )
+                                            },
+                                            isSheetOpen = isSheetOpen,
+                                            sheetState = sheetState,
+                                            onCloseSheet = { isSheetOpen = false },
+                                            onShowSnackbar = { snackbarMessage = it },
                                         )
                                     }
                                 }
