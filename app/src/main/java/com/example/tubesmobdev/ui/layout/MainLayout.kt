@@ -65,6 +65,8 @@ fun MainLayout(outerNavController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    val isCompact = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact
+
     LaunchedEffect(snackbarMessage) {
         snackbarMessage?.let {
             snackbarHostState.showSnackbar(it, withDismissAction = true)
@@ -95,6 +97,9 @@ fun MainLayout(outerNavController: NavController) {
         modifier = Modifier.fillMaxSize()
     ) {
         Scaffold(
+            topBar = {
+                if (isCompact) { topBarContent() }
+            },
             snackbarHost = { },
             bottomBar = {
                 if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) {
@@ -102,10 +107,15 @@ fun MainLayout(outerNavController: NavController) {
                 }
             }
         ) { paddingValues ->
+            val contentPaddingModifier = if (isCompact) {
+                Modifier.padding(paddingValues) // portrait
+            } else {
+                Modifier.padding(WindowInsets.systemBars.asPaddingValues())
+            }
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
+                    .then(contentPaddingModifier)
             ) {
                 if (windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact && currentRoute != "fullplayer") {
                     Column(
@@ -136,13 +146,142 @@ fun MainLayout(outerNavController: NavController) {
                         .weight(1f)
                         .fillMaxHeight()
                 ) {
-                    Scaffold(
-                        topBar = { topBarContent() }
-                    ) { innerPadding ->
+                    if (!isCompact) {
+                        Scaffold(
+                            topBar = { topBarContent() }
+                        ) { innerPadding ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(innerPadding)
+                            ) {
+                                NavHost(
+                                    navController = navController,
+                                    startDestination = "home"
+                                ) {
+                                    composable("home") {
+                                        topBarContent = { ScreenHeader("New Songs") }
+                                        HomeScreen(
+                                            navController = outerNavController,
+                                            onHomeSongClick = {
+                                                playerViewModel.playSong(it)
+                                                navController.navigate("fullplayer")
+                                            },
+                                            onSongClick = { playerViewModel.playSong(it) }
+                                        )
+                                    }
+                                    composable("library") {
+                                        topBarContent = {
+                                            ScreenHeader("Library", actions = {
+                                                IconButton(onClick = { navController.navigate("searchLibrary") }) {
+                                                    Icon(
+                                                        Icons.Default.Search,
+                                                        contentDescription = "Search"
+                                                    )
+                                                }
+                                                IconButton(onClick = { isSheetOpen = true }) {
+                                                    Icon(Icons.Default.Add, contentDescription = "Add")
+                                                }
+                                            })
+                                        }
+                                        LibraryScreen(
+                                            navController,
+                                            onSongClick = { playerViewModel.playSong(it) },
+                                            onSongDelete = { playerViewModel.stopIfPlaying(it) },
+                                            onSongUpdate = {
+                                                playerViewModel.updateCurrentSongIfMatches(
+                                                    it
+                                                )
+                                            },
+                                            isSheetOpen = isSheetOpen,
+                                            sheetState = sheetState,
+                                            onCloseSheet = { isSheetOpen = false },
+                                            onShowSnackbar = { snackbarMessage = it },
+                                            onAddQueueClick = { playerViewModel.addQueue(it) }
+                                        )
+                                    }
+                                    composable("profile") {
+                                        topBarContent = { ProfileHeaderContent() }
+                                    }
+                                    composable("fullplayer") {
+                                        topBarContent = {
+                                            ScreenHeader(
+                                                isMainMenu = false,
+                                                title = "fullplayer",
+                                                onBack = { navController.popBackStack() },
+                                                dominantColor = dominantColor
+                                            )
+                                        }
+                                        currentSong?.let {
+                                            FullPlayerScreen(
+                                                song = it,
+                                                isPlaying = isPlaying,
+                                                progress = progress,
+                                                onTogglePlayPause = { playerViewModel.togglePlayPause() },
+                                                onAddClicked = { playerViewModel.toggleLike() },
+                                                onSkipPrevious = { playerViewModel.playPrevious() },
+                                                onSkipNext = { playerViewModel.playNext() },
+                                                repeatMode = repeatMode,
+                                                onToggleShuffle = { playerViewModel.toggleShuffle() },
+                                                onCycleRepeat = { playerViewModel.cycleRepeatMode() },
+                                                isShuffle = isShuffle,
+                                                onSeekTo = { playerViewModel.seekToPosition(it) },
+                                                onSwipeLeft = { playerViewModel.playNext() },
+                                                onSwipeRight = { playerViewModel.playPrevious() }
+                                            )
+                                        }
+                                    }
+                                    composable("searchLibrary") {
+                                        topBarContent = {
+                                            SearchTopBar(
+                                                query = searchQuery,
+                                                onQueryChange = { searchQuery = it },
+                                                onBack = { navController.popBackStack() }
+                                            )
+                                        }
+                                        SearchLibraryScreen(
+                                            navController,
+                                            query = searchQuery,
+                                            onSongClick = { playerViewModel.playSong(it) },
+                                            onSongDelete = { playerViewModel.stopIfPlaying(it) },
+                                            onSongUpdate = {
+                                                playerViewModel.updateCurrentSongIfMatches(
+                                                    it
+                                                )
+                                            },
+                                            onShowSnackbar = { snackbarMessage = it },
+                                            onAddQueueClick = { playerViewModel.addQueue(it) }
+                                        )
+                                    }
+                                }
+
+                                if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact && currentRoute != "fullplayer") {
+                                    currentSong?.let {
+                                        Column(
+                                            modifier = Modifier
+                                                .align(Alignment.BottomCenter)
+                                                .clickable { navController.navigate("fullplayer") }
+                                        ) {
+                                            MiniPlayerBar(
+                                                song = it,
+                                                isPlaying = isPlaying,
+                                                progress = progress,
+                                                onTogglePlayPause = { playerViewModel.togglePlayPause() },
+                                                onAddClicked = { playerViewModel.toggleLike() },
+                                                onSwipeLeft = { playerViewModel.playNext() },
+                                                onSwipeRight = { playerViewModel.playPrevious() }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // Landscape / Tablet → Gak usah Scaffold
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(innerPadding)
+//                                .padding(WindowInsets.sy()) // biar aman dari statusbar
                         ) {
                             NavHost(
                                 navController = navController,
@@ -163,7 +302,10 @@ fun MainLayout(outerNavController: NavController) {
                                     topBarContent = {
                                         ScreenHeader("Library", actions = {
                                             IconButton(onClick = { navController.navigate("searchLibrary") }) {
-                                                Icon(Icons.Default.Search, contentDescription = "Search")
+                                                Icon(
+                                                    Icons.Default.Search,
+                                                    contentDescription = "Search"
+                                                )
                                             }
                                             IconButton(onClick = { isSheetOpen = true }) {
                                                 Icon(Icons.Default.Add, contentDescription = "Add")
@@ -174,7 +316,11 @@ fun MainLayout(outerNavController: NavController) {
                                         navController,
                                         onSongClick = { playerViewModel.playSong(it) },
                                         onSongDelete = { playerViewModel.stopIfPlaying(it) },
-                                        onSongUpdate = { playerViewModel.updateCurrentSongIfMatches(it) },
+                                        onSongUpdate = {
+                                            playerViewModel.updateCurrentSongIfMatches(
+                                                it
+                                            )
+                                        },
                                         isSheetOpen = isSheetOpen,
                                         sheetState = sheetState,
                                         onCloseSheet = { isSheetOpen = false },
@@ -226,7 +372,11 @@ fun MainLayout(outerNavController: NavController) {
                                         query = searchQuery,
                                         onSongClick = { playerViewModel.playSong(it) },
                                         onSongDelete = { playerViewModel.stopIfPlaying(it) },
-                                        onSongUpdate = { playerViewModel.updateCurrentSongIfMatches(it) },
+                                        onSongUpdate = {
+                                            playerViewModel.updateCurrentSongIfMatches(
+                                                it
+                                            )
+                                        },
                                         onShowSnackbar = { snackbarMessage = it },
                                         onAddQueueClick = { playerViewModel.addQueue(it) }
                                     )

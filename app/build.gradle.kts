@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.androidx.palette)
 
     implementation(libs.glide)
+    implementation(libs.androidx.material3.window.size.class1.android)
     kapt(libs.compiler)
 
     implementation(libs.androidx.recyclerview)

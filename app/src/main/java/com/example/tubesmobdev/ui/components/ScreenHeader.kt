@@ -38,7 +38,7 @@ dominantColor :Color = MaterialTheme.colorScheme.background
             title = { Text(text = title, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 28.sp)) },
             navigationIcon = navigationIcon,
             actions = actions,
-            modifier = modifier.padding(bottom = 14.dp).height(55.dp),
+            modifier = modifier,
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.background,
                 titleContentColor = MaterialTheme.colorScheme.onBackground
