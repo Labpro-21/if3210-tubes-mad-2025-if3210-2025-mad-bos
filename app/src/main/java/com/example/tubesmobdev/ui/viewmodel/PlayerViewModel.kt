@@ -8,6 +8,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tubesmobdev.data.model.Song
+import com.example.tubesmobdev.data.repository.PlayerPreferencesRepository
 import com.example.tubesmobdev.data.repository.SongRepository
 import com.example.tubesmobdev.util.RepeatMode
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,7 +21,8 @@ import javax.inject.Inject
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
     private val app: Application,
-    private val songRepository: SongRepository
+    private val songRepository: SongRepository,
+    private val playerRepository: PlayerPreferencesRepository
 ) : AndroidViewModel(app) {
 
     private var mediaPlayer: MediaPlayer? = null
@@ -40,7 +42,7 @@ class PlayerViewModel @Inject constructor(
     private val _currentQueue = MutableStateFlow<List<Song>>(emptyList())
     val currentQueue: StateFlow<List<Song>> = _currentQueue
 
-    private var currentQueueIndex = 0
+    private var currentQueueIndex = -1
 
     private val _repeatMode = MutableStateFlow(RepeatMode.NONE)
     val repeatMode: StateFlow<RepeatMode> = _repeatMode
@@ -56,8 +58,10 @@ class PlayerViewModel @Inject constructor(
         viewModelScope.launch {
             songRepository.getAllSongs().collect { songs ->
                 _songList.value = songs
-
-                _currentQueue.value = emptyList()
+                Log.d("Debug", "fetchSongs: halo" )
+                playerRepository.getQueue().collect { queue ->
+                    _currentQueue.value = queue
+                }
             }
         }
     }
@@ -73,11 +77,11 @@ class PlayerViewModel @Inject constructor(
         _progress.value = 0f
         mediaPlayer?.release()
 
-        if (_currentQueue.value.isNotEmpty()) {
-            val queue = _currentQueue.value
-            val index = queue.indexOfFirst { it.id == song.id }
-            currentQueueIndex = if (index != -1) index else 0
-        }
+//        if (_currentQueue.value.isNotEmpty()) {
+//            val queue = _currentQueue.value
+//            val index = queue.indexOfFirst { it.id == song.id }
+//            currentQueueIndex = if (index != -1) index else 0
+//        }
 
         val uri = song.filePath.toUri()
         Log.d("Debug", "playSong: $uri")
@@ -165,7 +169,7 @@ class PlayerViewModel @Inject constructor(
         if (_isShuffle.value) {
             val songs = _songList.value.toMutableList()
             songs.shuffle()
-            _currentQueue.value = songs
+//            _currentQueue.value = songs
             _currentSong.value?.let { current ->
                 currentQueueIndex = songs.indexOfFirst { it.id == current.id }.takeIf { it != -1 } ?: 0
             }
@@ -190,7 +194,13 @@ class PlayerViewModel @Inject constructor(
             val queue = _currentQueue.value
             if (currentQueueIndex < queue.size - 1) {
                 queue[currentQueueIndex + 1]
+            } else if (_repeatMode.value == RepeatMode.REPEAT_ALL){
+                queue[(currentQueueIndex + 1) % queue.size]
             } else {
+                viewModelScope.launch {
+                    playerRepository.clearQueue()
+                }
+                _currentQueue.value = emptyList()
                 if (_songList.value.isNotEmpty()) _songList.value.random() else null
             }
         } else {
@@ -266,10 +276,19 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
+    private fun updateQueue(queue: List<Song>) {
+        _currentQueue.value = queue
+        viewModelScope.launch {
+            playerRepository.saveQueue(queue)
+        }
+    }
     fun addQueue(newSong: Song) {
         Log.d("Debug", "addQueue: "+newSong.title)
         val updatedQueue = _currentQueue.value.toMutableList()
         updatedQueue.add(newSong)
         _currentQueue.value = updatedQueue
+        updateQueue(updatedQueue)
+        // Log the titles of the songs in the updated queue.
+        Log.d("Debug", "Updated queue: " + updatedQueue.joinToString(separator = ", ") { it.title })
     }
 }

@@ -4,6 +4,7 @@ import java.util.Base64
 import android.content.Context
 import android.util.Log
 import com.example.tubesmobdev.data.local.preferences.IAuthPreferences
+import com.example.tubesmobdev.data.local.preferences.IPlayerPreferences
 import com.example.tubesmobdev.data.remote.api.AuthApi
 import com.example.tubesmobdev.data.remote.request.LoginRequest
 import com.example.tubesmobdev.data.remote.request.RefreshTokenRequest
@@ -16,8 +17,9 @@ import javax.inject.Inject
 
 class AuthRepository @Inject constructor(
     private val authApi: AuthApi,
+    @ApplicationContext private val context: Context,
     private val authPreferences: IAuthPreferences,
-    @ApplicationContext private val context: Context
+    private val playerPreferences: IPlayerPreferences
 ): IAuthRepository {
 
     override suspend fun login(email: String, password: String): Result<AuthResult> {
@@ -134,8 +136,8 @@ class AuthRepository @Inject constructor(
 
     override suspend fun logout() {
         authPreferences.clearTokens()
+        playerPreferences.clearQueue()
         ServiceUtil.stopTokenRefreshService(context)
-
     }
 
     override suspend fun isLoggedIn(): Boolean {
