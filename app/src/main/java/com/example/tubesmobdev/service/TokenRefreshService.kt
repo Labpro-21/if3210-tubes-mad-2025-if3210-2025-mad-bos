@@ -11,6 +11,7 @@ import android.os.Looper
 import android.util.Log
 import com.example.tubesmobdev.data.repository.AuthRepository
 import com.example.tubesmobdev.domain.model.AuthResult
+import com.example.tubesmobdev.manager.PlayerManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +23,9 @@ class TokenRefreshService : Service() {
 
     @Inject
     lateinit var authRepository: AuthRepository
+
+    @Inject
+    lateinit var playerManager: PlayerManager
 
     private val handler = Handler(Looper.getMainLooper())
     private val checkInterval = 3 * 60 * 1000L // 3 menit
@@ -66,11 +70,13 @@ class TokenRefreshService : Service() {
                     is AuthResult.Failure -> {
                         Log.e("TokenRefreshService", "Token check failed → Logout")
                         authRepository.logout()
+                        playerManager.clearWithCallback()
                     }
                 }
             },
             onFailure = { e ->
-                Log.e("TokenRefreshService", "Token check error", e)
+                Log.e("TokenRefreshService", "Tok" +
+                        "en check error", e)
             }
         )
     }
@@ -84,10 +90,14 @@ class TokenRefreshService : Service() {
                     is AuthResult.TokenExpired -> {
                         Log.e("TokenRefreshService", "Token expired → Logout")
                         authRepository.logout()
+                        playerManager.clearWithCallback()
+
                     }
                     is AuthResult.Failure -> {
                         Log.e("TokenRefreshService", "Token refresh failed → Logout")
                         authRepository.logout()
+                        playerManager.clearWithCallback()
+
                     }
                 }
             },

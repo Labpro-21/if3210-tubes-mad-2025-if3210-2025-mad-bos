@@ -37,9 +37,14 @@ class SongAdapter(
         holder.title.text = song.title
         holder.artist.text = song.artist
 
-        Glide.with(holder.itemView.context)
-            .load(song.coverUrl)
-            .into(holder.image)
+        if (song.coverUrl.isNullOrEmpty()) {
+            holder.image.setImageResource(R.drawable.music)
+        } else {
+            Glide.with(holder.itemView.context)
+                .load(song.coverUrl)
+                .placeholder(R.drawable.music)
+                .into(holder.image)
+        }
 
         holder.itemView.setOnClickListener {
             onItemClick(song)

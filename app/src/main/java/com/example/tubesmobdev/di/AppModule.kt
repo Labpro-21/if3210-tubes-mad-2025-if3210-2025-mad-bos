@@ -15,6 +15,7 @@ import com.example.tubesmobdev.data.repository.AuthRepository
 import com.example.tubesmobdev.data.repository.ProfileRepository
 import com.example.tubesmobdev.data.repository.IAuthRepository
 import com.example.tubesmobdev.data.repository.SongRepository
+import com.example.tubesmobdev.manager.PlayerManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -113,5 +114,11 @@ object AppModule {
     @Singleton
     fun provideSongDao(db: SongDatabase): SongDao {
         return db.songDao()
+    }
+
+    @Provides
+    @Singleton
+    fun providePlayerManager(@ApplicationContext context: Context): PlayerManager {
+        return PlayerManager(context)
     }
 }

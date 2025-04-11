@@ -21,7 +21,7 @@
         android:textColor="#FFFFFF"
         android:textSize="16sp"
         android:textStyle="bold"
-        android:gravity="center"
+        android:gravity="start"
         android:layout_marginTop="8dp" />
 
 
@@ -33,6 +33,6 @@
         android:maxLines="1"
         android:textColor="#AAAAAA"
         android:textSize="14sp"
-        android:gravity="center"
+        android:gravity="start"
         android:layout_marginTop="4dp"/>
 </LinearLayout>

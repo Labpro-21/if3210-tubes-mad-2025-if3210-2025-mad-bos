@@ -9,9 +9,8 @@ import com.example.tubesmobdev.data.remote.response.ProfileResponse
 import com.example.tubesmobdev.data.repository.IAuthRepository
 import com.example.tubesmobdev.data.repository.ProfileRepository
 import com.example.tubesmobdev.data.repository.SongRepository
+import com.example.tubesmobdev.manager.PlayerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -19,7 +18,8 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val authRepository: IAuthRepository,
-    private val songRepository: SongRepository
+    private val songRepository: SongRepository,
+    private val playerManager: PlayerManager
 ) : ViewModel() {
 
     var profile: ProfileResponse? by mutableStateOf(null)
@@ -83,6 +83,7 @@ class ProfileViewModel @Inject constructor(
     fun logout() {
         viewModelScope.launch {
             authRepository.logout()
+            playerManager.clearWithCallback()
         }
     }
 }

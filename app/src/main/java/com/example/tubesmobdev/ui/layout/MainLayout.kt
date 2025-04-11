@@ -65,6 +65,8 @@ fun MainLayout(outerNavController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    var wasOffline by remember { mutableStateOf(false) }
+
     val isCompact = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact
 
     LaunchedEffect(snackbarMessage) {
@@ -75,17 +77,23 @@ fun MainLayout(outerNavController: NavController) {
     }
 
     LaunchedEffect(connectivityStatus) {
-
         if (connectivityStatus is ConnectivityStatus.Unavailable) {
+            wasOffline = true
             while (connectivityStatus is ConnectivityStatus.Unavailable) {
-                val result = snackbarHostState.showSnackbar("No internet connection", withDismissAction = true)
+                val result = snackbarHostState.showSnackbar(
+                    "No internet connection",
+                    withDismissAction = true
+                )
                 if (result == SnackbarResult.Dismissed) {
                     kotlinx.coroutines.delay(5000)
                 }
             }
         } else if (connectivityStatus is ConnectivityStatus.Available) {
             snackbarHostState.currentSnackbarData?.dismiss()
-            snackbarHostState.showSnackbar("Back online", withDismissAction = true)
+            if (wasOffline) {
+                snackbarHostState.showSnackbar("Back online", withDismissAction = true)
+                wasOffline = false
+            }
         }
     }
 

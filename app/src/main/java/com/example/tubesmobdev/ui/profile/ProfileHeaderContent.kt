@@ -31,6 +31,7 @@ import com.example.tubesmobdev.service.ConnectivityStatus
 import com.example.tubesmobdev.ui.components.ErrorStateProfile
 import com.example.tubesmobdev.ui.components.StatsColumn
 import com.example.tubesmobdev.ui.viewmodel.ConnectionViewModel
+import com.example.tubesmobdev.ui.viewmodel.PlayerViewModel
 import com.example.tubesmobdev.ui.viewmodel.ProfileViewModel
 import com.example.tubesmobdev.util.rememberDominantColor
 
@@ -135,7 +136,9 @@ fun ProfileHeaderContent(
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Button(
-                            onClick = { viewModel.logout() },
+                            onClick = {
+                                viewModel.logout()
+                            },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF3E3F3F),
                                 contentColor = Color.White
