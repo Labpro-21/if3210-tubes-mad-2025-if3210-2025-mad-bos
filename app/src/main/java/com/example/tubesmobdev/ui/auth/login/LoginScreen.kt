@@ -64,8 +64,6 @@ fun LoginScreen(
     val connectivityStatus by connectionViewModel.connectivityStatus.collectAsState()
     val isOffline = connectivityStatus == ConnectivityStatus.Unavailable
 
-    Log.d("Test", isOffline.toString())
-    Log.d("Test", connectivityStatus.toString())
 
     LaunchedEffect(errorMessage) {
         errorMessage?.let { message ->
@@ -251,9 +249,11 @@ fun LoginScreen(
                             text = "No internet connection",
                             color = Color.Red,
                             style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center,
                             modifier = Modifier
                                 .padding(bottom = 8.dp)
                                 .align(Alignment.Start)
+                                .fillMaxWidth()
                         )
                     }
 
