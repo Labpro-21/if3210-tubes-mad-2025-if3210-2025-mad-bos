@@ -1,6 +1,7 @@
 package com.example.tubesmobdev.ui.auth.login
 
 import android.app.Activity
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -36,14 +37,17 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.tubesmobdev.R
+import com.example.tubesmobdev.service.ConnectivityStatus
+import com.example.tubesmobdev.ui.viewmodel.ConnectionViewModel
 import com.example.tubesmobdev.ui.viewmodel.LoginViewModel
+import kotlin.math.log
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun LoginScreen(
     navController: NavController,
     viewModel: LoginViewModel = hiltViewModel(),
-
+    connectionViewModel: ConnectionViewModel = hiltViewModel()
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -56,6 +60,12 @@ fun LoginScreen(
 
     val context = LocalContext.current as Activity
     val windowSizeClass = calculateWindowSizeClass(context)
+
+    val connectivityStatus by connectionViewModel.connectivityStatus.collectAsState()
+    val isOffline = connectivityStatus == ConnectivityStatus.Unavailable
+
+    Log.d("Test", isOffline.toString())
+    Log.d("Test", connectivityStatus.toString())
 
     LaunchedEffect(errorMessage) {
         errorMessage?.let { message ->
@@ -236,6 +246,17 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(if (isSmallHeight) 20.dp else 40.dp))
 
+                    if (isOffline) {
+                        Text(
+                            text = "No internet connection",
+                            color = Color.Red,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier
+                                .padding(bottom = 8.dp)
+                                .align(Alignment.Start)
+                        )
+                    }
+
                     Button(
                         onClick = {
                             focusManager.clearFocus()
@@ -247,7 +268,8 @@ fun LoginScreen(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+                        ),
+                        enabled = !isOffline,
                     ) {
                         Text(
                             text = "Log in",

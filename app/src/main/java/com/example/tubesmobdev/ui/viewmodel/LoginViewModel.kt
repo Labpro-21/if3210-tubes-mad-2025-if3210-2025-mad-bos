@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tubesmobdev.data.repository.IAuthRepository
 import com.example.tubesmobdev.domain.model.AuthResult
+import com.example.tubesmobdev.service.ConnectivityObserver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,6 +17,7 @@ class LoginViewModel @Inject constructor(
 ) : ViewModel() {
     private val _loginErrorMessage = MutableStateFlow<String?>(null)
     val loginErrorMessage = _loginErrorMessage.asStateFlow()
+
 
     fun login(
         email: String,
