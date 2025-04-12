@@ -99,7 +99,7 @@ M4 terjadi ketika aplikasi tidak melakukan validasi dan sanitasi input pengguna 
   - Meng-encode data sebelum ditampilkan ke pengguna, terutama ketika data diambil dari sumber eksternal.
 - **Penggunaan Parameterized Queries**  
   - Menerapkan parameter binding atau prepared statements pada query database untuk mencegah SQL injection. Implementasi di Client-Side mencakup implementasi saat melaksanakan Room Query seperti gambar dibawah
-  ![Parameterized Queries](assets/OWASP4.1.png)
+  ![Parameterized Queries](Assets/OWASP4.1.png)
 
 ---
 
@@ -129,22 +129,22 @@ M9 menyangkut penyimpanan data yang tidak aman, di mana data sensitif dapat diak
 - **Enkripsi Data:**  
 ***Implementasi Kelas Enkripsi***
 
-![Implementasi Kelas Enkripsi](assets/OWASP_9/OWASP_9.1.png)
+![Implementasi Kelas Enkripsi](Assets/OWASP_9/OWASP_9.1.png)
 
 ***Implementasi Enkripsi pada penyimpanan token***
 
-![Implementasi Enkripsi pada penyimpanan token](assets/OWASP_9/OWASP_9.2.png)
+![Implementasi Enkripsi pada penyimpanan token](Assets/OWASP_9/OWASP_9.2.png)
 
 ***Implementasi Dekripsi saat mengambil refresh token***
 
-![Implementasi Dekripsi saat mengambil refresh token](assets/OWASP_9/OWASP_9.3.png)
+![Implementasi Dekripsi saat mengambil refresh token](Assets/OWASP_9/OWASP_9.3.png)
 
 - **Penggunaan Penyimpanan Aman:**  
 Aplikasi kami aman karena menggunakan <span style="color: red;font-weight: bold;">Google Tink</span> dan <span style="color: red;font-weight: bold;">Android KeyStore</span> untuk menyimpan data sensitif secara terenkripsi. Master key yang dilindungi hardware-backed memastikan kunci tidak dapat diakses, sementara keyset enkripsi disimpan di <span style="color: red;font-weight: bold;">SharedPreference</span> dalam bentuk terenkripsi, sehingga data seperti token tidak tersimpan sebagai plain text.
 
 ***Implementasi Shared Preference dalam penyimpanan keyset enkripsi***
 
-![Implementasi Dekripsi saat mengambil refresh token](assets/OWASP_9/OWASP_9.4.png)
+![Implementasi Dekripsi saat mengambil refresh token](Assets/OWASP_9/OWASP_9.4.png)
 - **Pengaturan Izin Akses:**  
   - Membatasi akses ke data lokal dengan menetapkan izin yang tepat sehingga data tidak dapat diakses oleh aplikasi lain.
 - **Pemeriksaan Keamanan:**  
