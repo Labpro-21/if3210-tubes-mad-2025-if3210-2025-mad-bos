@@ -5,13 +5,13 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.example.tubesmobdev.service.TokenRefreshService
+import com.example.tubesmobdev.util.ServiceUtil
 
 class RestartReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         Log.d("RestartReceiver", "Restarting TokenRefreshService")
 
-        val serviceIntent = Intent(context, TokenRefreshService::class.java)
 
-        context.startForegroundService(serviceIntent)
+        ServiceUtil.startService(context)
     }
 }

@@ -15,10 +15,11 @@ import com.example.tubesmobdev.ui.auth.login.LoginScreen
 import com.example.tubesmobdev.ui.layout.MainLayout
 import com.example.tubesmobdev.ui.splash.SplashScreen
 import com.example.tubesmobdev.ui.viewmodel.NavigationViewModel
+import com.example.tubesmobdev.ui.viewmodel.TokenRefreshViewModel
 import com.example.tubesmobdev.util.ServiceUtil
 
 @Composable
-fun AppNavigation(authViewModel: NavigationViewModel = hiltViewModel()) {
+fun AppNavigation(authViewModel: NavigationViewModel = hiltViewModel(), tokenRefreshViewModel: TokenRefreshViewModel = hiltViewModel()) {
     val navController = rememberNavController()
     val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
     val isInitialized by authViewModel.isInitialized.collectAsState()
@@ -39,6 +40,14 @@ fun AppNavigation(authViewModel: NavigationViewModel = hiltViewModel()) {
             ServiceUtil.stopService(context)
         }
     }
+
+//    LaunchedEffect(isLoggedIn) {
+//        if (isLoggedIn) {
+//            tokenRefreshViewModel.startTokenRefreshLoop()
+//        } else {
+//            tokenRefreshViewModel.stopTokenRefreshLoop()
+//        }
+//    }
 
     if (!isInitialized) {
         SplashScreen()
