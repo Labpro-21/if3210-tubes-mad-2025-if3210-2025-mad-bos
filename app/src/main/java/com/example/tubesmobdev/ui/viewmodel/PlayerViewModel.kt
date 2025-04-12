@@ -58,9 +58,18 @@ class PlayerViewModel @Inject constructor(
         viewModelScope.launch {
             songRepository.getAllSongs().collect { songs ->
                 _songList.value = songs
-                Log.d("Debug", "fetchSongs: halo" )
+                Log.d("Debug", "fetchSongs: halo")
+
                 playerRepository.getQueue().collect { queue ->
-                    _currentQueue.value = queue
+                    val validQueue = queue.filter { songInQueue ->
+                        songs.any { it.id == songInQueue.id }
+                    }
+                    //fix bug queue deleted here AHHHHHH
+                    if (queue.size != validQueue.size) {
+                        updateQueue(validQueue)
+                    } else {
+                        _currentQueue.value = queue
+                    }
                 }
             }
         }
