@@ -9,6 +9,8 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
+import com.example.tubesmobdev.data.local.preferences.IServicePreferences
+import com.example.tubesmobdev.data.local.preferences.ServicePreferences
 import com.example.tubesmobdev.data.repository.AuthRepository
 import com.example.tubesmobdev.domain.model.AuthResult
 import com.example.tubesmobdev.manager.PlayerManager
@@ -17,6 +19,7 @@ import com.example.tubesmobdev.receiver.RestartReceiver
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -28,6 +31,9 @@ class TokenRefreshService : Service() {
 
     @Inject
     lateinit var playerManager: PlayerManager
+
+    @Inject
+    lateinit var servicePreferences: IServicePreferences
 
     private val handler = Handler(Looper.getMainLooper())
     private val checkInterval = 3 * 60 * 1000L // 3 menit
@@ -55,6 +61,7 @@ class TokenRefreshService : Service() {
             1,
             NotificationUtil.createForegroundNotification(this)
         )
+        handler.removeCallbacks(tokenCheckRunnable)
         handler.post(tokenCheckRunnable)
         return START_STICKY
 //        CoroutineScope(Dispatchers.IO).launch {
@@ -70,10 +77,17 @@ class TokenRefreshService : Service() {
         super.onDestroy()
         handler.removeCallbacks(tokenCheckRunnable)
         Log.d("TokenRefreshService", "Service stopped")
-        Log.d("TokenRefreshService", "Service destroyed → Restarting...")
 
-        val intent = Intent(this, RestartReceiver::class.java)
-        sendBroadcast(intent)
+        CoroutineScope(Dispatchers.IO).launch {
+            val shouldRestart = servicePreferences.shouldRestartService.first()
+            if (shouldRestart) {
+                Log.d("TokenRefreshService", "Service destroyed → Restarting...")
+                val intent = Intent(this@TokenRefreshService, RestartReceiver::class.java)
+                sendBroadcast(intent)
+            } else {
+                Log.d("TokenRefreshService", "Service destroyed → No Restart (by config)")
+            }
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

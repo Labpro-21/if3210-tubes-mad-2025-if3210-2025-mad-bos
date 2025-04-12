@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private val Context.dataStore by preferencesDataStore(name = "player_preferences")
+val Context.dataStore by preferencesDataStore(name = "player_preferences")
 
 @Singleton
 class PlayerPreferences @Inject constructor(

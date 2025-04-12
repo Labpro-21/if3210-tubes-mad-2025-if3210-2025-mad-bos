@@ -7,7 +7,9 @@ import com.example.tubesmobdev.data.local.database.SongDatabase
 import com.example.tubesmobdev.data.local.preferences.AuthPreferences
 import com.example.tubesmobdev.data.local.preferences.IAuthPreferences
 import com.example.tubesmobdev.data.local.preferences.IPlayerPreferences
+import com.example.tubesmobdev.data.local.preferences.IServicePreferences
 import com.example.tubesmobdev.data.local.preferences.PlayerPreferences
+import com.example.tubesmobdev.data.local.preferences.ServicePreferences
 import com.example.tubesmobdev.data.remote.api.AuthApi
 import com.example.tubesmobdev.data.remote.api.ProfileApi
 import com.example.tubesmobdev.data.remote.interceptor.AuthInterceptor
@@ -70,6 +72,12 @@ object AppModule {
     @Provides
     fun providePlayerPreferences(@ApplicationContext context: Context): IPlayerPreferences {
         return PlayerPreferences(context)
+    }
+
+    @Singleton
+    @Provides
+    fun provideServicePreferences(@ApplicationContext context: Context): IServicePreferences {
+        return ServicePreferences(context)
     }
 
 

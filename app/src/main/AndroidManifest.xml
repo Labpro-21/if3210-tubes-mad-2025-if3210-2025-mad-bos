@@ -43,6 +43,7 @@
             </intent-filter>
         </activity>
         <receiver android:name=".receiver.AlarmReceiver" />
+        <receiver android:name=".receiver.RestartReceiver" />
 
     </application>
 

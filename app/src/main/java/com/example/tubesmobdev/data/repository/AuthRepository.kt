@@ -32,7 +32,7 @@ class AuthRepository @Inject constructor(
                     authPreferences.saveRefreshToken(body.refreshToken)
 
 //                    ServiceUtil.startExactAlarm(context, 3 * 60 * 1000L)
-                    ServiceUtil.startService(context)
+//                    ServiceUtil.startService(context)
                     Result.success(AuthResult.Success)
 
                 } else {
@@ -139,7 +139,7 @@ class AuthRepository @Inject constructor(
         authPreferences.clearTokens()
         playerPreferences.clearQueue()
 //        ServiceUtil.cancelAlarm(context)
-        ServiceUtil.stopService(context)
+//        ServiceUtil.stopService(context)
     }
 
 

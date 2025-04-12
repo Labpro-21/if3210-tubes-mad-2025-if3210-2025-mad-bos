@@ -1,7 +1,9 @@
 package com.example.tubesmobdev.util
 
+import android.app.ActivityManager
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -60,5 +62,11 @@ object ServiceUtil {
     fun stopService(context: Context) {
         val intent = Intent(context, TokenRefreshService::class.java)
         context.stopService(intent)
+    }
+
+    fun isServiceRunning(context: Context, serviceClass: Class<out Service>): Boolean {
+        val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        return manager.getRunningServices(Int.MAX_VALUE)
+            .any { it.service.className == serviceClass.name }
     }
 }
