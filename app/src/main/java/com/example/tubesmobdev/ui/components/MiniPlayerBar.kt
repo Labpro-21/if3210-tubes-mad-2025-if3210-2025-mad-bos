@@ -2,9 +2,12 @@ package com.example.tubesmobdev.ui.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.with
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -56,6 +59,8 @@ fun MiniPlayerBar(
     var offsetX by remember { mutableStateOf(0f) }
     val swipeOffset = remember { Animatable(0f) }
     val coroutineScope = rememberCoroutineScope()
+    var isSwiping by remember { mutableStateOf(false) }
+
 
     val maxOffsetForAlpha = 300f
     val alpha = 1f - (abs(swipeOffset.value) / maxOffsetForAlpha).coerceIn(0f, 0.7f)
@@ -68,6 +73,7 @@ fun MiniPlayerBar(
             .pointerInput(Unit) {
                 detectHorizontalDragGestures(
                     onHorizontalDrag = { _, dragAmount ->
+                        isSwiping = true
                         offsetX += dragAmount
                         coroutineScope.launch {
                             swipeOffset.snapTo(offsetX)
@@ -83,6 +89,7 @@ fun MiniPlayerBar(
                             }
                         }
                         offsetX = 0f
+                        isSwiping = false
                         coroutineScope.launch {
                             swipeOffset.animateTo(0f, animationSpec = tween(300))
                         }
@@ -119,12 +126,16 @@ fun MiniPlayerBar(
                 AnimatedContent(
                     targetState = song,
                     transitionSpec = {
-                        if (targetState.id > initialState.id) {
-                            slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300)) with
-                                    slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(300))
+                        if (isSwiping) {
+                            if (targetState.id > initialState.id) {
+                                slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) with
+                                        slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300))
+                            } else {
+                                slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) with
+                                        slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300))
+                            }
                         } else {
-                            slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300)) with
-                                    slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(300))
+                            EnterTransition.None togetherWith ExitTransition.None
                         }
                     },
                     label = "SongTextTransition"
