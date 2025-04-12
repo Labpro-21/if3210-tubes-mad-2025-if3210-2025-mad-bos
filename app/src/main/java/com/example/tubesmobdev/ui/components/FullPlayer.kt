@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -20,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -79,7 +81,6 @@ fun FullPlayerScreen(
         }
     }
 
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -123,7 +124,8 @@ fun FullPlayerScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .offset { IntOffset(swipeOffset.value.roundToInt(), 0) }.size(450.dp),
+                    .offset { IntOffset(swipeOffset.value.roundToInt(), 0) }
+                    .size(450.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Image(
@@ -142,30 +144,54 @@ fun FullPlayerScreen(
                         .aspectRatio(1f)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = song.title,
-                    color = Color.White,
-                    fontSize = 20.sp
-                )
-                Text(
-                    text = song.artist,
-                    color = Color.LightGray,
-                    fontSize = 14.sp
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 8.dp, end = 16.dp)
+                    ) {
+                        Text(
+                            text = song.title,
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = song.artist,
+                            color = Color.LightGray,
+                            fontSize = 14.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    IconButton(onClick = onAddClicked) {
+                        Icon(
+                            imageVector = if (song.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Like/Unlike",
+                            tint = Color.White,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                }
             }
+
             Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-            }
+
             SeekSlider(
                 progress = progress,
                 durationMillis = totalDurationMillis,
                 onSeekFinished = onSeekTo,
                 modifier = Modifier.fillMaxWidth()
             )
+
             Spacer(modifier = Modifier.height(16.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
@@ -181,16 +207,21 @@ fun FullPlayerScreen(
                 IconButton(onClick = onSkipPrevious) {
                     Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", tint = Color.White)
                 }
-                IconButton(onClick = onTogglePlayPause) {
+                IconButton(onClick = onTogglePlayPause,    modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        color = Color.White.copy(alpha = 0.5f),
+                        shape = CircleShape
+                    )) {
                     Icon(
                         imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = "Play/Pause",
-                        tint = Color.White,
+                        tint = Color.Black,
                         modifier = Modifier.size(32.dp)
                     )
                 }
                 IconButton(onClick = onSkipNext) {
-                    Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = Color.White,modifier = Modifier.size(32.dp))
+                    Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = Color.White, modifier = Modifier.size(32.dp))
                 }
                 IconButton(onClick = onCycleRepeat) {
                     val repeatIcon = when (repeatMode) {
@@ -211,16 +242,9 @@ fun FullPlayerScreen(
                         modifier = Modifier.size(32.dp)
                     )
                 }
-                IconButton(onClick = onAddClicked) {
-                    Icon(
-                        imageVector = if (song.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = "Like/Unlike",
-                        tint = Color.White,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
             }
         }
+
         if (isSheetOpen) {
             AddSongDrawer(
                 sheetState = sheetState,
