@@ -32,7 +32,7 @@ import com.example.tubesmobdev.ui.components.*
 import com.example.tubesmobdev.ui.home.HomeScreen
 import com.example.tubesmobdev.ui.library.LibraryScreen
 import com.example.tubesmobdev.ui.library.SearchLibraryScreen
-import com.example.tubesmobdev.ui.profile.ProfileHeaderContent
+import com.example.tubesmobdev.ui.profile.ProfileScreen
 import com.example.tubesmobdev.ui.viewmodel.ConnectionViewModel
 import com.example.tubesmobdev.ui.viewmodel.PlayerViewModel
 import com.example.tubesmobdev.util.rememberDominantColor
@@ -221,10 +221,11 @@ fun MainLayout(outerNavController: NavController) {
                                 )
                             }
                             composable("profile") {
+                                topBarContent = {}
                                 if (isCompact){
-                                    topBarContent = { ProfileHeaderContent() }
+                                    ProfileScreen()
                                 }else{
-                                    ProfileHeaderContent()
+                                    ProfileScreen()
                                 }
                             }
                             composable("fullplayer") {

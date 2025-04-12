@@ -152,7 +152,7 @@ fun MiniPlayerBar(
             IconButton(onClick = onAddClicked) {
                 Icon(
                     imageVector = if (song.isLiked) Icons.Default.Check else Icons.Default.Add,
-                    contentDescription = if (song.isLiked) "Liked" else "Add",
+                    contentDescription = if (song.isLiked) "Liked" else "Add to liked",
                     tint = Color.White
                 )
             }

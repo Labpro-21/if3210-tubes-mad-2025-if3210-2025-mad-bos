@@ -89,7 +89,7 @@ fun LoginScreen(
 
         Image(
             painter = painterResource(id = R.drawable.bg_login),
-            contentDescription = "Background",
+            contentDescription = null,
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.TopCenter),
@@ -267,7 +267,7 @@ fun LoginScreen(
                             .height(50.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            contentColor = MaterialTheme.colorScheme.background
                         ),
                         enabled = !isOffline,
                     ) {

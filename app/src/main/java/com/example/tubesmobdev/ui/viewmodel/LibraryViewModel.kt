@@ -65,6 +65,7 @@ class LibraryViewModel @Inject constructor(
             val result = repository.insertSong(song)
             onResult(result)
         }
+
     }
 
     fun clearError() {

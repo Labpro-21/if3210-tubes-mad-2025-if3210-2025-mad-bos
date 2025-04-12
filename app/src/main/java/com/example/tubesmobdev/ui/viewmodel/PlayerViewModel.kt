@@ -26,17 +26,9 @@ class PlayerViewModel @Inject constructor(
     private val playerRepository: PlayerPreferencesRepository,
     private val playerManager: PlayerManager
 ) : AndroidViewModel(app) {
-
-//    private var mediaPlayer: MediaPlayer? = null
-
     private val _currentSong = MutableStateFlow<Song?>(null)
     val currentSong: StateFlow<Song?> = _currentSong
 
-//    private val _isPlaying = MutableStateFlow(false)
-//    val isPlaying: StateFlow<Boolean> = _isPlaying
-//
-//    private val _progress = MutableStateFlow(0.3f)
-//    val progress: StateFlow<Float> = _progress
     val isPlaying = playerManager.isPlaying
     val progress = playerManager.progress
 
@@ -55,20 +47,54 @@ class PlayerViewModel @Inject constructor(
     val isShuffle: StateFlow<Boolean> = _isShuffle
 
     init {
-        fetchSongs()
+        observeQueue()
+        observeSongs()
+
         playerManager.onClear = {
             _currentSong.value = null
         }
     }
-
+    private fun observeSongs() {
+        viewModelScope.launch {
+            songRepository.getAllSongs().collect { songs ->
+                _songList.value = songs
+                validateQueueWithSongs(songs)
+            }
+        }
+    }
+    private fun observeQueue() {
+        viewModelScope.launch {
+            playerRepository.getQueue().collect { queue ->
+                _currentQueue.value = queue
+            }
+        }
+    }
+    private fun validateQueueWithSongs(songs: List<Song>) {
+        val currentQueue = _currentQueue.value
+        val validQueue = currentQueue.filter { songInQueue ->
+            songs.any { it.id == songInQueue.id }
+        }
+        if (currentQueue.size != validQueue.size) {
+            updateQueue(validQueue)
+        }
+    }
 
     private fun fetchSongs() {
         viewModelScope.launch {
             songRepository.getAllSongs().collect { songs ->
                 _songList.value = songs
-                Log.d("Debug", "fetchSongs: halo" )
+                Log.d("Debug", "fetchSongs: halo")
+
                 playerRepository.getQueue().collect { queue ->
-                    _currentQueue.value = queue
+                    val validQueue = queue.filter { songInQueue ->
+                        songs.any { it.id == songInQueue.id }
+                    }
+                    //fix bug queue deleted here AHHHHHH
+                    if (queue.size != validQueue.size) {
+                        updateQueue(validQueue)
+                    } else {
+                        _currentQueue.value = queue
+                    }
                 }
             }
         }
@@ -77,13 +103,7 @@ class PlayerViewModel @Inject constructor(
     fun seekToPosition(progress: Float) {
         playerManager.seekTo(progress)
     }
-//    fun seekToPosition(progress: Float) {
-//        mediaPlayer?.let {
-//            val newPosition = (it.duration * progress).toInt()
-//            it.seekTo(newPosition)
-//            _progress.value = progress
-//        }
-//    }
+
     fun playSong(song: Song) {
         _currentSong.value = song
         Log.d("Test", currentSong.value.toString())
@@ -94,61 +114,6 @@ class PlayerViewModel @Inject constructor(
             songRepository.updateLastPlayed(song.id, System.currentTimeMillis())
         }
     }
-//    fun playSong(song: Song) {
-//        _currentSong.value = song
-//        _progress.value = 0f
-//        mediaPlayer?.release()
-//
-////        if (_currentQueue.value.isNotEmpty()) {
-////            val queue = _currentQueue.value
-////            val index = queue.indexOfFirst { it.id == song.id }
-////            currentQueueIndex = if (index != -1) index else 0
-////        }
-//
-//        val uri = song.filePath.toUri()
-//        Log.d("Debug", "playSong: $uri")
-//        try {
-//            app.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
-//                mediaPlayer = MediaPlayer().apply {
-//                    setDataSource(pfd.fileDescriptor)
-//                    setOnPreparedListener {
-//                        start()
-//                        _isPlaying.value = true
-//                        startProgressUpdater()
-//                        viewModelScope.launch {
-//                            val currentTimestamp = System.currentTimeMillis()
-//                            songRepository.updateLastPlayed(song.id, currentTimestamp)
-//                        }
-//                    }
-//                    setOnCompletionListener {
-//                        _progress.value = 1f
-//                        viewModelScope.launch {
-//                            delay(500)
-//                            playNext()
-//                        }
-//                    }
-//                    prepareAsync()
-//                }
-//            } ?: Log.e("PlayerViewModel", "Could not open file descriptor for $uri")
-//        } catch (e: SecurityException) {
-//            Log.e("PlayerViewModel", "SecurityException: ${e.message}")
-//        } catch (e: Exception) {
-//            Log.e("PlayerViewModel", "Error playing song: $uri", e)
-//        }
-//    }
-
-//    fun togglePlayPause() {
-//        mediaPlayer?.let {
-//            if (it.isPlaying) {
-//                it.pause()
-//                _isPlaying.value = false
-//            } else {
-//                it.start()
-//                _isPlaying.value = true
-//                startProgressUpdater()
-//            }
-//        }
-//    }
     fun togglePlayPause() {
         playerManager.togglePlayPause()
     }
@@ -157,13 +122,6 @@ class PlayerViewModel @Inject constructor(
         playerManager.clearWithCallback()
         _currentSong.value = null
     }
-//    fun clearSong() {
-//        mediaPlayer?.release()
-//        mediaPlayer = null
-//        _currentSong.value = null
-//        _isPlaying.value = false
-//        _progress.value = 0f
-//    }
 
     fun stopIfPlaying(song: Song) {
         if (_currentSong.value?.id == song.id) {
@@ -171,17 +129,6 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
-//    private fun startProgressUpdater() {
-//        viewModelScope.launch {
-//            while (_isPlaying.value && mediaPlayer?.isPlaying == true) {
-//                mediaPlayer?.let {
-//                    val progress = it.currentPosition.toFloat() / it.duration
-//                    _progress.value = progress
-//                }
-//                delay(500)
-//            }
-//        }
-//    }
 
     fun toggleLike() {
         currentSong.value?.let { song ->
@@ -203,7 +150,6 @@ class PlayerViewModel @Inject constructor(
                 currentQueueIndex = songs.indexOfFirst { it.id == current.id }.takeIf { it != -1 } ?: 0
             }
         } else {
-            fetchSongs()
             _currentQueue.value = emptyList()
             currentQueueIndex = 0
         }
@@ -239,7 +185,7 @@ class PlayerViewModel @Inject constructor(
             Log.d("Debug", "getNextSong without queue ")
             val songs = _songList.value
             val currentIndex = songs.indexOfFirst { it.id == _currentSong.value?.id }
-            songs[(currentIndex + 1) % songs.size]
+            songs[(currentIndex + 1) % _songList.value.size]
         }
     }
 
