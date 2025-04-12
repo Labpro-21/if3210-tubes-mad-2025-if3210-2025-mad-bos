@@ -197,11 +197,19 @@ fun FullPlayerScreen(
                         RepeatMode.REPEAT_ONE -> Icons.Default.RepeatOne
                         else -> Icons.Default.Repeat
                     }
+
+                    val repeatIconColor = when (repeatMode) {
+                        RepeatMode.NONE -> Color.Gray
+                        RepeatMode.REPEAT_ALL -> Color.White
+                        RepeatMode.REPEAT_ONE -> Color(0xFF4CAF50) // Hijau misal
+                    }
+
                     Icon(
                         imageVector = repeatIcon,
                         contentDescription = "Repeat",
-                        tint = Color.White,
-                        modifier = Modifier.size(32.dp)                    )
+                        tint = repeatIconColor,
+                        modifier = Modifier.size(32.dp)
+                    )
                 }
                 IconButton(onClick = onAddClicked) {
                     Icon(
