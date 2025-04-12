@@ -3,12 +3,13 @@ package com.example.tubesmobdev.data.local.preferences
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class ServicePreferences @Inject constructor(
-    private val context: Context
+    @ApplicationContext private val context: Context
 ) : IServicePreferences {
     private val dataStore = context.dataStore
 

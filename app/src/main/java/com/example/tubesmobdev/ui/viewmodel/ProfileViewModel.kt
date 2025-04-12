@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.tubesmobdev.data.local.preferences.ServicePreferences
 import com.example.tubesmobdev.data.remote.response.ProfileResponse
 import com.example.tubesmobdev.data.repository.IAuthRepository
 import com.example.tubesmobdev.data.repository.ProfileRepository
@@ -20,7 +21,8 @@ class ProfileViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val authRepository: IAuthRepository,
     private val songRepository: SongRepository,
-    private val playerManager: PlayerManager
+    private val playerManager: PlayerManager,
+    private val servicePreferences: ServicePreferences,
 ) : ViewModel() {
 
     var profile: ProfileResponse? by mutableStateOf(null)
@@ -87,6 +89,7 @@ class ProfileViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
+            servicePreferences.setShouldRestartService(false)
             authRepository.logout()
             playerManager.clearWithCallback()
         }
