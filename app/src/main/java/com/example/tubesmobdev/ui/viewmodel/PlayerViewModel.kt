@@ -239,7 +239,7 @@ class PlayerViewModel @Inject constructor(
             Log.d("Debug", "getNextSong without queue ")
             val songs = _songList.value
             val currentIndex = songs.indexOfFirst { it.id == _currentSong.value?.id }
-            songs[(currentIndex + 1) % songs.size]
+            songs[(currentIndex + 1) % _songList.value.size]
         }
     }
 
