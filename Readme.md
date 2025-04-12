@@ -128,7 +128,6 @@ Aplikasi Purrytify adalah platform streaming musik yang memudahkan pengguna untu
 
 ## Jumlah Jam Persiapan dan Pengerjaan
 
-Cantumkan jumlah jam yang dihabiskan untuk persiapan, pengembangan, dan pengerjaan secara keseluruhan untuk masing-masing anggota. Contoh:
 
 | Nama           | Persiapan | Pengerjaan | Total Jam |
 |----------------|-----------|------------|-----------|
