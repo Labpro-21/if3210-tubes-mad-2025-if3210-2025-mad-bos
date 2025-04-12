@@ -2,8 +2,10 @@ package com.example.tubesmobdev.ui.library
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -76,7 +78,8 @@ fun LibraryScreen(
     Box (
         modifier = Modifier.fillMaxSize(),
         ) {
-        Column {
+        Column(
+        ) {
             if (!isCompact){
                 customTopBar()
             }
@@ -89,7 +92,7 @@ fun LibraryScreen(
                 TabRow(
                     selectedTabIndex = selectedTabIndex,
                     divider = {},
-                    indicator = {}
+                    indicator = {},
                 ) {
                     tabs.forEachIndexed{index, title ->
                         Tab(
@@ -112,13 +115,19 @@ fun LibraryScreen(
                 }
             }
             HorizontalDivider(color = Color(0xff212121))
-            SongRecyclerView(
-                songs = songsToShow,
-                onItemClick = onSongClick,
-                onDeleteClick = { songToDelete = it },
-                onEditClick = { songToEdit = it },
-                onAddQueueClick = onAddQueueClick
-            )
+            Column (
+                modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 80.dp)
+            ) {
+                SongRecyclerView(
+                    songs = songsToShow,
+                    onItemClick = onSongClick,
+                    onDeleteClick = { songToDelete = it },
+                    onEditClick = { songToEdit = it },
+                    onAddQueueClick = onAddQueueClick
+                )
+            }
         }
         if (isSheetOpen || songToEdit != null) {
             AddSongDrawer(

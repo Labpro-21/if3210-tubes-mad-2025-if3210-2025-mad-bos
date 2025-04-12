@@ -171,9 +171,8 @@ fun MainLayout(outerNavController: NavController) {
                                     isCompact = isCompact,
                                     onHomeSongClick = {
                                         playerViewModel.playSong(it)
-                                        if (isCompact) {
-                                            navController.navigate("fullplayer")
-                                        }
+                                        navController.navigate("fullplayer")
+
                                     },
                                     onSongClick = { playerViewModel.playSong(it) }
                                 )
@@ -270,6 +269,24 @@ fun MainLayout(outerNavController: NavController) {
                                         sheetState = sheetState,
                                         onCloseSheet = { isSheetOpen = false },
                                         onShowSnackbar = { snackbarMessage = it },
+                                        isCompact = isCompact,
+                                        customTopBar = {
+                                            ScreenHeader(
+                                                isCompact = isCompact,
+                                                isMainMenu = false,
+                                                title = "fullplayer",
+                                                onBack = { navController.popBackStack() },
+                                                dominantColor = dominantColor,
+                                                actions = {
+                                                    IconButton(onClick = { isSheetOpen = true }) {
+                                                        Icon(
+                                                            Icons.Default.Edit,
+                                                            contentDescription = "Edit"
+                                                        )
+                                                    }
+                                                }
+                                            )
+                                        }
                                     )
                                 }
                             }

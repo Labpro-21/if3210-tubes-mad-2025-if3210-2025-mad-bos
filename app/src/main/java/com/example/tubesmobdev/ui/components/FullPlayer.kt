@@ -6,7 +6,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -51,7 +53,9 @@ fun FullPlayerScreen(
     sheetState: SheetState,
     onCloseSheet: () -> Unit,
     onSongUpdate: (Song) -> Unit,
-    onShowSnackbar: (String) -> Unit
+    onShowSnackbar: (String) -> Unit,
+    customTopBar: @Composable (() -> Unit) = {},
+    isCompact: Boolean
 ) {
     var snackbarMessage by rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -109,9 +113,13 @@ fun FullPlayerScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            if (!isCompact){
+                customTopBar()
+            }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

@@ -24,9 +24,7 @@ fun SongRecyclerView(
 ) {
     AndroidView(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(top = 10.dp)
-            .verticalScroll(rememberScrollState()),
+            .fillMaxSize(),
         factory = { context ->
             RecyclerView(context).apply {
                 layoutManager = LinearLayoutManager(context)
