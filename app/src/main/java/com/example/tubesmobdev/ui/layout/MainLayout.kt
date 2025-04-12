@@ -137,15 +137,20 @@ fun MainLayout(outerNavController: NavController) {
                     ) {
                         SideNavigation(navController)
                         currentSong?.let {
-                            MiniPlayerBar(
-                                song = it,
-                                isPlaying = isPlaying,
-                                progress = progress,
-                                onTogglePlayPause = { playerViewModel.togglePlayPause() },
-                                onAddClicked = { playerViewModel.toggleLike() },
-                                onSwipeLeft = { playerViewModel.playNext() },
-                                onSwipeRight = { playerViewModel.playPrevious() }
-                            )
+                            Column(
+                                modifier = Modifier
+                                    .clickable { navController.navigate("fullplayer") }
+                            ) {
+                                MiniPlayerBar(
+                                    song = it,
+                                    isPlaying = isPlaying,
+                                    progress = progress,
+                                    onTogglePlayPause = { playerViewModel.togglePlayPause() },
+                                    onAddClicked = { playerViewModel.toggleLike() },
+                                    onSwipeLeft = { playerViewModel.playNext() },
+                                    onSwipeRight = { playerViewModel.playPrevious() }
+                                )
+                            }
                         }
                     }
                 }
