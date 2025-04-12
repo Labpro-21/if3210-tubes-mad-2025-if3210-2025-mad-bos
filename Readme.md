@@ -129,26 +129,28 @@ M9 menyangkut penyimpanan data yang tidak aman, di mana data sensitif dapat diak
 - **Enkripsi Data:**  
 ***Implementasi Kelas Enkripsi***
 
-![Implementasi Kelas Enkripsi](Assets/OWASP_9/OWASP_9.1.png)
+    - ***Implementasi Kelas Enkripsi***  
+      
+      ![Implementasi Kelas Enkripsi](Assets/OWASP_9/OWASP_9.1.png)
+      
+    - ***Implementasi Enkripsi pada penyimpanan token***  
+      
+      ![Implementasi Enkripsi pada penyimpanan token](Assets/OWASP_9/OWASP_9.2.png)
+      
+    - ***Implementasi Dekripsi saat mengambil refresh token***
+      ![Implementasi Enkripsi pada penyimpanan token](Assets/OWASP_9/OWASP_9.3.png)
 
-***Implementasi Enkripsi pada penyimpanan token***
-
-![Implementasi Enkripsi pada penyimpanan token](Assets/OWASP_9/OWASP_9.2.png)
-
-***Implementasi Dekripsi saat mengambil refresh token***
-
-![Implementasi Dekripsi saat mengambil refresh token](Assets/OWASP_9/OWASP_9.3.png)
 
 - **Penggunaan Penyimpanan Aman:**  
 Aplikasi kami aman karena menggunakan <span style="color: red;font-weight: bold;">Google Tink</span> dan <span style="color: red;font-weight: bold;">Android KeyStore</span> untuk menyimpan data sensitif secara terenkripsi. Master key yang dilindungi hardware-backed memastikan kunci tidak dapat diakses, sementara keyset enkripsi disimpan di <span style="color: red;font-weight: bold;">SharedPreference</span> dalam bentuk terenkripsi, sehingga data seperti token tidak tersimpan sebagai plain text.
 
-***Implementasi Shared Preference dalam penyimpanan keyset enkripsi***
-
+    - ***Implementasi Shared Preference dalam penyimpanan keyset enkripsi***
 ![Implementasi Dekripsi saat mengambil refresh token](Assets/OWASP_9/OWASP_9.4.png)
 - **Pengaturan Izin Akses:**  
-  - Membatasi akses ke data lokal dengan menetapkan izin yang tepat sehingga data tidak dapat diakses oleh aplikasi lain.
-- **Pemeriksaan Keamanan:**  
-  - Melakukan pengujian penetrasi secara berkala untuk memastikan bahwa data tidak mudah disusupi dan disimpan dengan aman.
+  - Membatasi akses ke data lokal dengan menetapkan izin yang tepat sehingga data tidak dapat diakses oleh aplikasi lain. Penggunaan penyimpanan internal seperti DataStore merupakan langkah yang sesuai dengan pendekatan OWASP M9, karena data hanya dapat diakses oleh aplikasi tersebut. 
+      - ***Implementasi Penyimpanan token di Context***  
+      
+      ![Implementasi Kelas Enkripsi](Assets/OWASP_9/OWASP_9.5.png)
 
 ---
 
