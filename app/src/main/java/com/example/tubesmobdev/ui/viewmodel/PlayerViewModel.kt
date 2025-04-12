@@ -308,6 +308,7 @@ class PlayerViewModel @Inject constructor(
         if (current != null && current.id == updatedSong.id) {
             _currentSong.value = updatedSong
         }
+        fetchSongs()
     }
 
     private fun updateQueue(queue: List<Song>) {
