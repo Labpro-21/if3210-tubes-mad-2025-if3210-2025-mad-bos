@@ -206,7 +206,8 @@ fun AddSongDrawer(
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    enabled = title.isNotEmpty() && artist.isNotEmpty()
                 ) {
                     Text("Save", color = Color.White)
                 }

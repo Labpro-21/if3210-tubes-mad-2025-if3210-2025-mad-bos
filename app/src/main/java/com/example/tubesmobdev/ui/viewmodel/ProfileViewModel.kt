@@ -1,5 +1,6 @@
 package com.example.tubesmobdev.ui.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -74,7 +75,11 @@ class ProfileViewModel @Inject constructor(
             val result = profileRepository.getProfile()
             result.fold(
                 onSuccess = { profile = it },
-                onFailure = { errorMessage = it.message ?: "Unknown error" }
+                onFailure = {
+                    errorMessage = it.message ?: "Unknown error"
+                    Log.d("TokenRefreshService", it.message.toString())
+
+                }
             )
             isLoading = false
         }

@@ -46,6 +46,7 @@ object AppModule {
         return OkHttpClient.Builder()
             .addInterceptor(logging)
             .addInterceptor(authInterceptor)
+            .cache(null)
             .build()
     }
 

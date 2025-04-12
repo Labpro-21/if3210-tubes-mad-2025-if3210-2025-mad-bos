@@ -31,8 +31,10 @@ class AuthRepository @Inject constructor(
                     authPreferences.saveAccessToken(body.accessToken)
                     authPreferences.saveRefreshToken(body.refreshToken)
 
-                    ServiceUtil.startTokenRefreshService(context)
+//                    ServiceUtil.startExactAlarm(context, 3 * 60 * 1000L)
+                    ServiceUtil.startService(context)
                     Result.success(AuthResult.Success)
+
                 } else {
                     Result.success(AuthResult.Failure("Empty response body"))
                 }
@@ -92,10 +94,9 @@ class AuthRepository @Inject constructor(
             val response = authApi.verifyToken("Bearer $token")
             when {
                 response.isSuccessful -> {
-                    // Check token duration left in seconds.
                     val durationLeftSeconds = getTokenDurationLeft(token)
                     Log.d("AuthRepository", "Token duration left: $durationLeftSeconds seconds")
-                    if (durationLeftSeconds < 1 * 60) { // Less than 4 minutes
+                    if (durationLeftSeconds < 3 * 60) {
                         Log.e("AuthRepository", "Token considered expired because duration left is less than 1 minutes")
                         Result.success(AuthResult.TokenExpired)
                     } else {
@@ -137,8 +138,10 @@ class AuthRepository @Inject constructor(
     override suspend fun logout() {
         authPreferences.clearTokens()
         playerPreferences.clearQueue()
-        ServiceUtil.stopTokenRefreshService(context)
+//        ServiceUtil.cancelAlarm(context)
+        ServiceUtil.stopService(context)
     }
+
 
     override suspend fun isLoggedIn(): Boolean {
         return authPreferences.isLoggedIn()

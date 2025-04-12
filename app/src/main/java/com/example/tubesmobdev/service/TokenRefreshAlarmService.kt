@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class TokenRefreshService : Service() {
+class TokenRefreshAlarmService : Service() {
 
     @Inject
     lateinit var authRepository: AuthRepository
@@ -29,25 +29,7 @@ class TokenRefreshService : Service() {
     @Inject
     lateinit var playerManager: PlayerManager
 
-    private val handler = Handler(Looper.getMainLooper())
-    private val checkInterval = 3 * 60 * 1000L // 3 menit
 
-    private val tokenCheckRunnable = object : Runnable {
-        override fun run() {
-            Log.d("TokenRefreshService", "Running token check...")
-
-            CoroutineScope(Dispatchers.IO).launch {
-                if (isInternetAvailable()) {
-                    Log.d("TokenRefreshService", "Internet available → Verify token")
-                    checkTokenValidity()
-                } else {
-                    Log.d("TokenRefreshService", "No internet → Skip token check")
-                }
-            }
-
-            handler.postDelayed(this, checkInterval)
-        }
-    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("TokenRefreshService", "Service started")
@@ -55,25 +37,20 @@ class TokenRefreshService : Service() {
             1,
             NotificationUtil.createForegroundNotification(this)
         )
-        handler.post(tokenCheckRunnable)
-        return START_STICKY
-//        CoroutineScope(Dispatchers.IO).launch {
-//            if (isInternetAvailable()) {
-//                checkTokenValidity()
-//            }
-//            stopSelf() // Auto stop setelah selesai
-//        }
-//        return START_NOT_STICKY
+
+        CoroutineScope(Dispatchers.IO).launch {
+            if (isInternetAvailable()) {
+                checkTokenValidity()
+            }
+            stopSelf()
+        }
+        return START_NOT_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        handler.removeCallbacks(tokenCheckRunnable)
         Log.d("TokenRefreshService", "Service stopped")
-        Log.d("TokenRefreshService", "Service destroyed → Restarting...")
 
-        val intent = Intent(this, RestartReceiver::class.java)
-        sendBroadcast(intent)
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
