@@ -1,5 +1,6 @@
 package com.example.tubesmobdev.ui.viewmodel
 
+import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tubesmobdev.data.repository.IAuthRepository
@@ -24,6 +25,18 @@ class LoginViewModel @Inject constructor(
         password: String,
 //        navController: NavController
     ) {
+        if (email.isBlank()) {
+            _loginErrorMessage.value = "Email harus diisi"
+            return
+        }
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            _loginErrorMessage.value = "Format email tidak valid"
+            return
+        }
+        if (password.isBlank()) {
+            _loginErrorMessage.value = "Password harus diisi"
+            return
+        }
         viewModelScope.launch {
             _loginErrorMessage.value = null
             authRepository.login(email, password)
