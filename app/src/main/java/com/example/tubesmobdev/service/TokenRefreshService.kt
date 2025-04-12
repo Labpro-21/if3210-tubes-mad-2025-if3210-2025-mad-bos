@@ -36,6 +36,7 @@ class TokenRefreshService : Service() {
     @Inject
     lateinit var servicePreferences: IServicePreferences
 
+
     private val handler = Handler(Looper.getMainLooper())
     private val checkInterval = 3 * 60 * 1000L // 3 menit
 
@@ -136,6 +137,18 @@ class TokenRefreshService : Service() {
                 Log.e("TokenRefreshService", "Token refresh error", e)
             }
         )
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        Log.d("TokenRefreshService", "App removed from recent apps → Stop Service")
+
+        playerManager.clear()
+        CoroutineScope(Dispatchers.IO).launch {
+            servicePreferences.setShouldRestartService(false)
+        }
+
+        stopSelf()
     }
 
     private fun isInternetAvailable(): Boolean {
