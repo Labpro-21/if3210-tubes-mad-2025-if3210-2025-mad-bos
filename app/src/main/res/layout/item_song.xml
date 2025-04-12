@@ -48,13 +48,14 @@
         android:gravity="center_vertical">
 
 
-        <ImageView
+        <ImageButton
             android:id="@+id/menuIcon"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:src="@drawable/more_vert"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
             android:tint="@android:color/white"
-            android:contentDescription="open window"
+            android:contentDescription="More Options"
             android:layout_marginEnd="4dp" />
 
     </LinearLayout>
