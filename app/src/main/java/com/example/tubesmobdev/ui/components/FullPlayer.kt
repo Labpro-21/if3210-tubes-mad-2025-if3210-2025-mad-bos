@@ -132,7 +132,7 @@ fun FullPlayerScreen(
                     } else {
                         rememberAsyncImagePainter(song.coverUrl)
                     },
-                    contentDescription = song.title,
+                    contentDescription = song.title + "-image",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()
