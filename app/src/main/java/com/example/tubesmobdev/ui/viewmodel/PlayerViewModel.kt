@@ -47,12 +47,37 @@ class PlayerViewModel @Inject constructor(
     val isShuffle: StateFlow<Boolean> = _isShuffle
 
     init {
-        fetchSongs()
+        observeQueue()
+        observeSongs()
+
         playerManager.onClear = {
             _currentSong.value = null
         }
     }
-
+    private fun observeSongs() {
+        viewModelScope.launch {
+            songRepository.getAllSongs().collect { songs ->
+                _songList.value = songs
+                validateQueueWithSongs(songs)
+            }
+        }
+    }
+    private fun observeQueue() {
+        viewModelScope.launch {
+            playerRepository.getQueue().collect { queue ->
+                _currentQueue.value = queue
+            }
+        }
+    }
+    private fun validateQueueWithSongs(songs: List<Song>) {
+        val currentQueue = _currentQueue.value
+        val validQueue = currentQueue.filter { songInQueue ->
+            songs.any { it.id == songInQueue.id }
+        }
+        if (currentQueue.size != validQueue.size) {
+            updateQueue(validQueue)
+        }
+    }
 
     private fun fetchSongs() {
         viewModelScope.launch {
@@ -113,7 +138,6 @@ class PlayerViewModel @Inject constructor(
                 songRepository.updateLikedStatus(song.id, newLikedState)
             }
         }
-        fetchSongs()
     }
 
     fun toggleShuffle() {
@@ -126,7 +150,6 @@ class PlayerViewModel @Inject constructor(
                 currentQueueIndex = songs.indexOfFirst { it.id == current.id }.takeIf { it != -1 } ?: 0
             }
         } else {
-            fetchSongs()
             _currentQueue.value = emptyList()
             currentQueueIndex = 0
         }
@@ -187,7 +210,6 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun playNext() {
-        fetchSongs()
         if (_repeatMode.value == RepeatMode.REPEAT_ONE) {
             _currentSong.value?.let { playSong(it) }
             return
@@ -208,7 +230,6 @@ class PlayerViewModel @Inject constructor(
     }
 
     fun playPrevious() {
-        fetchSongs()
         if (_repeatMode.value == RepeatMode.REPEAT_ONE) {
             _currentSong.value?.let { playSong(it) }
             return
@@ -233,7 +254,6 @@ class PlayerViewModel @Inject constructor(
         if (current != null && current.id == updatedSong.id) {
             _currentSong.value = updatedSong
         }
-        fetchSongs()
     }
 
     private fun updateQueue(queue: List<Song>) {
