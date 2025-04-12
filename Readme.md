@@ -17,7 +17,44 @@ Aplikasi Purrytify adalah platform streaming musik yang memudahkan pengguna untu
 
 ## Library yang Digunakan
 
-Masukin lagi nanti diakhir:
+- androidx-core-ktx: 1.12.0
+- androidx-core-splashscreen: 1.0.1
+- androidx-datastore-preferences: 1.1.3
+- androidx-hilt-hilt-navigation-compose: 1.2.0
+- androidx-hilt-work: 1.2.0
+- androidx-material-icons-extended: 1.7.8
+- androidx-material3-window-size: 1.1.0
+- androidx-navigation-navigation-compose: 2.8.9
+- androidx-palette: 1.0.0
+- androidx-recyclerview: 1.3.1
+- androidx-room-compiler: 2.6.1
+- androidx-room-ktx: 2.6.1
+- androidx-room-runtime: 2.6.1
+- androidx-runtime-livedata: 1.7.8
+- androidx-work-runtime-ktx: 2.8.1
+- coil-compose: 2.7.0
+- compiler: 4.16.0
+- converter-gson: 2.11.0
+- glide: 4.16.0
+- hilt-android: 2.51.1
+- hilt-android-compiler: 2.51.1
+- junit: 4.13.2
+- androidx-junit: 1.2.1
+- androidx-espresso-core: 3.6.1
+- androidx-lifecycle-runtime-ktx: 2.8.7
+- androidx-activity-compose: 1.8.2
+- androidx-compose-bom: 2025.03.00
+- androidx-ui: (latest)
+- androidx-ui-graphics: (latest)
+- androidx-ui-tooling: (latest)
+- androidx-ui-tooling-preview: (latest)
+- androidx-ui-test-manifest: (latest)
+- androidx-ui-test-junit4: (latest)
+- androidx-material3: 1.3.1
+- logging-interceptor: 4.12.0
+- retrofit: 2.11.0
+- tink-android: 1.17.0
+- androidx-material3-window-size-class1-android: 1.3.2
 
 - **Kotlin** – Bahasa pemrograman utama untuk Android.
 - **Jetpack Compose** – Untuk UI modern dengan deklaratif.
@@ -52,6 +89,9 @@ Masukin lagi nanti diakhir:
 
 **LikedSong**  
 ![Liked](Screenshots/Liked.jpg)
+
+**Queue**  
+![Queue](Screenshots/Queue.jpg)
 
 **No Network**  
 ![Offline](Screenshots/Offline.jpg)
@@ -132,14 +172,8 @@ M8 berhubungan dengan kesalahan konfigurasi sistem, baik pada server, aplikasi, 
 
 **Langkah Penanganan:**  
 - **Perbaikan Konfigurasi:**  
-  - Mengubah konfigurasi default pada server dan aplikasi guna menghindari setting yang rentan.
-  - Mengamankan file konfigurasi dan mengatur hak akses yang tepat untuk mencegah akses tidak sah.
-- **Konektivitas Aman:**  
-  - Memastikan semua komunikasi menggunakan protokol terenkripsi (misalnya, HTTPS).
-- **Audit dan Pemantauan:**  
-  - Melakukan audit konfigurasi secara berkala untuk mendeteksi perubahan yang tidak diinginkan.
-  - Mengimplementasikan alat pemantauan untuk memeriksa potensi kesalahan konfigurasi secara real-time.
-
+Konfigurasi buildTypes di dalam file build.gradle ini sesuai dengan M8 karena mengatur proses build aplikasi Android pada versi rilis (release), yang penting untuk memastikan aplikasi yang diproduksi siap untuk distribusi. Pengaturan isDebuggable = false mencegah proses debug pada aplikasi rilis, menjaga keamanan aplikasi. Sementara itu, isMinifyEnabled = true mengaktifkan minifikasi menggunakan ProGuard atau R8, yang mengurangi ukuran file aplikasi dan mengobfuskasi kode agar lebih sulit dibongkar.
+  ![Handle Built](Assets/OWASP_8/OWASP_8.1.png)
 ---
 
 ### M9: Insecure Data Storage
@@ -195,5 +229,6 @@ Perubahan yang tidak / tidak dapat dilakukan:
 - Content Description yang sama pada recycleview dimana keduanya muncul pada 1 halaman yang sama, namun dianggap minor karena jika dikonversi pada text, keduanya sebenarnya memiliki definisi yang sama serta fungsi yang sama , yakni untuk memutar lagu
 - Kontras warna pada beberapa background album dengan background aplikasi. Hal ini dianggap minor karena tidak semua album , melainkan hanya album tertentu yang tidak memiliki kontras yang baik dengan background aplikasi.
 
+NB : Karena merasa UI lebih penting, kami akhirnya memilih untuk memperkecil icon
 ---
 
