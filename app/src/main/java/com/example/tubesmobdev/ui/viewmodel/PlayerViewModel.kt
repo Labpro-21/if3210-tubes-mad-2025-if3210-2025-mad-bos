@@ -197,12 +197,13 @@ class PlayerViewModel @Inject constructor(
         _isShuffle.value = !_isShuffle.value
         if (_isShuffle.value) {
             val songs = _songList.value.toMutableList()
-            songs.shuffle()
+//            songs.shuffle()
 //            _currentQueue.value = songs
             _currentSong.value?.let { current ->
                 currentQueueIndex = songs.indexOfFirst { it.id == current.id }.takeIf { it != -1 } ?: 0
             }
         } else {
+            fetchSongs()
             _currentQueue.value = emptyList()
             currentQueueIndex = 0
         }
@@ -218,7 +219,9 @@ class PlayerViewModel @Inject constructor(
 
 
     private fun getNextSong(): Song? {
-        return if (_currentQueue.value.isNotEmpty()) {
+        return if (_isShuffle.value){
+            if (_songList.value.isNotEmpty()) _songList.value.random() else null
+        } else if (_currentQueue.value.isNotEmpty()) {
             Log.d("Debug", "getNextSong using queue ")
             val queue = _currentQueue.value
             if (currentQueueIndex < queue.size - 1) {
@@ -241,7 +244,9 @@ class PlayerViewModel @Inject constructor(
     }
 
     private fun getPreviousSong(): Song? {
-        return if (_currentQueue.value.isNotEmpty()) {
+        return if (_isShuffle.value){
+            if (_songList.value.isNotEmpty()) _songList.value.random() else null
+        } else if (_currentQueue.value.isNotEmpty()) {
             Log.d("Debug", "getPrevSong using queue ")
             val queue = _currentQueue.value
             if (currentQueueIndex > 0) {
