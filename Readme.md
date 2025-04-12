@@ -1,4 +1,4 @@
-<center>
+  <center>
   <h1 style="color: #008080;font-size: 40px;font-weight: bold;">Aplikasi Purrytify</h1>
 </center>
 
@@ -29,35 +29,59 @@ Masukin lagi nanti diakhir:
 ---
 
 ## Screenshot Aplikasi
+**Login**  
+![Login](Screenshots/Login.jpg)
 
-Simpan screenshot aplikasi di folder `screenshot` dan tampilkan di bagian ini. Contoh:
+**Home**  
+![Home](Screenshots/Home.jpg)
 
-![Screenshot 1](screenshot/screenshot1.png)
-![Screenshot 2](screenshot/screenshot2.png)
+**Lbrary**  
+![Library](Screenshots/Library.jpg)
 
----
+**Profile**  
+![Profile](Screenshots/Profile.jpg)
+
+**Add Song**  
+![AddSong](Screenshots/AddSong.jpg)
+
+**FullPlayer**  
+![FullPlayer](Screenshots/FullPlayer.jpg)
+
+**Edit Song**  
+![Edit](Screenshots/Edit.jpg)
+
+**LikedSong**  
+![Liked](Screenshots/Liked.jpg)
+
+**No Network**  
+![Offline](Screenshots/Offline.jpg)
+
+**Online again**  
+![Online](Screenshots/Online.jpg)
+
+--- 
 
 ## Pembagian Kerja Anggota Kelompok
 
 
 | No | Bagian/Fitur            | Anggota (PIC) | 
 |----|-------------------------|---------------|
-| 1  | Header dan Navbar       | Anggota 1     | 
-| 2  | Login                   | Anggota 2     | 
-| 3  | Home                    | Anggota 3     |  
-| 4  | Library                 | Anggota 1     | 
+| 1  | Header dan Navbar       | 13522117      | 
+| 2  | Login                   | 13522117      | 
+| 3  | Home                    | 13522077      |  
+| 4  | Library                 | 13522117      | 
 | 5  | Pemutaran Lagu          | 13522019   | 
-| 6  | Penambahan Lagu         | Anggota 2     |
+| 6  | Penambahan Lagu         | 13522117      |
 | 7  | Profile                 | 13522019     |  
-| 8  | Liked Songs             | Anggota 1     | 
-| 9  | Background Service      | Anggota 4     | 
-| 10 | Network Sensing         | Anggota 2     | 
-| 11 | Queue                   | Anggota 3     | 
-| 12 | Shuffle                 | Anggota 4     |
-| 13 | Repeat                  | Anggota 1     | 
+| 8  | Liked Songs             | 13522117      | 
+| 9  | Background Service      | 13522117      | 
+| 10 | Network Sensing         | 13522077     | 
+| 11 | Queue                   | 13522077    | 
+| 12 | Shuffle                 | 13522077     |
+| 13 | Repeat                  | 13522077    | 
 | 14 | OWASP                   |13522019     |
-| 15 | Pencarian               | Anggota 3     | 
-| 16 | Accessibility Testing   | Anggota 4     | 
+| 15 | Pencarian               | 13522117     | 
+| 16 | Accessibility Testing   | 13522019    | 
 
 
 ---
@@ -69,8 +93,8 @@ Cantumkan jumlah jam yang dihabiskan untuk persiapan, pengembangan, dan pengerja
 | Nama           | Persiapan | Pengerjaan | Total Jam |
 |----------------|-----------|------------|-----------|
 | 13522019     | 40 Jam     | 32 Jam     | 72 Jam    |
-| 13522077      |  40 Jam     | XX Jam     | XX Jam    |
-| 13522117      | 40 Jam     | XX Jam     | XX Jam    |
+| 13522077      |  40 Jam     | 32 Jam     | 72 Jam    |
+| 13522117      | 40 Jam     | 48 Jam     | 88 Jam    |
 
 ---
 
@@ -93,13 +117,11 @@ M4 terjadi ketika aplikasi tidak melakukan validasi dan sanitasi input pengguna 
 
 **Langkah Penanganan:**  
 - **Validasi Input:**  
-  - Menggunakan validasi format (misalnya, regex untuk email) pada semua input pengguna.
-  - Memastikan data tidak kosong dan memenuhi standar yang telah ditetapkan (contoh: memeriksa apakah input berupa email atau password sudah terisi dengan benar).
-- **Sanitasi Output:**  
-  - Meng-encode data sebelum ditampilkan ke pengguna, terutama ketika data diambil dari sumber eksternal.
+  - Menggunakan validasi format (misalnya, regex untuk email) pada semua input pengguna dan memastikan data tidak kosong dan memenuhi standar yang telah ditetapkan (contoh: memeriksa apakah input berupa email atau password sudah terisi dengan benar).
+  ![Validasi input](Assets/OWASP_4/OWASP4.2.png)
 - **Penggunaan Parameterized Queries**  
   - Menerapkan parameter binding atau prepared statements pada query database untuk mencegah SQL injection. Implementasi di Client-Side mencakup implementasi saat melaksanakan Room Query seperti gambar dibawah
-  ![Parameterized Queries](Assets/OWASP4.1.png)
+  ![Parameterized Queries](Assets/OWASP_4/OWASP4.1.png)
 
 ---
 
@@ -159,7 +181,19 @@ Dokumentasi ini mencerminkan upaya kami untuk mengatasi dan memitigasi risiko da
 
 ## Aksesibilitas Testing
 
-P
+Hasil testing dapat dilihat pada link berikut : https://drive.google.com/file/d/14YwVKkxjG2GD0K88KJaBYnUVgNcGpOG_/view?usp=sharing
+ 
+Perubahan yang dilakukan:
+- Memberikan content description yang berbeda untuk foto album serta judul lagu pada full player.
+- Memberikan content description pada text dalam sebuah view dengan menggunakan mergeDescendants sehingga dianggap menjadi sebuah node
+- Mengubah kontras warna pada tombol login serta tombol play
+- Memberikan content description yang berbeda untuk tombol penambahan pada tiap komponen yang muncul dalam 1 halaman yang sama
+- Meningkatkan aksesibilitas dengan memperbesar icon
+
+Perubahan yang tidak / tidak dapat dilakukan:
+- Adanya hidden text pada background login , dimana sistem melihat tulisan pada background sebagai text
+- Content Description yang sama pada recycleview dimana keduanya muncul pada 1 halaman yang sama, namun dianggap minor karena jika dikonversi pada text, keduanya sebenarnya memiliki definisi yang sama serta fungsi yang sama , yakni untuk memutar lagu
+- Kontras warna pada beberapa background album dengan background aplikasi. Hal ini dianggap minor karena tidak semua album , melainkan hanya album tertentu yang tidak memiliki kontras yang baik dengan background aplikasi.
 
 ---
 
