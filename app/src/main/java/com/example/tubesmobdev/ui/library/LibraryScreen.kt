@@ -87,8 +87,8 @@ fun LibraryScreen(
             Box(
                 contentAlignment = Alignment.TopStart,
                 modifier = Modifier
-                    .padding(bottom = 10.dp, start = 10.dp, end = 10.dp, top = 10.dp)
-                    .width(150.dp)
+                    .padding(bottom = 10.dp, start = 10.dp, end = 0.dp, top = 10.dp)
+                    .width(250.dp)
             ){
                 TabRow(
                     selectedTabIndex = selectedTabIndex,
@@ -103,13 +103,15 @@ fun LibraryScreen(
                                 .background(Color.Transparent)
                                 .padding(end = 5.dp)
                                 .clip(shape = RoundedCornerShape(30.dp))
-                                .background(if (selectedTabIndex != index) Color(0xff212121) else MaterialTheme.colorScheme.primaryContainer)
+                                .background(if (selectedTabIndex != index) Color(0xff212121) else MaterialTheme.colorScheme.primaryContainer),
+
                         ) {
                             Text(
                                 text = title,
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontSize = 13.sp,
-                                color = if (selectedTabIndex != index) Color.White else Color.Black
+                                color = if (selectedTabIndex != index) Color.White else Color.Black,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
                             )
                         }
                     }
