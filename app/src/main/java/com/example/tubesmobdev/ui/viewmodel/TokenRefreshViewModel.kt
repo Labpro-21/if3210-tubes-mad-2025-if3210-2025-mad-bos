@@ -6,7 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.tubesmobdev.data.repository.AuthRepository
 import com.example.tubesmobdev.domain.model.AuthResult
 import com.example.tubesmobdev.manager.PlayerManager
+import com.example.tubesmobdev.service.ConnectivityObserver
+import com.example.tubesmobdev.service.ConnectivityStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,27 +20,31 @@ import javax.inject.Inject
 @HiltViewModel
 class TokenRefreshViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val playerManager: PlayerManager
+    private val playerManager: PlayerManager,
+    private val connectivityObserver: ConnectivityObserver
 ) : ViewModel() {
 
-    private val _isRunning = MutableStateFlow(false)
-    val isRunning: StateFlow<Boolean> = _isRunning
+    private var tokenJob: Job? = null
 
     fun startTokenRefreshLoop() {
-        if (_isRunning.value) return // biar nggak double loop
+        if (tokenJob?.isActive == true) return
 
-        _isRunning.value = true
-        viewModelScope.launch {
-            while (isActive && _isRunning.value) {
-                Log.d("TokenRefreshLoop", "Checking token validity...")
-                checkTokenValidity()
-                delay(3 * 60 * 1000L) // 3 menit
+        tokenJob = viewModelScope.launch {
+            connectivityObserver.observe().collect { status ->
+                if (status is ConnectivityStatus.Available) {
+                    checkTokenValidity()
+                } else {
+                    Log.w("TokenRefreshLoop", "Skip token check, No internet")
+                }
+
+                delay(3 * 60 * 1000L)
             }
         }
     }
 
     fun stopTokenRefreshLoop() {
-        _isRunning.value = false
+        tokenJob?.cancel()
+        tokenJob = null
     }
 
     private suspend fun checkTokenValidity() {
@@ -46,15 +53,11 @@ class TokenRefreshViewModel @Inject constructor(
                 when (result) {
                     is AuthResult.Success -> Log.d("TokenRefreshLoop", "Token is valid")
                     is AuthResult.TokenExpired -> refreshToken()
-                    is AuthResult.Failure -> {
-                        Log.e("TokenRefreshLoop", "Token invalid → Logout")
-                        authRepository.logout()
-                        playerManager.clearWithCallback()
-                    }
+                    is AuthResult.Failure -> forceLogout()
                 }
             },
-            onFailure = { e ->
-                Log.e("TokenRefreshLoop", "Token check error", e)
+            onFailure = {
+                Log.e("TokenRefreshLoop", "Token check error", it)
             }
         )
     }
@@ -64,16 +67,17 @@ class TokenRefreshViewModel @Inject constructor(
             onSuccess = { result ->
                 when (result) {
                     is AuthResult.Success -> Log.d("TokenRefreshLoop", "Token refreshed successfully")
-                    is AuthResult.TokenExpired, is AuthResult.Failure -> {
-                        Log.e("TokenRefreshLoop", "Token expired or failed → Logout")
-                        authRepository.logout()
-                        playerManager.clearWithCallback()
-                    }
+                    is AuthResult.TokenExpired, is AuthResult.Failure -> forceLogout()
                 }
             },
-            onFailure = { e ->
-                Log.e("TokenRefreshLoop", "Token refresh error", e)
+            onFailure = {
+                Log.e("TokenRefreshLoop", "Token refresh error", it)
             }
         )
+    }
+
+    private suspend fun forceLogout() {
+        authRepository.logout()
+        playerManager.clearWithCallback()
     }
 }
