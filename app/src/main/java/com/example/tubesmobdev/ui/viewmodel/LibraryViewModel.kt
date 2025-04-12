@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tubesmobdev.data.model.Song
+import com.example.tubesmobdev.data.repository.PlayerPreferencesRepository
 import com.example.tubesmobdev.data.repository.SongRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +16,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
-    private val repository: SongRepository
+    private val repository: SongRepository,
+    private val playerRepository: PlayerPreferencesRepository,
 ): ViewModel() {
     private val _songs = MutableStateFlow<List<Song>>(emptyList())
     val songs: StateFlow<List<Song>> get() = _songs
@@ -28,6 +30,9 @@ class LibraryViewModel @Inject constructor(
 
     private val _searchResults = MutableStateFlow<List<Song>>(emptyList())
     val searchResults: StateFlow<List<Song>> = _searchResults
+
+    private val _currentQueue = MutableStateFlow<List<Song>>(emptyList())
+    val currentQueue: StateFlow<List<Song>> = _currentQueue
 
     init {
         fetchSongs()
@@ -46,6 +51,11 @@ class LibraryViewModel @Inject constructor(
                 repository.getLikedSongs()
                     .catch { e -> _errorMessage.value = "Gagal memuat liked songs: ${e.message}" }
                     .collect { _likedSongs.value = it }
+            }
+            launch {
+                playerRepository.getQueue().collect { queue ->
+                    _currentQueue.value = queue
+                }
             }
         }
     }

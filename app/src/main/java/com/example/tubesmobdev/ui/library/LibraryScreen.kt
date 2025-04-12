@@ -50,14 +50,15 @@ fun LibraryScreen(
     isCompact: Boolean
 ) {
 
-    val tabs = listOf("All", "Liked")
+    val tabs = listOf("All", "Liked", "Queue")
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
 
     var snackbarMessage by rememberSaveable { mutableStateOf<String?>(null) }
 
     val allSongs by viewModel.songs.collectAsState()
     val likedSongs by viewModel.likedSongs.collectAsState()
-    val songsToShow = if (selectedTabIndex == 0) allSongs else likedSongs
+    val queueSongs by viewModel.currentQueue.collectAsState()
+    val songsToShow = if (selectedTabIndex == 0) allSongs else if (selectedTabIndex == 1) likedSongs else queueSongs
     val errorMessage by viewModel.errorMessage.collectAsState()
 
     var songToDelete by rememberSaveable  { mutableStateOf<Song?>(null) }
@@ -94,13 +95,13 @@ fun LibraryScreen(
                     divider = {},
                     indicator = {},
                 ) {
-                    tabs.forEachIndexed{index, title ->
+                    tabs.forEachIndexed { index, title ->
                         Tab(
                             onClick = { selectedTabIndex = index },
                             selected = selectedTabIndex == index,
                             modifier = Modifier
                                 .background(Color.Transparent)
-                                .padding(end = 10.dp)
+                                .padding(end = 5.dp)
                                 .clip(shape = RoundedCornerShape(30.dp))
                                 .background(if (selectedTabIndex != index) Color(0xff212121) else MaterialTheme.colorScheme.primaryContainer)
                         ) {
