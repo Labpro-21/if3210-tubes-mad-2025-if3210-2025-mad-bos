@@ -16,7 +16,7 @@ fun StatsColumn(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.semantics {
+        modifier = modifier.semantics(mergeDescendants = true) {
             contentDescription = "$value $label"
         },
         horizontalAlignment = Alignment.CenterHorizontally
