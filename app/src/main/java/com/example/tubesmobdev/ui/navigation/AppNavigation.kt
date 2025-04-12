@@ -1,5 +1,6 @@
 package com.example.tubesmobdev.ui.navigation
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -9,14 +10,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.tubesmobdev.service.TokenRefreshService
 import com.example.tubesmobdev.ui.auth.login.LoginScreen
 import com.example.tubesmobdev.ui.layout.MainLayout
 import com.example.tubesmobdev.ui.splash.SplashScreen
 import com.example.tubesmobdev.ui.viewmodel.NavigationViewModel
 import com.example.tubesmobdev.util.ServiceUtil
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @Composable
 fun AppNavigation(authViewModel: NavigationViewModel = hiltViewModel()) {
@@ -25,12 +24,18 @@ fun AppNavigation(authViewModel: NavigationViewModel = hiltViewModel()) {
     val isInitialized by authViewModel.isInitialized.collectAsState()
     val context = LocalContext.current
     LaunchedEffect(isLoggedIn) {
+        authViewModel.setShouldRestartService(isLoggedIn)
+
         if (isLoggedIn) {
-            authViewModel.setShouldRestartService(true)
-            ServiceUtil.stopService(context)
-            ServiceUtil.startService(context)
+            if (ServiceUtil.isServiceRunning(context, TokenRefreshService::class.java)) {
+                Log.d("ServiceUtil", "Service is running → Trigger restart only")
+                ServiceUtil.triggerRestart(context)
+            } else {
+                Log.d("ServiceUtil", "Service not running → Start service")
+                ServiceUtil.startService(context)
+            }
         } else {
-            authViewModel.setShouldRestartService(false)
+            Log.d("ServiceUtil", "User logged out → Stop service")
             ServiceUtil.stopService(context)
         }
     }

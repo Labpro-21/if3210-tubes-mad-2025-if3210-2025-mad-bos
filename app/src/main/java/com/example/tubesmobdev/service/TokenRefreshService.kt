@@ -1,8 +1,11 @@
 package com.example.tubesmobdev.service
 
+import android.annotation.SuppressLint
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Handler
@@ -10,11 +13,9 @@ import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import com.example.tubesmobdev.data.local.preferences.IServicePreferences
-import com.example.tubesmobdev.data.local.preferences.ServicePreferences
 import com.example.tubesmobdev.data.repository.AuthRepository
 import com.example.tubesmobdev.domain.model.AuthResult
 import com.example.tubesmobdev.manager.PlayerManager
-import com.example.tubesmobdev.receiver.AlarmReceiver
 import com.example.tubesmobdev.receiver.RestartReceiver
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -44,7 +45,6 @@ class TokenRefreshService : Service() {
 
             CoroutineScope(Dispatchers.IO).launch {
                 if (isInternetAvailable()) {
-                    Log.d("TokenRefreshService", "Internet available → Verify token")
                     checkTokenValidity()
                 } else {
                     Log.d("TokenRefreshService", "No internet → Skip token check")
@@ -55,28 +55,36 @@ class TokenRefreshService : Service() {
         }
     }
 
+    private val restartReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == "com.example.tubesmobdev.ACTION_TRIGGER_RESTART") {
+                Log.d("TokenRefreshService", "Trigger restart received → Reset logic")
+                handler.removeCallbacks(tokenCheckRunnable)
+                handler.post(tokenCheckRunnable)
+            }
+        }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        registerReceiver(restartReceiver, IntentFilter("com.example.tubesmobdev.ACTION_TRIGGER_RESTART"), RECEIVER_NOT_EXPORTED)
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("TokenRefreshService", "Service started")
-        startForeground(
-            1,
-            NotificationUtil.createForegroundNotification(this)
-        )
+
+        startForeground(1, NotificationUtil.createForegroundNotification(this))
+
         handler.removeCallbacks(tokenCheckRunnable)
         handler.post(tokenCheckRunnable)
+
         return START_STICKY
-//        CoroutineScope(Dispatchers.IO).launch {
-//            if (isInternetAvailable()) {
-//                checkTokenValidity()
-//            }
-//            stopSelf() // Auto stop setelah selesai
-//        }
-//        return START_NOT_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        unregisterReceiver(restartReceiver)
         handler.removeCallbacks(tokenCheckRunnable)
-        Log.d("TokenRefreshService", "Service stopped")
 
         CoroutineScope(Dispatchers.IO).launch {
             val shouldRestart = servicePreferences.shouldRestartService.first()
@@ -99,15 +107,14 @@ class TokenRefreshService : Service() {
                     is AuthResult.Success -> Log.d("TokenRefreshService", "Token is valid")
                     is AuthResult.TokenExpired -> refreshToken()
                     is AuthResult.Failure -> {
-                        Log.e("TokenRefreshService", "Token check failed → Logout")
+                        Log.e("TokenRefreshService", "Token invalid → Logout")
                         authRepository.logout()
                         playerManager.clearWithCallback()
                     }
                 }
             },
             onFailure = { e ->
-                Log.e("TokenRefreshService", "Tok" +
-                        "en check error", e)
+                Log.e("TokenRefreshService", "Token check error", e)
             }
         )
     }
@@ -118,17 +125,10 @@ class TokenRefreshService : Service() {
             onSuccess = { result ->
                 when (result) {
                     is AuthResult.Success -> Log.d("TokenRefreshService", "Token refreshed successfully")
-                    is AuthResult.TokenExpired -> {
-                        Log.e("TokenRefreshService", "Token expired → Logout")
-                        authRepository.logout()
-                        playerManager.clearWithCallback()
-
-                    }
-                    is AuthResult.Failure -> {
+                    else -> {
                         Log.e("TokenRefreshService", "Token refresh failed → Logout")
                         authRepository.logout()
                         playerManager.clearWithCallback()
-
                     }
                 }
             },

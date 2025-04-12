@@ -53,9 +53,9 @@ object ServiceUtil {
         )
         alarmManager.cancel(pendingIntent)
     }
+
     fun startService(context: Context) {
         val serviceIntent = Intent(context, TokenRefreshService::class.java)
-
         context.startForegroundService(serviceIntent)
     }
 
@@ -68,5 +68,10 @@ object ServiceUtil {
         val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         return manager.getRunningServices(Int.MAX_VALUE)
             .any { it.service.className == serviceClass.name }
+    }
+
+    fun triggerRestart(context: Context) {
+        val intent = Intent( "com.example.tubesmobdev.ACTION_TRIGGER_RESTART")
+        context.sendBroadcast(intent)
     }
 }
