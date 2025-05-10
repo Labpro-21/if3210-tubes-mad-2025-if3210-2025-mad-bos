@@ -56,7 +56,7 @@ fun AddSongDrawer(
     onSongUpdate: (Song) -> Unit,
     songToEdit: Song? = null
 ) {
-    var songUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+    var songUri by rememberSaveable { mutableStateOf<Uri?>(songToEdit?.filePath?.let { Uri.parse(it) }) }
     val initialImageUri = songToEdit?.coverUrl?.let { Uri.parse(it) }
     var imageUri by rememberSaveable { mutableStateOf(initialImageUri) }
     var title by rememberSaveable { mutableStateOf(songToEdit?.title ?: "") }
