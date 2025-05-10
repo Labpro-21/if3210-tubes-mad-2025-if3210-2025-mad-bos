@@ -38,10 +38,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @UnstableApi
-@AndroidEntryPoint
+//@AndroidEntryPoint
 class MusicService : MediaSessionService() {
-    @Inject
-    lateinit var songRepository: SongRepository
+//    @Inject
+//    lateinit var songRepository: SongRepository
 
     private var mediaSession: MediaSession? = null
     private var player: ExoPlayer? = null

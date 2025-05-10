@@ -59,7 +59,7 @@
         </activity>
         <receiver android:name=".receiver.AlarmReceiver" />
         <receiver android:name=".receiver.RestartReceiver" />
-        <receiver android:name=".receiver.NotificationReceiver" />
+<!--        <receiver android:name=".receiver.NotificationReceiver" />-->
 
 
     </application>
