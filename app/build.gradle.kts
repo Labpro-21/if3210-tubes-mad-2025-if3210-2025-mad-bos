@@ -45,6 +45,13 @@ android {
 
 dependencies {
 
+    // Jika pakai Gradle langsung:
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.session)
+    implementation(libs.androidx.media3.ui)
+
+    implementation(libs.androidx.media)
+
     implementation(libs.androidx.work.runtime.ktx)
     implementation (libs.androidx.hilt.work)
 

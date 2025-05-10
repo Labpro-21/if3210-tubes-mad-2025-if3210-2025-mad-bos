@@ -1,5 +1,4 @@
 package com.example.tubesmobdev.ui.components
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image

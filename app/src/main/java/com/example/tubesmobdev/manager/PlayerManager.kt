@@ -1,97 +1,47 @@
 package com.example.tubesmobdev.manager
 
 import android.content.Context
-import android.media.MediaPlayer
-import android.net.Uri
-import android.util.Log
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import android.content.Intent
+import androidx.annotation.OptIn
+import androidx.core.content.ContextCompat
+import androidx.media3.common.util.UnstableApi
+import com.example.tubesmobdev.data.model.Song
+import com.example.tubesmobdev.service.MusicService
+import com.example.tubesmobdev.util.RepeatMode
+import com.google.gson.Gson
+import javax.inject.Inject
 
-class PlayerManager(
+class PlayerManager @Inject constructor(
     private val context: Context
 ) {
-    private var mediaPlayer: MediaPlayer? = null
-
-    private val _isPlaying = MutableStateFlow(false)
-    val isPlaying: StateFlow<Boolean> = _isPlaying
-
-    private val _progress = MutableStateFlow(0f)
-    val progress: StateFlow<Float> = _progress
-
-    private var onSongCompleted: (() -> Unit)? = null
-
-    var onClear: (() -> Unit)? = null
-
-    fun play(uri: Uri, onComplete: () -> Unit) {
-        clear()
-        onSongCompleted = onComplete
-        try {
-            context.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
-                mediaPlayer = MediaPlayer().apply {
-                    setDataSource(pfd.fileDescriptor)
-                    setOnPreparedListener {
-                        start()
-                        _isPlaying.value = true
-                        startProgressUpdater()
-                    }
-                    setOnCompletionListener {
-                        _progress.value = 1f
-                        _isPlaying.value = false
-                        onSongCompleted?.invoke()
-                    }
-                    prepareAsync()
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("PlayerManager", "Error playing song", e)
+    @OptIn(UnstableApi::class)
+    fun play(
+        song: Song,
+        queue: List<Song>,
+        isShuffle: Boolean,
+        repeatMode: RepeatMode
+    ) {
+        val index = queue.indexOfFirst { it.id == song.id }.takeIf { it != -1 } ?: 0
+        val intent = Intent(context, MusicService::class.java).apply {
+            action = MusicService.ACTION_PLAY
+            putExtra(MusicService.EXTRA_QUEUE, Gson().toJson(queue))
+            putExtra(MusicService.EXTRA_INDEX, index)
+            putExtra(MusicService.EXTRA_SHUFFLE, isShuffle)
+            putExtra(MusicService.EXTRA_REPEAT, repeatMode.name)
         }
+        ContextCompat.startForegroundService(context, intent)
     }
 
-    fun togglePlayPause() {
-        mediaPlayer?.let {
-            if (it.isPlaying) {
-                it.pause()
-                _isPlaying.value = false
-            } else {
-                it.start()
-                _isPlaying.value = true
-                startProgressUpdater()
-            }
+    @OptIn(UnstableApi::class)
+    fun stop() {
+        val intent = Intent(context, MusicService::class.java).apply {
+            action = MusicService.ACTION_STOP
         }
+        context.startService(intent)
     }
 
-    fun seekTo(progress: Float) {
-        mediaPlayer?.seekTo((mediaPlayer?.duration!! * progress).toInt())
-        _progress.value = progress
-    }
-
-    fun clear() {
-        mediaPlayer?.release()
-        mediaPlayer = null
-        _isPlaying.value = false
-        _progress.value = 0f
-    }
-
-    fun clearWithCallback() {
-        clear()
+    fun clearWithCallback(onClear: (() -> Unit)? = null) {
+        stop()
         onClear?.invoke()
-    }
-
-    private fun startProgressUpdater() {
-        Thread {
-            while (true) {
-                val mp = mediaPlayer ?: break
-
-                try {
-                    if (!mp.isPlaying) break
-
-                    _progress.value = mp.currentPosition.toFloat() / mp.duration
-                } catch (e: IllegalStateException) {
-                    break
-                }
-
-                Thread.sleep(500)
-            }
-        }.start()
     }
 }

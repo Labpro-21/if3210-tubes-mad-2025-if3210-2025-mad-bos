@@ -74,7 +74,7 @@ class TokenRefreshService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("TokenRefreshService", "Service started")
 
-        startForeground(1, NotificationUtil.createForegroundNotification(this))
+        startForeground(99, NotificationUtil.createForegroundNotification(this))
 
         handler.removeCallbacks(tokenCheckRunnable)
         handler.post(tokenCheckRunnable)
@@ -110,7 +110,11 @@ class TokenRefreshService : Service() {
                     is AuthResult.Failure -> {
                         Log.e("TokenRefreshService", "Token invalid → Logout")
                         authRepository.logout()
-                        playerManager.clearWithCallback()
+                        try {
+                            playerManager.clearWithCallback()
+                        } catch (e: Exception) {
+                            Log.e("TokenRefreshService", "Error clearing player", e)
+                        }
                     }
                 }
             },
@@ -129,7 +133,11 @@ class TokenRefreshService : Service() {
                     else -> {
                         Log.e("TokenRefreshService", "Token refresh failed → Logout")
                         authRepository.logout()
-                        playerManager.clearWithCallback()
+                        try {
+                            playerManager.clearWithCallback()
+                        } catch (e: Exception) {
+                            Log.e("TokenRefreshService", "Error clearing player", e)
+                        }
                     }
                 }
             },
@@ -143,7 +151,6 @@ class TokenRefreshService : Service() {
         super.onTaskRemoved(rootIntent)
         Log.d("TokenRefreshService", "App removed from recent apps → Stop Service")
 
-        playerManager.clear()
         CoroutineScope(Dispatchers.IO).launch {
             servicePreferences.setShouldRestartService(false)
         }

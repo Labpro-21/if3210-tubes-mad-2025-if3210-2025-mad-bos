@@ -1,6 +1,8 @@
 package com.example.tubesmobdev.di
 
 import android.content.Context
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
 import androidx.room.Room
 import com.example.tubesmobdev.data.local.dao.SongDao
 import com.example.tubesmobdev.data.local.database.SongDatabase
@@ -17,6 +19,7 @@ import com.example.tubesmobdev.data.repository.AuthRepository
 import com.example.tubesmobdev.data.repository.ProfileRepository
 import com.example.tubesmobdev.data.repository.IAuthRepository
 import com.example.tubesmobdev.data.repository.SongRepository
+import com.example.tubesmobdev.manager.PlaybackConnection
 import com.example.tubesmobdev.manager.PlayerManager
 import dagger.Module
 import dagger.Provides
@@ -115,7 +118,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideSongRepository(songDao: SongDao, authPreferences: IAuthPreferences,): SongRepository {
+    fun provideSongRepository(songDao: SongDao, authPreferences: IAuthPreferences): SongRepository {
         return SongRepository(songDao, authPreferences)
     }
 
@@ -129,5 +132,12 @@ object AppModule {
     @Singleton
     fun providePlayerManager(@ApplicationContext context: Context): PlayerManager {
         return PlayerManager(context)
+    }
+
+    @OptIn(UnstableApi::class)
+    @Provides
+    @Singleton
+    fun providePlaybackConnection(@ApplicationContext context: Context): PlaybackConnection {
+        return PlaybackConnection(context)
     }
 }

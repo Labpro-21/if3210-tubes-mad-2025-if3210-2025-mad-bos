@@ -23,7 +23,6 @@ class LoginViewModel @Inject constructor(
     fun login(
         email: String,
         password: String,
-//        navController: NavController
     ) {
         if (email.isBlank()) {
             _loginErrorMessage.value = "Email harus diisi"
@@ -44,9 +43,6 @@ class LoginViewModel @Inject constructor(
                     onSuccess = { authResult ->
                         when (authResult) {
                             is AuthResult.Success -> {
-//                                navController.navigate("main") {
-//                                    popUpTo("login") { inclusive = true }
-//                                }
                             }
                             is AuthResult.Failure -> {
                                 _loginErrorMessage.value = authResult.message

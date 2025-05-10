@@ -1,16 +1,18 @@
 package com.example.tubesmobdev.ui.viewmodel
 
 import android.app.Application
-import android.media.MediaPlayer
 import android.net.Uri
 import android.util.Log
+import androidx.annotation.OptIn
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.util.UnstableApi
 import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.data.repository.PlayerPreferencesRepository
 import com.example.tubesmobdev.data.repository.SongRepository
 import com.example.tubesmobdev.manager.PlayerManager
+import com.example.tubesmobdev.manager.PlaybackConnection
 import com.example.tubesmobdev.util.RepeatMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -20,17 +22,17 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class PlayerViewModel @Inject constructor(
+class PlayerViewModel @OptIn(UnstableApi::class)
+@Inject constructor(
     private val app: Application,
     private val songRepository: SongRepository,
     private val playerRepository: PlayerPreferencesRepository,
-    private val playerManager: PlayerManager
+    private val playerManager: PlayerManager,
+    private val playbackConnection: PlaybackConnection
 ) : AndroidViewModel(app) {
+
     private val _currentSong = MutableStateFlow<Song?>(null)
     val currentSong: StateFlow<Song?> = _currentSong
-
-    val isPlaying = playerManager.isPlaying
-    val progress = playerManager.progress
 
     private val _songList = MutableStateFlow<List<Song>>(emptyList())
     val songList: StateFlow<List<Song>> = _songList
@@ -46,14 +48,42 @@ class PlayerViewModel @Inject constructor(
     private val _isShuffle = MutableStateFlow(false)
     val isShuffle: StateFlow<Boolean> = _isShuffle
 
+    private val _isPlaying = MutableStateFlow(false)
+    val isPlaying: StateFlow<Boolean> = _isPlaying
+
+    private val _progress = MutableStateFlow(0f)
+    val progress: StateFlow<Float> = _progress
+
     init {
         observeQueue()
         observeSongs()
+        observePlaybackState()
+    }
 
-        playerManager.onClear = {
-            _currentSong.value = null
+    @OptIn(UnstableApi::class)
+    private fun observePlaybackState() {
+        viewModelScope.launch {
+            val controller = playbackConnection.getController()
+            while (true) {
+                _isPlaying.value = controller.isPlaying
+                val duration = controller.duration.coerceAtLeast(1L)
+                val position = controller.currentPosition
+                _progress.value = position.toFloat() / duration
+                delay(500)
+            }
         }
     }
+
+    @OptIn(UnstableApi::class)
+    fun seekToPosition(progress: Float) {
+        viewModelScope.launch {
+            val controller = playbackConnection.getController()
+            val duration = controller.duration.coerceAtLeast(1L)
+            controller.seekTo((progress * duration).toLong())
+        }
+    }
+
+
     private fun observeSongs() {
         viewModelScope.launch {
             songRepository.getAllSongs().collect { songs ->
@@ -62,6 +92,7 @@ class PlayerViewModel @Inject constructor(
             }
         }
     }
+
     private fun observeQueue() {
         viewModelScope.launch {
             playerRepository.getQueue().collect { queue ->
@@ -69,6 +100,7 @@ class PlayerViewModel @Inject constructor(
             }
         }
     }
+
     private fun validateQueueWithSongs(songs: List<Song>) {
         val currentQueue = _currentQueue.value
         val validQueue = currentQueue.filter { songInQueue ->
@@ -79,48 +111,32 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
-    private fun fetchSongs() {
-        viewModelScope.launch {
-            songRepository.getAllSongs().collect { songs ->
-                _songList.value = songs
-                Log.d("Debug", "fetchSongs: halo")
-
-                playerRepository.getQueue().collect { queue ->
-                    val validQueue = queue.filter { songInQueue ->
-                        songs.any { it.id == songInQueue.id }
-                    }
-                    //fix bug queue deleted here AHHHHHH
-                    if (queue.size != validQueue.size) {
-                        updateQueue(validQueue)
-                    } else {
-                        _currentQueue.value = queue
-                    }
-                }
-            }
-        }
-    }
-
-    fun seekToPosition(progress: Float) {
-        playerManager.seekTo(progress)
-    }
-
     fun playSong(song: Song) {
         _currentSong.value = song
         Log.d("Test", currentSong.value.toString())
-        playerManager.play(song.filePath.toUri()) {
-            playNext()
-        }
+        playerManager.play(
+            song = song,
+            queue = _currentQueue.value.ifEmpty { _songList.value },
+            isShuffle = _isShuffle.value,
+            repeatMode = _repeatMode.value
+        )
         viewModelScope.launch {
             songRepository.updateLastPlayed(song.id, System.currentTimeMillis())
         }
     }
+
+    @OptIn(UnstableApi::class)
     fun togglePlayPause() {
-        playerManager.togglePlayPause()
+        viewModelScope.launch {
+            val controller = playbackConnection.getController()
+            if (controller.isPlaying) controller.pause() else controller.play()
+        }
     }
 
     fun clearSong() {
-        playerManager.clearWithCallback()
-        _currentSong.value = null
+        playerManager.clearWithCallback {
+            _currentSong.value = null
+        }
     }
 
     fun stopIfPlaying(song: Song) {
@@ -128,7 +144,6 @@ class PlayerViewModel @Inject constructor(
             clearSong()
         }
     }
-
 
     fun toggleLike() {
         currentSong.value?.let { song ->
@@ -144,8 +159,6 @@ class PlayerViewModel @Inject constructor(
         _isShuffle.value = !_isShuffle.value
         if (_isShuffle.value) {
             val songs = _songList.value.toMutableList()
-//            songs.shuffle()
-//            _currentQueue.value = songs
             _currentSong.value?.let { current ->
                 currentQueueIndex = songs.indexOfFirst { it.id == current.id }.takeIf { it != -1 } ?: 0
             }
@@ -163,16 +176,14 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
-
     private fun getNextSong(): Song? {
-        return if (_isShuffle.value){
+        return if (_isShuffle.value) {
             if (_songList.value.isNotEmpty()) _songList.value.random() else null
         } else if (_currentQueue.value.isNotEmpty()) {
-            Log.d("Debug", "getNextSong using queue ")
             val queue = _currentQueue.value
             if (currentQueueIndex < queue.size - 1) {
                 queue[currentQueueIndex + 1]
-            } else if (_repeatMode.value == RepeatMode.REPEAT_ALL){
+            } else if (_repeatMode.value == RepeatMode.REPEAT_ALL) {
                 queue[(currentQueueIndex + 1) % queue.size]
             } else {
                 viewModelScope.launch {
@@ -182,7 +193,6 @@ class PlayerViewModel @Inject constructor(
                 if (_songList.value.isNotEmpty()) _songList.value.random() else null
             }
         } else {
-            Log.d("Debug", "getNextSong without queue ")
             val songs = _songList.value
             val currentIndex = songs.indexOfFirst { it.id == _currentSong.value?.id }
             songs[(currentIndex + 1) % _songList.value.size]
@@ -190,10 +200,9 @@ class PlayerViewModel @Inject constructor(
     }
 
     private fun getPreviousSong(): Song? {
-        return if (_isShuffle.value){
+        return if (_isShuffle.value) {
             if (_songList.value.isNotEmpty()) _songList.value.random() else null
         } else if (_currentQueue.value.isNotEmpty()) {
-            Log.d("Debug", "getPrevSong using queue ")
             val queue = _currentQueue.value
             if (currentQueueIndex > 0) {
                 queue[currentQueueIndex - 1]
@@ -201,7 +210,6 @@ class PlayerViewModel @Inject constructor(
                 if (_songList.value.isNotEmpty()) _songList.value.random() else null
             }
         } else {
-            Log.d("Debug", "getPrevSong without queue ")
             val songs = _songList.value
             val currentIndex = songs.indexOfFirst { it.id == _currentSong.value?.id }
             val prevIndex = if (currentIndex - 1 < 0) songs.lastIndex else currentIndex - 1
@@ -262,12 +270,11 @@ class PlayerViewModel @Inject constructor(
             playerRepository.saveQueue(queue)
         }
     }
+
     fun addQueue(newSong: Song) {
-        Log.d("Debug", "addQueue: "+newSong.title)
         val updatedQueue = _currentQueue.value.toMutableList()
         updatedQueue.add(newSong)
         _currentQueue.value = updatedQueue
         updateQueue(updatedQueue)
-        Log.d("Debug", "Updated queue: " + updatedQueue.joinToString(separator = ", ") { it.title })
     }
 }
