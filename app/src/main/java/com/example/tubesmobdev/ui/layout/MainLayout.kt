@@ -1,14 +1,15 @@
 package com.example.tubesmobdev.ui.layout
 
 import android.app.Activity
+import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -33,10 +34,12 @@ import com.example.tubesmobdev.ui.home.HomeScreen
 import com.example.tubesmobdev.ui.library.LibraryScreen
 import com.example.tubesmobdev.ui.library.SearchLibraryScreen
 import com.example.tubesmobdev.ui.profile.ProfileScreen
+import com.example.tubesmobdev.ui.topsongs.TopSongsScreen
 import com.example.tubesmobdev.ui.viewmodel.ConnectionViewModel
 import com.example.tubesmobdev.ui.viewmodel.PlayerViewModel
 import com.example.tubesmobdev.util.rememberDominantColor
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun MainLayout(outerNavController: NavController) {
@@ -169,17 +172,41 @@ fun MainLayout(outerNavController: NavController) {
                             startDestination = "home"
                         ) {
                             composable("home") {
-                                topBarContent = { ScreenHeader("New Songs") }
+                                topBarContent = { ScreenHeader("Top Songs") }
                                 HomeScreen(
                                     customTopBar = {ScreenHeader("New Songs", isCompact = isCompact)  },
-                                    navController = outerNavController,
+                                    navController = navController,
                                     isCompact = isCompact,
                                     onHomeSongClick = {
+                                        playerViewModel.clearCurrentQueue()
                                         playerViewModel.playSong(it)
                                         navController.navigate("fullplayer")
 
                                     },
-                                    onSongClick = { playerViewModel.playSong(it) }
+                                    onSongClick = {
+                                        playerViewModel.clearCurrentQueue()
+                                        playerViewModel.playSong(it)
+                                    }
+                                )
+                            }
+
+                            composable("top_songs/{chartCode}") { backStackEntry ->
+                                val chartCode = backStackEntry.arguments?.getString("chartCode") ?: "global"
+                                topBarContent = {
+                                    ScreenHeader(
+                                        title = if (chartCode == "global") "Top 50 Global" else "Top 10 $chartCode",
+                                        isMainMenu = false,
+                                        onBack = { navController.popBackStack() },
+                                        dominantColor = if (chartCode == "global") Color(0xFF1d7d75) else Color(0xFFf16975)
+                                    )
+                                }
+                                TopSongsScreen(
+                                    chartCode = chartCode,
+                                    onSongClick = { song, songs ->
+                                        playerViewModel.clearCurrentQueue()
+                                        playerViewModel.setCurrentQueue(songs)
+                                        playerViewModel.playSong(song)
+                                    }
                                 )
                             }
                             composable("library") {
@@ -198,7 +225,10 @@ fun MainLayout(outerNavController: NavController) {
                                 }
                                 LibraryScreen(
                                     navController,
-                                    onSongClick = { playerViewModel.playSong(it) },
+                                    onSongClick = {
+                                        playerViewModel.clearCurrentQueue()
+                                        playerViewModel.playSong(it)
+                                    },
                                     onSongDelete = { playerViewModel.stopIfPlaying(it) },
                                     onSongUpdate = {
                                         playerViewModel.updateCurrentSongIfMatches(
@@ -307,7 +337,10 @@ fun MainLayout(outerNavController: NavController) {
                                 SearchLibraryScreen(
                                     navController,
                                     query = searchQuery,
-                                    onSongClick = { playerViewModel.playSong(it) },
+                                    onSongClick = {
+                                        playerViewModel.clearCurrentQueue()
+                                        playerViewModel.playSong(it)
+                                    },
                                     onSongDelete = { playerViewModel.stopIfPlaying(it) },
                                     onSongUpdate = {
                                         playerViewModel.updateCurrentSongIfMatches(

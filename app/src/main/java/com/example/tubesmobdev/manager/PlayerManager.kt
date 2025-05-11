@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
+import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.service.MusicService
@@ -22,6 +23,11 @@ class PlayerManager @Inject constructor(
         repeatMode: RepeatMode
     ) {
         val index = queue.indexOfFirst { it.id == song.id }.takeIf { it != -1 } ?: 0
+
+        Log.d("PlayerManager", "Playing song: ${song.title}")
+        Log.d("PlayerManager", "Queue size: ${queue.size}")
+        Log.d("PlayerManager", "Index in queue: $index")
+
         val intent = Intent(context, MusicService::class.java).apply {
             action = MusicService.ACTION_PLAY
             putExtra(MusicService.EXTRA_QUEUE, Gson().toJson(queue))

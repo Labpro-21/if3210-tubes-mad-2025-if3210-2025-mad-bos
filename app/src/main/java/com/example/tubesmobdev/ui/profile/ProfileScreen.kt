@@ -1,7 +1,6 @@
 package com.example.tubesmobdev.ui.profile
 
 import android.app.Activity
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -41,13 +40,15 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
     connectionViewModel: ConnectionViewModel = hiltViewModel()
 ) {
-    val profile = viewModel.profile
-    val isLoading = viewModel.isLoading
-    val errorMessage = viewModel.errorMessage
+    val profile by viewModel.profile.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val allSongsCount by viewModel.allSongsCount.collectAsState()
+    val likedSongsCount by viewModel.likedSongsCount.collectAsState()
+    val listenedSongsCount by viewModel.listenedSongsCount.collectAsState()
+
     val baseUrl = "http://34.101.226.132:3000/uploads/profile-picture/"
     val photoUrl = profile?.profilePhoto?.let { baseUrl + it } ?: ""
-
-    Log.d("URL", photoUrl)
 
     val painter: Painter = rememberAsyncImagePainter(photoUrl)
     val dominantColor: Color = rememberDominantColor(painter.toString())
@@ -64,9 +65,10 @@ fun ProfileScreen(
 
     val connectivityStatus by connectionViewModel.connectivityStatus.collectAsState()
 
-    LaunchedEffect (Unit) {
+    LaunchedEffect(Unit) {
         viewModel.fetchProfile()
     }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
@@ -83,7 +85,7 @@ fun ProfileScreen(
             }
 
             errorMessage != null -> {
-                ErrorStateProfile (
+                ErrorStateProfile(
                     message = "Something went wrong when fetch profile data",
                     onLogout = { viewModel.logout() }
                 )
@@ -122,7 +124,7 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Text(
-                            text = profile.username,
+                            text = profile!!.username,
                             style = MaterialTheme.typography.headlineSmall,
                             fontSize = 20.sp
                         )
@@ -130,7 +132,7 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Text(
-                            text = profile.location,
+                            text = profile!!.location,
                             style = MaterialTheme.typography.bodyLarge,
                             fontSize = 16.sp,
                             color = Color.Gray
@@ -156,9 +158,9 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(50.dp))
 
                         Row(modifier = Modifier.fillMaxWidth()) {
-                            StatsColumn(viewModel.allSongsCount, "SONGS", Modifier.weight(1f))
-                            StatsColumn(viewModel.likedSongsCount, "LIKED", Modifier.weight(1f))
-                            StatsColumn(viewModel.listenedSongsCount, "LISTENED", Modifier.weight(1f))
+                            StatsColumn(allSongsCount, "SONGS", Modifier.weight(1f))
+                            StatsColumn(likedSongsCount, "LIKED", Modifier.weight(1f))
+                            StatsColumn(listenedSongsCount, "LISTENED", Modifier.weight(1f))
                         }
                     }
                 }
@@ -166,4 +168,3 @@ fun ProfileScreen(
         }
     }
 }
-

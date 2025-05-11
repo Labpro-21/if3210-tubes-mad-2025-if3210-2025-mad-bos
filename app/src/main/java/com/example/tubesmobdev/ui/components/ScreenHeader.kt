@@ -3,6 +3,7 @@ package com.example.tubesmobdev.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
@@ -25,10 +26,9 @@ fun ScreenHeader(
     onBack: () -> Unit = {},
     onClick: () -> Unit = {},
     dominantColor: Color = MaterialTheme.colorScheme.background,
-    isCompact: Boolean = true // tambahan ini aja
+    isCompact: Boolean = true
 ) {
     if (isCompact) {
-        // compact / hp / small screen
         if (isMainMenu) {
             TopAppBar(
                 title = {
@@ -53,7 +53,7 @@ fun ScreenHeader(
                 title = {},
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = actions,
@@ -65,7 +65,7 @@ fun ScreenHeader(
             )
         }
     } else {
-        // landscape / tablet / large screen → manual layout
+
         Row(
             modifier = modifier
                 .fillMaxWidth()
@@ -75,7 +75,7 @@ fun ScreenHeader(
         ) {
             if (!isMainMenu) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                 }
             }
 

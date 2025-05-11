@@ -8,7 +8,7 @@
 
     <ImageView
         android:id="@+id/songImage"
-        android:layout_width="99dp"
+        android:layout_width="100dp"
         android:layout_height="100dp"
         android:scaleType="centerCrop"
         android:contentDescription="@null"/>

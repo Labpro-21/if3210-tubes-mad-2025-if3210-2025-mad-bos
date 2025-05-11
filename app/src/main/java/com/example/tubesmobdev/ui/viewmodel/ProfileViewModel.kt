@@ -1,9 +1,6 @@
 package com.example.tubesmobdev.ui.viewmodel
 
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tubesmobdev.data.local.preferences.ServicePreferences
@@ -13,6 +10,9 @@ import com.example.tubesmobdev.data.repository.ProfileRepository
 import com.example.tubesmobdev.data.repository.SongRepository
 import com.example.tubesmobdev.manager.PlayerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,21 +25,27 @@ class ProfileViewModel @Inject constructor(
     private val servicePreferences: ServicePreferences,
 ) : ViewModel() {
 
-    var profile: ProfileResponse? by mutableStateOf(null)
-        private set
+    // Profile state
+    private val _profile = MutableStateFlow<ProfileResponse?>(null)
+    val profile: StateFlow<ProfileResponse?> = _profile.asStateFlow()
 
-    var isLoading: Boolean by mutableStateOf(false)
-        private set
+    // Loading state
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    var errorMessage: String? by mutableStateOf(null)
-        private set
-    var allSongsCount by mutableStateOf(0)
-        private set
+    // Error state
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    var likedSongsCount by mutableStateOf(0)
-        private set
-    var listenedSongsCount by mutableStateOf(0)
-        private set
+    // Song counts
+    private val _allSongsCount = MutableStateFlow(0)
+    val allSongsCount: StateFlow<Int> = _allSongsCount.asStateFlow()
+
+    private val _likedSongsCount = MutableStateFlow(0)
+    val likedSongsCount: StateFlow<Int> = _likedSongsCount.asStateFlow()
+
+    private val _listenedSongsCount = MutableStateFlow(0)
+    val listenedSongsCount: StateFlow<Int> = _listenedSongsCount.asStateFlow()
 
     init {
         fetchProfile()
@@ -51,19 +57,19 @@ class ProfileViewModel @Inject constructor(
             launch {
                 songRepository.getAllSongsCount()
                     .collect { count ->
-                        allSongsCount = count
+                        _allSongsCount.value = count
                     }
             }
             launch {
                 songRepository.getLikedSongsCount()
                     .collect { count ->
-                        likedSongsCount = count
+                        _likedSongsCount.value = count
                     }
             }
             launch {
                 songRepository.getPlayedSongsCount()
                     .collect { count ->
-                        listenedSongsCount = count
+                        _listenedSongsCount.value = count
                     }
             }
         }
@@ -71,19 +77,18 @@ class ProfileViewModel @Inject constructor(
 
     fun fetchProfile() {
         viewModelScope.launch {
-            isLoading = true
-            errorMessage = null
+            _isLoading.value = true
+            _errorMessage.value = null
 
             val result = profileRepository.getProfile()
             result.fold(
-                onSuccess = { profile = it },
+                onSuccess = { _profile.value = it },
                 onFailure = {
-                    errorMessage = it.message ?: "Unknown error"
+                    _errorMessage.value = it.message ?: "Unknown error"
                     Log.d("TokenRefreshService", it.message.toString())
-
                 }
             )
-            isLoading = false
+            _isLoading.value = false
         }
     }
 

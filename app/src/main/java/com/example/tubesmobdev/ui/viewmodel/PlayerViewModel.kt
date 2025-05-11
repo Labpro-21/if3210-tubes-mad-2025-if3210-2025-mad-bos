@@ -1,10 +1,15 @@
 package com.example.tubesmobdev.ui.viewmodel
 
 import android.app.Application
-import android.net.Uri
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
 import android.util.Log
 import androidx.annotation.OptIn
-import androidx.core.net.toUri
+import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
@@ -13,7 +18,10 @@ import com.example.tubesmobdev.data.repository.PlayerPreferencesRepository
 import com.example.tubesmobdev.data.repository.SongRepository
 import com.example.tubesmobdev.manager.PlayerManager
 import com.example.tubesmobdev.manager.PlaybackConnection
+import com.example.tubesmobdev.service.MusicService
 import com.example.tubesmobdev.util.RepeatMode
+import com.example.tubesmobdev.util.SongEventBus
+import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,10 +62,32 @@ class PlayerViewModel @OptIn(UnstableApi::class)
     private val _progress = MutableStateFlow(0f)
     val progress: StateFlow<Float> = _progress
 
+
+
     init {
         observeQueue()
         observeSongs()
         observePlaybackState()
+        observeSongEvents()
+
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        try {
+
+        } catch (e: Exception) {
+            Log.e("PlayerViewModel", "Error unregistering receiver", e)
+        }
+    }
+
+    private fun observeSongEvents() {
+        viewModelScope.launch {
+            SongEventBus.events.collect { song ->
+                Log.d("PlayerViewModel", "Song event received from EventBus: ${song.title}")
+                onSongChanged(song)
+            }
+        }
     }
 
     @OptIn(UnstableApi::class)
@@ -83,7 +113,6 @@ class PlayerViewModel @OptIn(UnstableApi::class)
         }
     }
 
-
     private fun observeSongs() {
         viewModelScope.launch {
             songRepository.getAllSongs().collect { songs ->
@@ -103,26 +132,53 @@ class PlayerViewModel @OptIn(UnstableApi::class)
 
     private fun validateQueueWithSongs(songs: List<Song>) {
         val currentQueue = _currentQueue.value
-        val validQueue = currentQueue.filter { songInQueue ->
-            songs.any { it.id == songInQueue.id }
+        if (currentQueue.isEmpty()) return
+
+        val validQueue = currentQueue.filter { queueSong ->
+            songs.any { it.id == queueSong.id }
         }
+
         if (currentQueue.size != validQueue.size) {
+            Log.d("PlayerViewModel", "Invalid songs removed from queue")
             updateQueue(validQueue)
+
+            if (currentQueueIndex >= validQueue.size) {
+                currentQueueIndex = validQueue.size - 1
+            }
+        }
+    }
+
+    fun onSongChanged(song: Song) {
+        viewModelScope.launch {
+            _currentSong.value = song
+
+            if (!song.isOnline) {
+                songRepository.updateLastPlayed(song.id, System.currentTimeMillis())
+            }
+
+            currentQueueIndex = _currentQueue.value.indexOfFirst { it.id == song.id }
+                .takeIf { it != -1 } ?: currentQueueIndex
         }
     }
 
     fun playSong(song: Song) {
         _currentSong.value = song
-        Log.d("Test", currentSong.value.toString())
+
+        val queue = _currentQueue.value.ifEmpty { _songList.value }
+
         playerManager.play(
             song = song,
-            queue = _currentQueue.value.ifEmpty { _songList.value },
+            queue = queue,
             isShuffle = _isShuffle.value,
             repeatMode = _repeatMode.value
         )
-        viewModelScope.launch {
-            songRepository.updateLastPlayed(song.id, System.currentTimeMillis())
+
+        if (!song.isOnline) {
+            viewModelScope.launch {
+                songRepository.updateLastPlayed(song.id, System.currentTimeMillis())
+            }
         }
+
     }
 
     @OptIn(UnstableApi::class)
@@ -133,10 +189,16 @@ class PlayerViewModel @OptIn(UnstableApi::class)
         }
     }
 
-    fun clearSong() {
+    private fun clearSong() {
         playerManager.clearWithCallback {
             _currentSong.value = null
         }
+    }
+
+    fun clearCurrentQueue() {
+        _currentQueue.value = emptyList()
+        observeQueue()
+        observeSongs()
     }
 
     fun stopIfPlaying(song: Song) {
@@ -260,7 +322,9 @@ class PlayerViewModel @OptIn(UnstableApi::class)
     fun updateCurrentSongIfMatches(updatedSong: Song) {
         val current = _currentSong.value
         if (current != null && current.id == updatedSong.id) {
-            _currentSong.value = updatedSong
+            val updatedWithOnlineStatus = updatedSong.copy()
+            updatedWithOnlineStatus.isOnline = current.isOnline
+            _currentSong.value = updatedWithOnlineStatus
         }
     }
 
@@ -269,6 +333,11 @@ class PlayerViewModel @OptIn(UnstableApi::class)
         viewModelScope.launch {
             playerRepository.saveQueue(queue)
         }
+    }
+
+    fun setCurrentQueue(queue: List<Song>) {
+        _currentQueue.value = queue
+        updateQueue(queue)
     }
 
     fun addQueue(newSong: Song) {

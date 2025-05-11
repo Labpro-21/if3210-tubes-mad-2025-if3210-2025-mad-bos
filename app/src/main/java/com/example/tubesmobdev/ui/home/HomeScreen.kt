@@ -7,6 +7,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -16,12 +17,15 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.tubesmobdev.data.model.Song
+import com.example.tubesmobdev.ui.components.TopSongSection
 import com.example.tubesmobdev.ui.viewmodel.HomeViewModel
+import com.example.tubesmobdev.ui.viewmodel.ProfileViewModel
 
 @Composable
 fun HomeScreen(
     navController: NavController,
     viewModel: HomeViewModel = hiltViewModel(),
+    profileViewModel: ProfileViewModel = hiltViewModel(),
     onSongClick: (Song) -> Unit,
     onHomeSongClick: (Song) -> Unit,
     customTopBar: @Composable (() -> Unit) = {},
@@ -30,15 +34,41 @@ fun HomeScreen(
     val newestSongs by viewModel.newestSongs.collectAsState()
     val recentlyPlayedSongs by viewModel.recentlyPlayedSongs.collectAsState()
 
+    val profile by profileViewModel.profile.collectAsState()
+    val isLoadingProfile by profileViewModel.isLoading.collectAsState()
+
+    LaunchedEffect (Unit) {
+        profileViewModel.fetchProfile()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(bottom = 80.dp) // optional biar ga ketutup mini player
+            .padding(bottom = 80.dp)
     ) {
         if (!isCompact){
             customTopBar()
         }
+        if (!isLoadingProfile) {
+            TopSongSection   (
+                onChartClick = { chartCode ->
+                    navController.navigate("top_songs/$chartCode")
+                },
+                location = profile?.location
+            )
+        }
+
+        Text(
+            text = "New Songs",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Start,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 12.dp)
+        )
+
         SongRecyclerView(
             songs = newestSongs,
             onItemClick = onHomeSongClick,

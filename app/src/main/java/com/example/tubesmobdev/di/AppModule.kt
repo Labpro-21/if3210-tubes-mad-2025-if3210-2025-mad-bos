@@ -14,10 +14,12 @@ import com.example.tubesmobdev.data.local.preferences.PlayerPreferences
 import com.example.tubesmobdev.data.local.preferences.ServicePreferences
 import com.example.tubesmobdev.data.remote.api.AuthApi
 import com.example.tubesmobdev.data.remote.api.ProfileApi
+import com.example.tubesmobdev.data.remote.api.SongApi
 import com.example.tubesmobdev.data.remote.interceptor.AuthInterceptor
 import com.example.tubesmobdev.data.repository.AuthRepository
 import com.example.tubesmobdev.data.repository.ProfileRepository
 import com.example.tubesmobdev.data.repository.IAuthRepository
+import com.example.tubesmobdev.data.repository.OnlineSongRepository
 import com.example.tubesmobdev.data.repository.SongRepository
 import com.example.tubesmobdev.manager.PlaybackConnection
 import com.example.tubesmobdev.manager.PlayerManager
@@ -139,5 +141,17 @@ object AppModule {
     @Singleton
     fun providePlaybackConnection(@ApplicationContext context: Context): PlaybackConnection {
         return PlaybackConnection(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSongApi(retrofit: Retrofit): SongApi {
+        return retrofit.create(SongApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOnlineSongRepository(apiService: SongApi): OnlineSongRepository {
+        return OnlineSongRepository(apiService)
     }
 }
