@@ -2,8 +2,8 @@ package com.example.tubesmobdev.di
 
 import android.content.Context
 import androidx.annotation.OptIn
-import androidx.media3.common.util.UnstableApi
 import androidx.room.Room
+import com.example.tubesmobdev.data.local.dao.ListeningRecordDao
 import com.example.tubesmobdev.data.local.dao.SongDao
 import com.example.tubesmobdev.data.local.database.SongDatabase
 import com.example.tubesmobdev.data.local.preferences.AuthPreferences
@@ -19,6 +19,7 @@ import com.example.tubesmobdev.data.remote.interceptor.AuthInterceptor
 import com.example.tubesmobdev.data.repository.AuthRepository
 import com.example.tubesmobdev.data.repository.ProfileRepository
 import com.example.tubesmobdev.data.repository.IAuthRepository
+import com.example.tubesmobdev.data.repository.ListeningRecordRepository
 import com.example.tubesmobdev.data.repository.OnlineSongRepository
 import com.example.tubesmobdev.data.repository.SongRepository
 import com.example.tubesmobdev.manager.PlaybackConnection
@@ -26,6 +27,7 @@ import com.example.tubesmobdev.manager.PlayerManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.UnstableApi
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
@@ -128,6 +130,21 @@ object AppModule {
     @Singleton
     fun provideSongDao(db: SongDatabase): SongDao {
         return db.songDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideListeningRecordRepository(
+        dao: ListeningRecordDao,
+        authPreferences: IAuthPreferences
+    ): ListeningRecordRepository {
+        return ListeningRecordRepository(dao, authPreferences)
+    }
+
+    @Provides
+    @Singleton
+    fun provideListeningRecordDao(db: SongDatabase): ListeningRecordDao {
+        return db.listeningRecordDao()
     }
 
     @Provides

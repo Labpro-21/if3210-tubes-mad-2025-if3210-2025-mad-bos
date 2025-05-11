@@ -6,10 +6,11 @@ import android.util.Log
 import androidx.annotation.OptIn
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.SessionCommand
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.tubesmobdev.data.model.ListeningRecord
 import com.example.tubesmobdev.data.model.Song
+import com.example.tubesmobdev.data.repository.ListeningRecordRepository
 import com.example.tubesmobdev.data.repository.PlayerPreferencesRepository
 import com.example.tubesmobdev.data.repository.SongRepository
 import com.example.tubesmobdev.manager.PlaybackConnection
@@ -18,22 +19,30 @@ import com.example.tubesmobdev.service.MusicService
 import com.example.tubesmobdev.util.RepeatMode
 import com.example.tubesmobdev.util.SongEvent
 import com.example.tubesmobdev.util.SongEventBus
+import dagger.hilt.android.UnstableApi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
+import kotlin.math.log
 
 @HiltViewModel
 class PlayerViewModel @OptIn(UnstableApi::class)
 @Inject constructor(
     private val app: Application,
     private val songRepository: SongRepository,
+    private val listeningRecordRepository: ListeningRecordRepository,
     private val playerRepository: PlayerPreferencesRepository,
     private val playerManager: PlayerManager,
     private val playbackConnection: PlaybackConnection
 ) : AndroidViewModel(app) {
+
+    private var listeningStartTime: Long? = null
 
     private val _currentSong = MutableStateFlow<Song?>(null)
     val currentSong: StateFlow<Song?> = _currentSong
@@ -178,7 +187,10 @@ class PlayerViewModel @OptIn(UnstableApi::class)
 
     private fun onSongChanged(song: Song) {
         viewModelScope.launch {
+            saveListeningDuration() // simpan jika ada lagu sebelumnya
+
             _currentSong.value = song
+            listeningStartTime = System.currentTimeMillis()
 
             if (!song.isOnline) {
                 songRepository.updateLastPlayed(song.id, System.currentTimeMillis())
@@ -187,6 +199,29 @@ class PlayerViewModel @OptIn(UnstableApi::class)
             currentQueueIndex = _currentQueue.value.indexOfFirst { it.id == song.id }
                 .takeIf { it != -1 } ?: currentQueueIndex
         }
+    }
+
+    private suspend fun saveListeningDuration() {
+        val song = _currentSong.value ?: return
+        val startTime = listeningStartTime ?: return
+        val endTime = System.currentTimeMillis()
+        val listenedMs = endTime - startTime
+
+        // Simpan hanya jika lebih dari 5 detik
+        if (listenedMs >= 5000 && !song.isOnline) {
+            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            val record = ListeningRecord(
+                songId = song.id,
+                title = song.title,
+                artist = song.artist,
+                creatorId = song.creatorId,
+                date = today,
+                durationListened = listenedMs
+            )
+            listeningRecordRepository.insertRecord(record)
+        }
+
+        listeningStartTime = null
     }
 
     fun playSong(song: Song) {

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.tubesmobdev.data.local.preferences.ServicePreferences
 import com.example.tubesmobdev.data.remote.response.ProfileResponse
 import com.example.tubesmobdev.data.repository.IAuthRepository
+import com.example.tubesmobdev.data.repository.ListeningRecordRepository
 import com.example.tubesmobdev.data.repository.ProfileRepository
 import com.example.tubesmobdev.data.repository.SongRepository
 import com.example.tubesmobdev.manager.PlayerManager
@@ -21,9 +22,14 @@ class ProfileViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val authRepository: IAuthRepository,
     private val songRepository: SongRepository,
+    private val listeningRecordRepository: ListeningRecordRepository,
     private val playerManager: PlayerManager,
     private val servicePreferences: ServicePreferences,
 ) : ViewModel() {
+
+    val totalListeningMinutes = MutableStateFlow(0L)
+    val topArtist = MutableStateFlow("")
+    val topSong = MutableStateFlow("")
 
     private val _profile = MutableStateFlow<ProfileResponse?>(null)
     val profile: StateFlow<ProfileResponse?> = _profile.asStateFlow()
@@ -85,6 +91,24 @@ class ProfileViewModel @Inject constructor(
                 }
             )
             _isLoading.value = false
+
+            launch {
+                listeningRecordRepository.getTotalListeningTime().collect {
+                    totalListeningMinutes.value = (it ?: 0L) / 60000
+                }
+            }
+
+            launch {
+                listeningRecordRepository.getTopArtist().collect {
+                    topArtist.value = it ?: ""
+                }
+            }
+
+            launch {
+                listeningRecordRepository.getTopSong().collect {
+                    topSong.value = it ?: ""
+                }
+            }
         }
     }
 
