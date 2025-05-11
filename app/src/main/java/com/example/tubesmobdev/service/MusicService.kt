@@ -143,11 +143,18 @@ class MusicService : MediaSessionService() {
             }
 
             override fun createCurrentContentIntent(player: Player): PendingIntent? {
+                val intent = Intent(this@MusicService, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    putExtra("NAVIGATE_TO_FULL_PLAYER", true)
+                }
+
+                Log.d("Intent3", intent.toString())
+
                 return PendingIntent.getActivity(
                     this@MusicService,
                     0,
-                    Intent(this@MusicService, MainActivity::class.java),
-                    PendingIntent.FLAG_IMMUTABLE
+                    intent,
+                    PendingIntent.FLAG_MUTABLE
                 )
             }
 
@@ -198,13 +205,6 @@ class MusicService : MediaSessionService() {
         }
     }
 
-//    private fun broadcastSongChange(song: Song) {
-//        val intent = Intent(ACTION_SONG_CHANGED).apply {
-//            putExtra(EXTRA_SONG, Gson().toJson(song))
-//        }
-//        Log.d("PlayerViewModel", "send: $intent")
-//        sendBroadcast(intent)
-//    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)

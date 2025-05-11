@@ -1,31 +1,52 @@
+// MainActivity.kt
 package com.example.tubesmobdev
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
-import android.widget.Toast
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.ViewModelProvider
 import com.example.tubesmobdev.ui.navigation.AppNavigation
 import com.example.tubesmobdev.ui.theme.TubesMobdevTheme
+import com.example.tubesmobdev.ui.viewmodel.NavigationViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private lateinit var navigationViewModel: NavigationViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        navigationViewModel = ViewModelProvider(this)[NavigationViewModel::class.java]
+        val navigateToFullPlayer = intent?.getBooleanExtra("NAVIGATE_TO_FULL_PLAYER", false) == true
+
+        Log.d("Intent", navigateToFullPlayer.toString())
         installSplashScreen()
         enableEdgeToEdge()
+
+        if (navigateToFullPlayer) {
+            navigationViewModel.triggerNavigateToFullPlayer()
+        }
+
         setContent {
             TubesMobdevTheme {
-                AppNavigation()
+                AppNavigation(navigationViewModel = navigationViewModel)
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        val navigateToFullPlayer = intent?.getBooleanExtra("NAVIGATE_TO_FULL_PLAYER", false) == true
+        Log.d("MainLayout", navigateToFullPlayer.toString())
+
+
+        if (navigateToFullPlayer) {
+            navigationViewModel.triggerNavigateToFullPlayer()
         }
     }
 }

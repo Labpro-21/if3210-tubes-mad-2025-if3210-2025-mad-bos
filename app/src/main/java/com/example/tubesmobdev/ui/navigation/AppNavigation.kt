@@ -19,11 +19,17 @@ import com.example.tubesmobdev.ui.viewmodel.TokenRefreshViewModel
 import com.example.tubesmobdev.util.ServiceUtil
 
 @Composable
-fun AppNavigation(authViewModel: NavigationViewModel = hiltViewModel(), tokenRefreshViewModel: TokenRefreshViewModel = hiltViewModel()) {
+fun AppNavigation(
+    authViewModel: NavigationViewModel = hiltViewModel(),
+    tokenRefreshViewModel: TokenRefreshViewModel = hiltViewModel(),
+    navigationViewModel: NavigationViewModel = hiltViewModel(),
+    initialDestination: String = "home"
+) {
     val navController = rememberNavController()
     val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
     val isInitialized by authViewModel.isInitialized.collectAsState()
     val context = LocalContext.current
+
     LaunchedEffect(isLoggedIn) {
         authViewModel.setShouldRestartService(isLoggedIn)
 
@@ -41,18 +47,11 @@ fun AppNavigation(authViewModel: NavigationViewModel = hiltViewModel(), tokenRef
         }
     }
 
-//    LaunchedEffect(isLoggedIn) {
-//        if (isLoggedIn) {
-//            tokenRefreshViewModel.startTokenRefreshLoop()
-//        } else {
-//            tokenRefreshViewModel.stopTokenRefreshLoop()
-//        }
-//    }
-
     if (!isInitialized) {
         SplashScreen()
         return
     }
+
     NavHost(
         navController = navController,
         startDestination = if (isLoggedIn) "main" else "login"
@@ -61,56 +60,7 @@ fun AppNavigation(authViewModel: NavigationViewModel = hiltViewModel(), tokenRef
             LoginScreen(navController = navController)
         }
         composable("main") {
-            MainLayout(navController)
+            MainLayout(navController, startDestination = initialDestination, navigationViewModel = navigationViewModel)
         }
     }
-
-//    when (isLoggedIn.value) {
-//        null -> {
-//            LoginScreen(navController = navController)
-//        }
-//        true -> {
-//            NavHost(navController = navController, startDestination = "home") {
-//
-//                composable("login") {
-//                    LoginScreen(navController = navController)
-//                }
-//
-//                composable("home") {
-//                    HomeScreen(navController = navController)
-//                }
-//
-//                composable("library") {
-//                    LibraryScreen(navController = navController, onSongClick = {})
-//                }
-//
-//                composable("profile") {
-//                    ProfileScreen(navController = navController)
-//                }
-//            }
-//        }
-//        false -> {
-//            NavHost(navController = navController, startDestination = "login") {
-//
-//                composable("login") {
-//                    LoginScreen(navController = navController)
-//                }
-//
-//                composable("home") {
-//                    HomeScreen(navController = navController)
-//                }
-//
-//                composable("library") {
-//                    LibraryScreen(navController = navController, onSongClick = {})
-//                }
-//
-//                composable("profile") {
-//                    ProfileScreen(navController = navController)
-//                }
-//            }
-//
-//        }
-//    }
-
-
 }

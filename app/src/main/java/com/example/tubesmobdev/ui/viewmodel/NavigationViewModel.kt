@@ -1,5 +1,6 @@
 package com.example.tubesmobdev.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.tubesmobdev.data.local.preferences.IAuthPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -9,6 +10,7 @@ import javax.inject.Inject
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tubesmobdev.data.local.preferences.IServicePreferences
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
@@ -20,7 +22,8 @@ class NavigationViewModel @Inject constructor(
     private val servicePreferences: IServicePreferences
 ) : ViewModel() {
 
-
+    private val _navigateToFullPlayer = MutableSharedFlow<Unit>(extraBufferCapacity = 1,replay = 1)
+    val navigateToFullPlayer = _navigateToFullPlayer
 
     private val _isInitialized = MutableStateFlow(false)
     val isInitialized: StateFlow<Boolean> = _isInitialized
@@ -36,6 +39,12 @@ class NavigationViewModel @Inject constructor(
         viewModelScope.launch {
             servicePreferences.setShouldRestartService(value)
         }
+    }
+
+    fun triggerNavigateToFullPlayer() {
+        Log.d("MainLayout", "triggerNavigateToFullPlayer")
+        val res = _navigateToFullPlayer.tryEmit(Unit)
+        Log.d("MainLayout", "tryemit: $res")
     }
 
 }

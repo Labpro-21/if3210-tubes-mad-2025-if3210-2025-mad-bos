@@ -2,6 +2,7 @@ package com.example.tubesmobdev.ui.layout
 
 import android.app.Activity
 import android.os.Build
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -23,6 +24,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -36,16 +39,18 @@ import com.example.tubesmobdev.ui.library.SearchLibraryScreen
 import com.example.tubesmobdev.ui.profile.ProfileScreen
 import com.example.tubesmobdev.ui.topsongs.TopSongsScreen
 import com.example.tubesmobdev.ui.viewmodel.ConnectionViewModel
+import com.example.tubesmobdev.ui.viewmodel.NavigationViewModel
 import com.example.tubesmobdev.ui.viewmodel.PlayerViewModel
 import com.example.tubesmobdev.util.rememberDominantColor
 
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun MainLayout(outerNavController: NavController) {
+fun MainLayout(outerNavController: NavController, startDestination: String = "home",  navigationViewModel: NavigationViewModel) {
     val navController = rememberNavController()
     val playerViewModel: PlayerViewModel = hiltViewModel()
     val connectionViewModel: ConnectionViewModel = hiltViewModel()
+
+
 
     val connectivityStatus by connectionViewModel.connectivityStatus.collectAsState()
     val currentSong by playerViewModel.currentSong.collectAsState()
@@ -78,6 +83,18 @@ fun MainLayout(outerNavController: NavController) {
         snackbarMessage?.let {
             snackbarHostState.showSnackbar(it, withDismissAction = true)
             snackbarMessage = null
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        navigationViewModel.navigateToFullPlayer.collect {
+            Log.d("MainLayout", "Received signal to navigate to fullplayer")
+            if (currentRoute != "fullplayer") {
+                Log.d("MainLayout", "Navigating to fullplayer from route: $currentRoute")
+                navController.navigate("fullplayer")
+            } else {
+                Log.d("MainLayout", "Already at fullplayer")
+            }
         }
     }
 
@@ -169,7 +186,7 @@ fun MainLayout(outerNavController: NavController) {
                     ) {
                         NavHost(
                             navController = navController,
-                            startDestination = "home"
+                            startDestination = startDestination
                         ) {
                             composable("home") {
                                 topBarContent = { ScreenHeader("Top Songs") }
