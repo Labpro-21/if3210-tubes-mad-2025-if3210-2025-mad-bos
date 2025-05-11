@@ -260,84 +260,19 @@ class PlayerViewModel @OptIn(UnstableApi::class)
         }
     }
 
-    private fun getNextSong(): Song? {
-        return if (_isShuffle.value) {
-            if (_songList.value.isNotEmpty()) _songList.value.random() else null
-        } else if (_currentQueue.value.isNotEmpty()) {
-            val queue = _currentQueue.value
-            if (currentQueueIndex < queue.size - 1) {
-                queue[currentQueueIndex + 1]
-            } else if (_repeatMode.value == RepeatMode.REPEAT_ALL) {
-                queue[(currentQueueIndex + 1) % queue.size]
-            } else {
-                viewModelScope.launch {
-                    playerRepository.clearQueue()
-                }
-                _currentQueue.value = emptyList()
-                if (_songList.value.isNotEmpty()) _songList.value.random() else null
-            }
-        } else {
-            val songs = _songList.value
-            val currentIndex = songs.indexOfFirst { it.id == _currentSong.value?.id }
-            songs[(currentIndex + 1) % _songList.value.size]
-        }
-    }
-
-    private fun getPreviousSong(): Song? {
-        return if (_isShuffle.value) {
-            if (_songList.value.isNotEmpty()) _songList.value.random() else null
-        } else if (_currentQueue.value.isNotEmpty()) {
-            val queue = _currentQueue.value
-            if (currentQueueIndex > 0) {
-                queue[currentQueueIndex - 1]
-            } else {
-                if (_songList.value.isNotEmpty()) _songList.value.random() else null
-            }
-        } else {
-            val songs = _songList.value
-            val currentIndex = songs.indexOfFirst { it.id == _currentSong.value?.id }
-            val prevIndex = if (currentIndex - 1 < 0) songs.lastIndex else currentIndex - 1
-            songs[prevIndex]
-        }
-    }
-
+    @OptIn(UnstableApi::class)
     fun playNext() {
-        if (_repeatMode.value == RepeatMode.REPEAT_ONE) {
-            _currentSong.value?.let { playSong(it) }
-            return
-        }
-        val nextSong = getNextSong()
-        if (nextSong != null) {
-            if (_currentQueue.value.isNotEmpty()) {
-                val queue = _currentQueue.value
-                val index = queue.indexOfFirst { it.id == nextSong.id }
-                if (index != -1) {
-                    currentQueueIndex = index
-                }
-            }
-            playSong(nextSong)
-        } else {
-            _currentSong.value?.let { playSong(it) }
+        viewModelScope.launch {
+            val controller = playbackConnection.getController()
+            controller.seekToNext()
         }
     }
 
+    @OptIn(UnstableApi::class)
     fun playPrevious() {
-        if (_repeatMode.value == RepeatMode.REPEAT_ONE) {
-            _currentSong.value?.let { playSong(it) }
-            return
-        }
-        val previousSong = getPreviousSong()
-        if (previousSong != null) {
-            if (_currentQueue.value.isNotEmpty()) {
-                val queue = _currentQueue.value
-                val index = queue.indexOfFirst { it.id == previousSong.id }
-                if (index != -1) {
-                    currentQueueIndex = index
-                }
-            }
-            playSong(previousSong)
-        } else {
-            _currentSong.value?.let { playSong(it) }
+        viewModelScope.launch {
+            val controller = playbackConnection.getController()
+            controller.seekToPrevious()
         }
     }
 

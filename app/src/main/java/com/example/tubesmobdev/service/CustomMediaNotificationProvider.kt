@@ -1,13 +1,17 @@
 package com.example.tubesmobdev.service
 
 import android.content.Context
+import android.os.Bundle
 import androidx.core.app.NotificationCompat
+import androidx.media3.common.Player
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.CommandButton
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaNotification
 import androidx.media3.session.MediaSession
+import androidx.media3.session.SessionCommand
+import com.example.tubesmobdev.R
 import com.google.common.collect.ImmutableList
 
 
@@ -19,16 +23,42 @@ class CustomMediaNotificationProvider(context: Context): DefaultMediaNotificatio
         builder: NotificationCompat.Builder,
         actionFactory: MediaNotification.ActionFactory
     ): IntArray {
-        //[Seek to previous item, Play, Seek to next item, Shuffle, Repeat, Like]
-        val defaultPrev = mediaButtons.find { it.displayName == "Seek to previous item" }
-        val defaultPlayPause = mediaButtons.indexOfFirst { it.displayName == "Play" || it.displayName == "Pause" }
-        val defaultNext = mediaButtons.find { it.displayName == "Seek to next item" }
-        val defaultShuffle = mediaButtons.find { it.displayName == "Shuffle" }
-        val defaultRepeat = mediaButtons.find { it.displayName == "Repeat" }
-        val defaultLike = mediaButtons.indexOfFirst { it.displayName == "Like" }
+        Log.d("CustomButton", "add notif")
 
-        Log.d("CustomButton", "${mediaButtons.map { it.displayName }}")
+        return super.addNotificationActions(mediaSession, mediaButtons, builder, actionFactory)
+    }
 
-        return intArrayOf(defaultPlayPause, defaultLike)
+
+    override fun getMediaButtons(
+        session: MediaSession,
+        playerCommands: Player.Commands,
+        mediaButtonPreferences: ImmutableList<CommandButton>,
+        showPauseButton: Boolean
+    ): ImmutableList<CommandButton> {
+        val buttons = mutableListOf<CommandButton>()
+
+        val playPauseButton = CommandButton.Builder()
+            .setDisplayName("Play/Pause")
+            .setPlayerCommand(Player.COMMAND_PLAY_PAUSE)
+            .setIconResId(R.drawable.ic_play)
+            .setExtras(Bundle().apply {
+                putInt(COMMAND_KEY_COMPACT_VIEW_INDEX, 0)
+            })
+            .build()
+
+        val likeButton = CommandButton.Builder()
+            .setDisplayName("Like")
+            .setSessionCommand(SessionCommand(MusicService.ACTION_TOGGLE_LIKE, Bundle.EMPTY))
+            .setIconResId(R.drawable.ic_like)
+            .setExtras(Bundle().apply {
+                putInt(COMMAND_KEY_COMPACT_VIEW_INDEX, 1)
+            })
+            .build()
+
+        buttons += playPauseButton
+        buttons += likeButton
+
+        Log.d("CustomButton", "media")
+        return ImmutableList.copyOf(buttons)
     }
 }

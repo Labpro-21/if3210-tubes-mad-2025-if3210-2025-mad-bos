@@ -290,11 +290,12 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                         onBack = { navController.popBackStack() },
                                         dominantColor = dominantColor,
                                         actions = {
-                                            IconButton(onClick = { isSheetOpen = true }) {
-                                                Icon(
-                                                    Icons.Default.Edit,
-                                                    contentDescription = "Edit"
-                                                )
+                                            currentSong?.let { song ->
+                                                if (!song.isOnline) {
+                                                    IconButton(onClick = { isSheetOpen = true }) {
+                                                        Icon(Icons.Default.Edit, contentDescription = "Edit")
+                                                    }
+                                                }
                                             }
                                         }
                                     )
