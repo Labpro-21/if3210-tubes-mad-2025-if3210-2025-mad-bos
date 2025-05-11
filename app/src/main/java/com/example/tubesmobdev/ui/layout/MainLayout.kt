@@ -290,11 +290,15 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                         onBack = { navController.popBackStack() },
                                         dominantColor = dominantColor,
                                         actions = {
-                                            IconButton(onClick = { isSheetOpen = true }) {
-                                                Icon(
-                                                    Icons.Default.Edit,
-                                                    contentDescription = "Edit"
-                                                )
+                                            currentSong?.isOnline?.let { it1 ->
+                                                if (!it1) {
+                                                    IconButton(onClick = { isSheetOpen = true }) {
+                                                        Icon(
+                                                            Icons.Default.Edit,
+                                                            contentDescription = "Edit"
+                                                        )
+                                                    }
+                                                }
                                             }
                                         }
                                     )
@@ -333,11 +337,13 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                                 onBack = { navController.popBackStack() },
                                                 dominantColor = dominantColor,
                                                 actions = {
-                                                    IconButton(onClick = { isSheetOpen = true }) {
-                                                        Icon(
-                                                            Icons.Default.Edit,
-                                                            contentDescription = "Edit"
-                                                        )
+                                                    if (!it.isOnline) { // akses dari currentSong
+                                                        IconButton(onClick = { isSheetOpen = true }) {
+                                                            Icon(
+                                                                Icons.Default.Edit,
+                                                                contentDescription = "Edit"
+                                                            )
+                                                        }
                                                     }
                                                 }
                                             )
