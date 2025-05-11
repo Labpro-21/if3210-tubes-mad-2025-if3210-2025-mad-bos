@@ -290,13 +290,10 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                         onBack = { navController.popBackStack() },
                                         dominantColor = dominantColor,
                                         actions = {
-                                            currentSong?.isOnline?.let { it1 ->
-                                                if (!it1) {
+                                            currentSong?.let { song ->
+                                                if (!song.isOnline) {
                                                     IconButton(onClick = { isSheetOpen = true }) {
-                                                        Icon(
-                                                            Icons.Default.Edit,
-                                                            contentDescription = "Edit"
-                                                        )
+                                                        Icon(Icons.Default.Edit, contentDescription = "Edit")
                                                     }
                                                 }
                                             }
@@ -337,13 +334,11 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                                 onBack = { navController.popBackStack() },
                                                 dominantColor = dominantColor,
                                                 actions = {
-                                                    if (!it.isOnline) { // akses dari currentSong
-                                                        IconButton(onClick = { isSheetOpen = true }) {
-                                                            Icon(
-                                                                Icons.Default.Edit,
-                                                                contentDescription = "Edit"
-                                                            )
-                                                        }
+                                                    IconButton(onClick = { isSheetOpen = true }) {
+                                                        Icon(
+                                                            Icons.Default.Edit,
+                                                            contentDescription = "Edit"
+                                                        )
                                                     }
                                                 }
                                             )

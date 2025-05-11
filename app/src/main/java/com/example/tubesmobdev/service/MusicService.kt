@@ -1,15 +1,9 @@
 package com.example.tubesmobdev.service
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
-import androidx.compose.ui.platform.LocalContext
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
@@ -50,6 +44,7 @@ class MusicService : MediaSessionService() {
     private var currentIndex: Int = 0
     private val serviceScope = CoroutineScope(Dispatchers.Main)
 
+
     private val customCommandLike = SessionCommand(ACTION_TOGGLE_LIKE, Bundle.EMPTY)
     private val customCommandShuffle = SessionCommand(ACTION_TOGGLE_SHUFFLE, Bundle.EMPTY)
     private val customCommandRepeat = SessionCommand(ACTION_TOGGLE_REPEAT, Bundle.EMPTY)
@@ -62,9 +57,6 @@ class MusicService : MediaSessionService() {
 
         const val ACTION_PLAY = "com.example.tubesmobdev.PLAY"
         const val ACTION_STOP = "com.example.tubesmobdev.STOP"
-        const val ACTION_PLAY_PAUSE = "com.example.tubesmobdev.PLAY_PAUSE"
-        const val ACTION_SKIP_NEXT = "com.example.tubesmobdev.SKIP_NEXT"
-        const val ACTION_SKIP_PREVIOUS = "com.example.tubesmobdev.SKIP_PREVIOUS"
         const val ACTION_TOGGLE_SHUFFLE = "com.example.tubesmobdev.SHUFFLE"
         const val ACTION_TOGGLE_REPEAT = "com.example.tubesmobdev.REPEAT"
         const val ACTION_TOGGLE_LIKE = "com.example.tubesmobdev.LIKE"
@@ -73,9 +65,6 @@ class MusicService : MediaSessionService() {
         const val EXTRA_INDEX = "EXTRA_INDEX"
         const val EXTRA_SHUFFLE = "EXTRA_SHUFFLE"
         const val EXTRA_REPEAT = "EXTRA_REPEAT"
-
-        const val ACTION_SONG_CHANGED = "com.example.tubesmobdev.SONG_CHANGED"
-        const val EXTRA_SONG = "EXTRA_SONG"
 
     }
 
@@ -101,12 +90,14 @@ class MusicService : MediaSessionService() {
             )
         }
 
+
         override fun onCustomCommand(
             session: MediaSession,
             controller: MediaSession.ControllerInfo,
             customCommand: SessionCommand,
             args: Bundle
         ): ListenableFuture<SessionResult> {
+
             val currentIndex = player?.currentMediaItemIndex ?: return Futures.immediateFuture(SessionResult(SessionResult.RESULT_ERROR_UNKNOWN))
             val song = currentQueue.getOrNull(currentIndex) ?: return Futures.immediateFuture(SessionResult(SessionResult.RESULT_ERROR_UNKNOWN))
             if (customCommand.customAction == ACTION_TOGGLE_LIKE) {
@@ -142,7 +133,7 @@ class MusicService : MediaSessionService() {
             session: MediaSession,
             controller: MediaSession.ControllerInfo
         ): ConnectionResult {
-
+            Log.d("CustomButton", "connect")
             return AcceptedResultBuilder(session)
                 .setAvailableSessionCommands(
                     ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon()
@@ -158,9 +149,7 @@ class MusicService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
 
-        customMediaNotificationProvider = CustomMediaNotificationProvider(this)
 
         player = ExoPlayer.Builder(this).build()
 
@@ -199,8 +188,6 @@ class MusicService : MediaSessionService() {
             }
         })
 
-
-
         mediaSession = MediaSession.Builder(this, player!!)
             .setSessionActivity(
                 PendingIntent.getActivity(
@@ -213,77 +200,67 @@ class MusicService : MediaSessionService() {
             .setCallback(CustomCallback())
             .build()
 
-        notificationManager = PlayerNotificationManager.Builder(
-            this,
-            NOTIFICATION_ID,
-            CHANNEL_ID
-        ).setMediaDescriptionAdapter(object : PlayerNotificationManager.MediaDescriptionAdapter {
-            override fun getCurrentContentTitle(player: Player): CharSequence {
-                return player.mediaMetadata.title ?: "Unknown Title"
-            }
+//        notificationManager = PlayerNotificationManager.Builder(
+//            this,
+//            NOTIFICATION_ID,
+//            CHANNEL_ID
+//        ).setMediaDescriptionAdapter(object : PlayerNotificationManager.MediaDescriptionAdapter {
+//            override fun getCurrentContentTitle(player: Player): CharSequence {
+//                return player.mediaMetadata.title ?: "Unknown Title"
+//            }
+//
+//            override fun createCurrentContentIntent(player: Player): PendingIntent? {
+//                val intent = Intent(this@MusicService, MainActivity::class.java).apply {
+//                    flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+//                    putExtra("NAVIGATE_TO_FULL_PLAYER", true)
+//                }
+//
+//                return PendingIntent.getActivity(
+//                    this@MusicService,
+//                    0,
+//                    intent,
+//                    PendingIntent.FLAG_MUTABLE
+//                )
+//            }
+//
+//            override fun getCurrentContentText(player: Player): CharSequence? {
+//                return player.mediaMetadata.artist ?: "Unknown Artist"
+//            }
+//
+//            override fun getCurrentLargeIcon(
+//                player: Player,
+//                callback: PlayerNotificationManager.BitmapCallback
+//            ): Bitmap? {
+//                val song = currentQueue.getOrNull(player.currentMediaItemIndex) ?: return null
+//                val coverPath = song.coverUrl ?: return null
+//
+//                return try {
+//                    val uri = Uri.parse(coverPath)
+//                    val inputStream = contentResolver.openInputStream(uri)
+//                    val bitmap = BitmapFactory.decodeStream(inputStream)
+//                    inputStream?.close()
+//                    bitmap
+//                } catch (e: Exception) {
+//                    null
+//                }
+//            }
+//        }).setNotificationListener(object : PlayerNotificationManager.NotificationListener {
+//            override fun onNotificationCancelled(notificationId: Int, dismissedByUser: Boolean) {
+//                stopSelf()
+//            }
+//        }).build()
+//
+//        notificationManager?.apply {
+//            setPlayer(player)
+//            setSmallIcon(R.drawable.logo_app)
+//            setMediaSessionToken(mediaSession!!.sessionCompatToken)
+//            setUseNextAction(true)
+//            setUsePreviousAction(true)
+//            setUsePlayPauseActions(true)
+//            setUseStopAction(true)
+//        }
 
-            override fun createCurrentContentIntent(player: Player): PendingIntent? {
-                val intent = Intent(this@MusicService, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    putExtra("NAVIGATE_TO_FULL_PLAYER", true)
-                }
-
-                return PendingIntent.getActivity(
-                    this@MusicService,
-                    0,
-                    intent,
-                    PendingIntent.FLAG_MUTABLE
-                )
-            }
-
-            override fun getCurrentContentText(player: Player): CharSequence? {
-                return player.mediaMetadata.artist ?: "Unknown Artist"
-            }
-
-            override fun getCurrentLargeIcon(
-                player: Player,
-                callback: PlayerNotificationManager.BitmapCallback
-            ): Bitmap? {
-                val song = currentQueue.getOrNull(player.currentMediaItemIndex) ?: return null
-                val coverPath = song.coverUrl ?: return null
-
-                return try {
-                    val uri = Uri.parse(coverPath)
-                    val inputStream = contentResolver.openInputStream(uri)
-                    val bitmap = BitmapFactory.decodeStream(inputStream)
-                    inputStream?.close()
-                    bitmap
-                } catch (e: Exception) {
-                    null
-                }
-            }
-        }).setNotificationListener(object : PlayerNotificationManager.NotificationListener {
-            override fun onNotificationPosted(
-                notificationId: Int,
-                notification: Notification,
-                ongoing: Boolean
-            ) {
-                if (ongoing) {
-                    startForeground(notificationId, notification)
-                }
-            }
-
-            override fun onNotificationCancelled(notificationId: Int, dismissedByUser: Boolean) {
-                stopSelf()
-            }
-        }).build()
-
-        notificationManager?.apply {
-            setPlayer(player)
-            setSmallIcon(R.drawable.ic_music_note)
-            setMediaSessionToken(mediaSession!!.sessionCompatToken)
-            setUseNextAction(true)
-            setUsePreviousAction(true)
-            setUsePlayPauseActions(true)
-            setUseStopAction(true)
-        }
-
-        setMediaNotificationProvider(customMediaNotificationProvider)
+//        setMediaNotificationProvider(customMediaNotificationProvider)
 
     }
 
@@ -297,7 +274,6 @@ class MusicService : MediaSessionService() {
                 val shuffle = intent.getBooleanExtra(EXTRA_SHUFFLE, false)
                 val repeat = intent.getStringExtra(EXTRA_REPEAT) ?: "NONE"
 
-                Log.d("MusicService2", queueJson.toString())
 
                 val queueType = object : TypeToken<List<Song>>() {}.type
                 val queue: List<Song> = Gson().fromJson(queueJson, queueType)
@@ -344,22 +320,30 @@ class MusicService : MediaSessionService() {
     }
 
     private fun updateCustomButton(song: Song) {
-        Log.d("CustomButton", "woi: ${player?.shuffleModeEnabled}")
-        val buttons = buildList {
-            add(
-                CommandButton.Builder()
-                    .setDisplayName("Shuffle")
-                    .setSessionCommand(customCommandShuffle)
-                    .setIconResId(
-                        if (player?.shuffleModeEnabled == true)
-                            R.drawable.ic_shuffle
-                        else
-                            R.drawable.ic_shuffle_off
-                    )
-                    .build()
-            )
+        val buttons = mutableListOf<CommandButton>()
 
-//            add(
+        val shuffleBtn = CommandButton.Builder()
+            .setDisplayName("Shuffle")
+            .setSessionCommand(customCommandShuffle)
+            .setIconResId(
+                if (player?.shuffleModeEnabled == true)
+                    R.drawable.ic_shuffle
+                else
+                    R.drawable.ic_shuffle_off
+            )
+            .build()
+
+        val likeBtn = if (!song.isOnline) {
+            CommandButton.Builder()
+                .setDisplayName("Like")
+                .setSessionCommand(customCommandLike)
+                .setIconResId(
+                    if (song.isLiked) R.drawable.ic_liked else R.drawable.ic_like
+                )
+                .build()
+        } else null
+
+        //            add(
 //                CommandButton.Builder()
 //                    .setDisplayName("Repeat")
 //                    .setSessionCommand(customCommandRepeat)
@@ -373,19 +357,11 @@ class MusicService : MediaSessionService() {
 //                    .build()
 //            )
 
-            if (!song.isOnline) {
-                add(
-                    CommandButton.Builder()
-                        .setDisplayName("Like")
-                        .setSessionCommand(customCommandLike)
-                        .setIconResId(
-                            if (song.isLiked) R.drawable.ic_liked else R.drawable.ic_like
-                        )
-                        .build()
-                )
-            }
-        }
+        buttons.add(shuffleBtn)
 
+        if (likeBtn != null) {
+            buttons.add(likeBtn)
+        }
         mediaSession?.setCustomLayout(buttons)
     }
 
@@ -423,19 +399,11 @@ class MusicService : MediaSessionService() {
     }
 
     override fun onDestroy() {
-        notificationManager?.setPlayer(null)
+//        notificationManager?.setPlayer(null)
         mediaSession?.release()
         player?.release()
         super.onDestroy()
     }
 
-    private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            "Music Playback",
-            NotificationManager.IMPORTANCE_LOW
-        )
-        val manager = getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(channel)
-    }
+
 }
