@@ -121,7 +121,7 @@ fun MainLayout(outerNavController: NavController) {
             }
         ) { paddingValues ->
             val contentPaddingModifier = if (isCompact) {
-                Modifier.padding(paddingValues) // portrait
+                Modifier.padding(paddingValues)
             } else {
                 Modifier.padding(WindowInsets.systemBars.asPaddingValues())
             }
@@ -206,7 +206,9 @@ fun MainLayout(outerNavController: NavController) {
                                         playerViewModel.clearCurrentQueue()
                                         playerViewModel.setCurrentQueue(songs)
                                         playerViewModel.playSong(song)
-                                    }
+                                    },
+                                    onShowSnackbar = { snackbarMessage = it },
+
                                 )
                             }
                             composable("library") {

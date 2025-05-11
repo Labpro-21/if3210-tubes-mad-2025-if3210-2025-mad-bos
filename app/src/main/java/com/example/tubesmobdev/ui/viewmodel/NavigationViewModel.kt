@@ -19,8 +19,6 @@ class NavigationViewModel @Inject constructor(
     authPreferences: IAuthPreferences,
     private val servicePreferences: IServicePreferences
 ) : ViewModel() {
-//    private val _isLoggedIn = MutableStateFlow<Boolean?>(null)
-//    val isLoggedIn: StateFlow<Boolean?> = _isLoggedIn.asStateFlow()
 
 
 
@@ -39,14 +37,5 @@ class NavigationViewModel @Inject constructor(
             servicePreferences.setShouldRestartService(value)
         }
     }
-//    init {
-//        checkLoginStatus()
-//    }
-//
-//    private fun checkLoginStatus() {
-//        viewModelScope.launch {
-//            val loggedIn = authPreferences.isLoggedIn()
-//            _isLoggedIn.value = loggedIn
-//        }
-//    }
+
 }

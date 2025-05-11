@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,19 +28,31 @@ import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.data.remote.response.toLocalSong
 import com.example.tubesmobdev.ui.components.SongListItem
 import com.example.tubesmobdev.ui.viewmodel.OnlineSongViewModel
+import com.example.tubesmobdev.util.ProfileUtil
 
 @Composable
 fun TopSongsScreen(
     chartCode: String,
     onSongClick: (Song, List<Song>) -> Unit,
-    viewModel: OnlineSongViewModel = hiltViewModel()
+    viewModel: OnlineSongViewModel = hiltViewModel(),
+    onShowSnackbar: (String) -> Unit,
 ) {
+    val context = LocalContext.current
     val onlineSongs by viewModel.songs.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
+    val isDownloading by viewModel.isDownloading.collectAsState()
+    val downloadProgress by viewModel.downloadProgress.collectAsState()
+    val currentDownloadTitle by viewModel.currentDownloadTitle.collectAsState()
 
     LaunchedEffect(chartCode) {
         viewModel.fetchSongs(chartCode)
+    }
+
+    LaunchedEffect(isDownloading) {
+        if (isDownloading) {
+            onShowSnackbar("Downloading $currentDownloadTitle")
+        }
     }
 
     val songs = onlineSongs.sortedBy { it.rank }
@@ -107,7 +121,7 @@ fun TopSongsScreen(
                                 )
                                 Spacer(modifier = Modifier.height(20.dp))
                                 Text(
-                                    text = chartCode.uppercase(),
+                                    text = if (chartCode == "global") chartCode.uppercase() else ProfileUtil.getCountryName(chartCode).uppercase(),
                                     color = Color.White,
                                     style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp)
                                 )
@@ -141,11 +155,36 @@ fun TopSongsScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.End
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (isDownloading) {
+                                Icon(
+                                    imageVector = Icons.Default.Download,
+                                    contentDescription = "Downloading",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                LinearProgressIndicator(
+                                    progress = { downloadProgress },
+                                    modifier = Modifier
+                                        .width(120.dp)
+                                        .height(4.dp),
+                                    color = Color(0xFF1DB954),
+                                    trackColor = Color.White.copy(alpha = 0.3f)
+                                )
+                            }
+                        }
+
                         IconButton(onClick = {
-                            if (songs.isNotEmpty()) onSongClick(songs[0].toLocalSong(), songs.map{ it.toLocalSong() })
+                            if (songs.isNotEmpty()) onSongClick(songs[0].toLocalSong(), songs.map { it.toLocalSong() })
                         }) {
                             Icon(
                                 imageVector = Icons.Default.PlayArrow,
@@ -157,7 +196,14 @@ fun TopSongsScreen(
                     }
 
                     if (isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.padding(top = 12.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
 
                     if (error != null) {
@@ -165,7 +211,7 @@ fun TopSongsScreen(
                             text = "Error: $error",
                             color = Color.Red,
                             style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(top = 12.dp)
+                            modifier = Modifier.padding(top = 12.dp, start = 16.dp)
                         )
                     }
 
@@ -177,7 +223,22 @@ fun TopSongsScreen(
                 SongListItem(
                     number = song.rank,
                     song = song,
-                    onClick = { onSongClick(song.toLocalSong(), listOf(song.toLocalSong())) }
+                    onClick = { onSongClick(song.toLocalSong(), listOf(song.toLocalSong())) },
+                    onDownloadClick = {
+                        if (!isDownloading) {
+                            viewModel.downloadAndInsertSong(context, song) { result: Result<Unit> ->
+                                val snackbarMessage = if (result.isSuccess) {
+                                    "Lagu berhasil diunduh"
+                                } else {
+                                    "Gagal mengunduh lagu"
+                                }
+                                onShowSnackbar(snackbarMessage)
+                            }
+                        } else {
+                            onShowSnackbar("Download sedang berjalan. Tunggu hingga selesai.")
+                        }
+                    },
+                    isDownloadDisabled = isDownloading
                 )
             }
         }

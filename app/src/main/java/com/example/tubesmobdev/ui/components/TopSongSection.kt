@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.tubesmobdev.util.ProfileUtil
-import java.util.Locale
 
 @Composable
 fun TopSongSection(onChartClick: (String) -> Unit, location: String?) {

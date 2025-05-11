@@ -25,19 +25,15 @@ class ProfileViewModel @Inject constructor(
     private val servicePreferences: ServicePreferences,
 ) : ViewModel() {
 
-    // Profile state
     private val _profile = MutableStateFlow<ProfileResponse?>(null)
     val profile: StateFlow<ProfileResponse?> = _profile.asStateFlow()
 
-    // Loading state
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    // Error state
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    // Song counts
     private val _allSongsCount = MutableStateFlow(0)
     val allSongsCount: StateFlow<Int> = _allSongsCount.asStateFlow()
 

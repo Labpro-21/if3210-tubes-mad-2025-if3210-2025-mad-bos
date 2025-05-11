@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,9 +27,11 @@ import com.example.tubesmobdev.data.remote.response.OnlineSong
 fun SongListItem(
     number: Int,
     song: OnlineSong,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDownloadClick: () -> Unit,
+    isDownloadDisabled: Boolean = false
 ) {
-    Row (
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
@@ -45,7 +51,11 @@ fun SongListItem(
                 .size(60.dp)
                 .padding(start = 8.dp)
         )
-        Column(modifier = Modifier.padding(start = 12.dp)) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 12.dp)
+        ) {
             Text(
                 text = song.title,
                 style = MaterialTheme.typography.bodyLarge.copy(
@@ -58,6 +68,15 @@ fun SongListItem(
                     fontSize = 14.sp
                 ),
                 color = Color.Gray
+            )
+        }
+        IconButton (
+            onClick = onDownloadClick,
+            enabled = !isDownloadDisabled
+        ) {
+            Icon(
+                imageVector = Icons.Default.Download,
+                contentDescription = "Download"
             )
         }
     }
