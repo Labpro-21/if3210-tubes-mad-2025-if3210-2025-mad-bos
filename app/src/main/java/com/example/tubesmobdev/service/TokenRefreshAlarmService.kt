@@ -5,15 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
 import android.util.Log
 import com.example.tubesmobdev.data.repository.AuthRepository
 import com.example.tubesmobdev.domain.model.AuthResult
 import com.example.tubesmobdev.manager.PlayerManager
-import com.example.tubesmobdev.receiver.AlarmReceiver
-import com.example.tubesmobdev.receiver.RestartReceiver
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

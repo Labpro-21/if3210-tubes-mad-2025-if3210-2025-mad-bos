@@ -1,27 +1,23 @@
 package com.example.tubesmobdev.ui.viewmodel
 
 import android.app.Application
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.os.Build
+import android.os.Bundle
 import android.util.Log
 import androidx.annotation.OptIn
-import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.SessionCommand
 import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.data.repository.PlayerPreferencesRepository
 import com.example.tubesmobdev.data.repository.SongRepository
-import com.example.tubesmobdev.manager.PlayerManager
 import com.example.tubesmobdev.manager.PlaybackConnection
+import com.example.tubesmobdev.manager.PlayerManager
 import com.example.tubesmobdev.service.MusicService
 import com.example.tubesmobdev.util.RepeatMode
+import com.example.tubesmobdev.util.SongEvent
 import com.example.tubesmobdev.util.SongEventBus
-import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -83,12 +79,43 @@ class PlayerViewModel @OptIn(UnstableApi::class)
 
     private fun observeSongEvents() {
         viewModelScope.launch {
-            SongEventBus.events.collect { song ->
-                Log.d("PlayerViewModel", "Song event received from EventBus: ${song.title}")
-                onSongChanged(song)
+            SongEventBus.events.collect { event ->
+                when (event) {
+                    is SongEvent.SongChanged -> {
+                        Log.d("PlayerViewModel", "Song changed: ${event.song.title}")
+                        onSongChanged(event.song)
+                    }
+                    is SongEvent.SongLiked -> {
+                        Log.d("PlayerViewModel", "Song liked toggle: id=${event.songId}")
+                        if (_currentSong.value?.id == event.songId) {
+                            currentSong.value?.let { song ->
+                                val newLikedState = event.isLiked
+                                _currentSong.value = song.copy(isLiked = newLikedState)
+                                viewModelScope.launch {
+                                    songRepository.updateLikedStatus(song.id, newLikedState)
+                                }
+                            }
+                        }
+                    }
+                    is SongEvent.ShuffleToggled -> {
+                        Log.d("PlayerViewModel", "Shuffle toggled")
+                        _isShuffle.value = event.isShuffle
+                    }
+                    is SongEvent.RepeatToggled -> {
+                        Log.d("PlayerViewModel", "Repeat toggled")
+                        val repeatMode = event.repeatMode
+                        _repeatMode.value = when (repeatMode) {
+                            0 -> RepeatMode.NONE
+                            1 -> RepeatMode.REPEAT_ONE
+                            2 -> RepeatMode.REPEAT_ALL
+                            else -> RepeatMode.NONE
+                        }
+                    }
+                }
             }
         }
     }
+
 
     @OptIn(UnstableApi::class)
     private fun observePlaybackState() {
@@ -109,6 +136,7 @@ class PlayerViewModel @OptIn(UnstableApi::class)
         viewModelScope.launch {
             val controller = playbackConnection.getController()
             val duration = controller.duration.coerceAtLeast(1L)
+
             controller.seekTo((progress * duration).toLong())
         }
     }
@@ -148,7 +176,7 @@ class PlayerViewModel @OptIn(UnstableApi::class)
         }
     }
 
-    fun onSongChanged(song: Song) {
+    private fun onSongChanged(song: Song) {
         viewModelScope.launch {
             _currentSong.value = song
 
@@ -207,34 +235,28 @@ class PlayerViewModel @OptIn(UnstableApi::class)
         }
     }
 
+    @OptIn(UnstableApi::class)
     fun toggleLike() {
-        currentSong.value?.let { song ->
-            val newLikedState = !song.isLiked
-            _currentSong.value = song.copy(isLiked = newLikedState)
-            viewModelScope.launch {
-                songRepository.updateLikedStatus(song.id, newLikedState)
-            }
+        viewModelScope.launch {
+            val controller = playbackConnection.getController()
+            controller.sendCustomCommand(SessionCommand(MusicService.ACTION_TOGGLE_LIKE, Bundle.EMPTY), Bundle.EMPTY)
         }
     }
 
+
+    @OptIn(UnstableApi::class)
     fun toggleShuffle() {
-        _isShuffle.value = !_isShuffle.value
-        if (_isShuffle.value) {
-            val songs = _songList.value.toMutableList()
-            _currentSong.value?.let { current ->
-                currentQueueIndex = songs.indexOfFirst { it.id == current.id }.takeIf { it != -1 } ?: 0
-            }
-        } else {
-            _currentQueue.value = emptyList()
-            currentQueueIndex = 0
+        viewModelScope.launch {
+            val controller = playbackConnection.getController()
+            controller.sendCustomCommand(SessionCommand(MusicService.ACTION_TOGGLE_SHUFFLE, Bundle.EMPTY), Bundle.EMPTY)
         }
     }
 
+    @OptIn(UnstableApi::class)
     fun cycleRepeatMode() {
-        _repeatMode.value = when (_repeatMode.value) {
-            RepeatMode.NONE -> RepeatMode.REPEAT_ALL
-            RepeatMode.REPEAT_ALL -> RepeatMode.REPEAT_ONE
-            RepeatMode.REPEAT_ONE -> RepeatMode.NONE
+        viewModelScope.launch {
+            val controller = playbackConnection.getController()
+            controller.sendCustomCommand(SessionCommand(MusicService.ACTION_TOGGLE_REPEAT, Bundle.EMPTY), Bundle.EMPTY)
         }
     }
 

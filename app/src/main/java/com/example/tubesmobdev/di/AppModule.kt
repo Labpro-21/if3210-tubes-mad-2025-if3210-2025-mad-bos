@@ -143,6 +143,7 @@ object AppModule {
         return PlaybackConnection(context)
     }
 
+
     @Provides
     @Singleton
     fun provideSongApi(retrofit: Retrofit): SongApi {
