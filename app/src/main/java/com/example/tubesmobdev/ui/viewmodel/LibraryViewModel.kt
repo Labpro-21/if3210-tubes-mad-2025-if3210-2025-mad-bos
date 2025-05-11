@@ -34,6 +34,9 @@ class LibraryViewModel @Inject constructor(
     private val _currentQueue = MutableStateFlow<List<Song>>(emptyList())
     val currentQueue: StateFlow<List<Song>> = _currentQueue
 
+    private val _downloadedSongs = MutableStateFlow<List<Song>>(emptyList())
+    val downloadedSongs: StateFlow<List<Song>> = _downloadedSongs
+
     init {
         fetchSongs()
     }
@@ -52,6 +55,12 @@ class LibraryViewModel @Inject constructor(
                     .catch { e -> _errorMessage.value = "Gagal memuat liked songs: ${e.message}" }
                     .collect { _likedSongs.value = it }
             }
+
+            launch {
+                repository.getDownloadedSongs()
+                    .catch { e -> _errorMessage.value = "Gagal memuat downloaded songs: ${e.message}" }
+                    .collect { _downloadedSongs.value = it }
+            }
             launch {
                 playerRepository.getQueue().collect { queue ->
                     _currentQueue.value = queue
@@ -69,7 +78,8 @@ class LibraryViewModel @Inject constructor(
                 filePath = uri.toString(),
                 coverUrl = imageUri?.toString(),
                 duration = duration,
-                createdAt = System.currentTimeMillis()
+                createdAt = System.currentTimeMillis(),
+                isDownloaded = false
             )
 
             val result = repository.insertSong(song)

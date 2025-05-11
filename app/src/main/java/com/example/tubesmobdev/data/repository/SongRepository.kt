@@ -21,6 +21,14 @@ class SongRepository @Inject constructor(
             flowOf(emptyList())
         }
     }
+    suspend fun getDownloadedSongs(): Flow<List<Song>> {
+        val userId = authPreferences.getUserId()
+        return if (userId != null) {
+            songDao.getDownloadedSongs(userId)
+        } else {
+            flowOf(emptyList())
+        }
+    }
     suspend fun getPlayedSongsCount(): Flow<Int> {
         val userId = authPreferences.getUserId()
         return if (userId != null) {

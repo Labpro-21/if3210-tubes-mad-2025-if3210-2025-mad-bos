@@ -175,7 +175,7 @@ fun TopSongsScreen(
                                 LinearProgressIndicator(
                                     progress = { downloadProgress },
                                     modifier = Modifier
-                                        .width(120.dp)
+                                        .width(150.dp)
                                         .height(4.dp),
                                     color = Color(0xFF1DB954),
                                     trackColor = Color.White.copy(alpha = 0.3f)

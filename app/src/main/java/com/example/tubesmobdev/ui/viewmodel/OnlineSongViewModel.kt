@@ -55,7 +55,8 @@ class OnlineSongViewModel @Inject constructor(
                 filePath = uri.toString(),
                 coverUrl = imageUri?.toString(),
                 duration = duration,
-                createdAt = System.currentTimeMillis()
+                createdAt = System.currentTimeMillis(),
+                isDownloaded = true
             )
 
             songRepository.insertSong(song)

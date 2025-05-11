@@ -16,6 +16,7 @@ data class Song(
     val lastPlayed: Long? = null,
     val createdAt: Long? = null,
     var creatorId: Long? = null,
+    val isDownloaded: Boolean = false,
 ) {
     @Ignore
     var isOnline: Boolean = false
@@ -31,7 +32,8 @@ data class Song(
         lastPlayed: Long? = this.lastPlayed,
         createdAt: Long? = this.createdAt,
         creatorId: Long? = this.creatorId,
-        isOnline: Boolean = this.isOnline
+        isOnline: Boolean = this.isOnline,
+        isDownloaded: Boolean = this.isDownloaded
     ): Song {
         val song = Song(
             id, title, artist, filePath, coverUrl,

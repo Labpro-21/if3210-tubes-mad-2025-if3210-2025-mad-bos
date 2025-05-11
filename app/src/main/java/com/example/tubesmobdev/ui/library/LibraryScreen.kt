@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -50,7 +51,7 @@ fun LibraryScreen(
     isCompact: Boolean
 ) {
 
-    val tabs = listOf("All", "Liked", "Queue")
+    val tabs = listOf("All", "Liked", "Downloaded", "Queue")
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
 
     var snackbarMessage by rememberSaveable { mutableStateOf<String?>(null) }
@@ -58,7 +59,8 @@ fun LibraryScreen(
     val allSongs by viewModel.songs.collectAsState()
     val likedSongs by viewModel.likedSongs.collectAsState()
     val queueSongs by viewModel.currentQueue.collectAsState()
-    val songsToShow = if (selectedTabIndex == 0) allSongs else if (selectedTabIndex == 1) likedSongs else queueSongs
+    val downloadedSongs by viewModel.downloadedSongs.collectAsState()
+    val songsToShow = if (selectedTabIndex == 0) allSongs else if (selectedTabIndex == 1) likedSongs else if (selectedTabIndex == 2) downloadedSongs else queueSongs
     val errorMessage by viewModel.errorMessage.collectAsState()
 
     var songToDelete by rememberSaveable  { mutableStateOf<Song?>(null) }
@@ -87,13 +89,14 @@ fun LibraryScreen(
             Box(
                 contentAlignment = Alignment.TopStart,
                 modifier = Modifier
-                    .padding(bottom = 10.dp, start = 10.dp, end = 0.dp, top = 10.dp)
-                    .width(250.dp)
+                    .padding(bottom = 10.dp, start = 0.dp, end = 0.dp, top = 10.dp)
+                    .fillMaxWidth()
             ){
-                TabRow(
+                ScrollableTabRow (
                     selectedTabIndex = selectedTabIndex,
                     divider = {},
                     indicator = {},
+                    edgePadding = 8.dp,
                 ) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
@@ -109,7 +112,7 @@ fun LibraryScreen(
                             Text(
                                 text = title,
                                 style = MaterialTheme.typography.headlineSmall,
-                                fontSize = 13.sp,
+                                fontSize = 12.sp,
                                 color = if (selectedTabIndex != index) Color.White else Color.Black,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
                             )

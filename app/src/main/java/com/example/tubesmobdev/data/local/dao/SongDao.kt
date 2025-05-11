@@ -17,6 +17,9 @@ interface SongDao {
     @Query("SELECT * FROM songs WHERE isLiked = 1 AND creatorId = :userId ORDER BY createdAt")
     fun getLikedSongs(userId: Long): Flow<List<Song>>
 
+    @Query("SELECT * FROM songs WHERE isDownloaded = 1 AND creatorId = :userId ORDER BY createdAt")
+    fun getDownloadedSongs(userId: Long): Flow<List<Song>>
+
     @Query("SELECT * FROM songs WHERE creatorId = :userId ORDER BY createdAt DESC LIMIT 10")
     fun getNewestSongs(userId: Long): Flow<List<Song>>
 
