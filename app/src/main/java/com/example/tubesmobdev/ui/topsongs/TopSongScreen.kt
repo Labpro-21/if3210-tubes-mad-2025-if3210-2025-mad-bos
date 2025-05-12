@@ -226,11 +226,11 @@ fun TopSongsScreen(
                     onClick = { onSongClick(song.toLocalSong(), listOf(song.toLocalSong())) },
                     onDownloadClick = {
                         if (!isDownloading) {
-                            viewModel.downloadAndInsertSong(context, song) { result: Result<Unit> ->
+                            viewModel.downloadAndInsertSong(context, song) { result ->
                                 val snackbarMessage = if (result.isSuccess) {
                                     "Lagu berhasil diunduh"
                                 } else {
-                                    "Gagal mengunduh lagu"
+                                    result.exceptionOrNull()?.message ?: "Gagal mengunduh lagu"
                                 }
                                 onShowSnackbar(snackbarMessage)
                             }

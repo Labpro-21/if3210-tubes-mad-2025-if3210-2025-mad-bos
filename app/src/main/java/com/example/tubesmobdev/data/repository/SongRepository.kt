@@ -99,4 +99,8 @@ class SongRepository @Inject constructor(
         return songDao.searchSongs(query)
     }
 
+    suspend fun findSongByTitleAndArtist(title: String, artist: String): Song? {
+        return songDao.findSongByTitleAndArtist(title, artist)
+    }
+
 }

@@ -60,6 +60,7 @@ dependencies {
 
     implementation(libs.glide)
     implementation(libs.androidx.material3.window.size.class1.android)
+    implementation(libs.firebase.components)
     kapt(libs.compiler)
 
     implementation(libs.androidx.recyclerview)

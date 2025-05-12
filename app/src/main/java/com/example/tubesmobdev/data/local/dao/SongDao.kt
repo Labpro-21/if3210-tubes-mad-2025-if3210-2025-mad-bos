@@ -47,4 +47,7 @@ interface SongDao {
     @Query("SELECT COUNT(*) FROM songs WHERE creatorId = :userId AND lastPlayed IS NOT NULL")
     fun countPlayedSongs(userId: Long): Flow<Int>
 
+    @Query("SELECT * FROM songs WHERE title = :title AND artist = :artist LIMIT 1")
+    suspend fun findSongByTitleAndArtist(title: String, artist: String): Song?
+
 }

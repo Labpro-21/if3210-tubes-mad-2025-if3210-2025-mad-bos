@@ -79,6 +79,14 @@ class OnlineSongViewModel @Inject constructor(
             _downloadProgress.value = 0f
             _currentDownloadTitle.value = song.title
 
+            val existing = songRepository.findSongByTitleAndArtist(song.title, song.artist)
+            if (existing != null && existing.isDownloaded) {
+                _isDownloading.value = false
+                _currentDownloadTitle.value = ""
+                onResult(Result.failure(Exception("This song has already been downloaded")))
+                return@launch
+            }
+
             withContext(Dispatchers.IO) {
                 try {
                     val resolver = context.contentResolver
