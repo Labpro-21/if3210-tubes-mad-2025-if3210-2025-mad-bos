@@ -1,5 +1,5 @@
 [versions]
-agp = "8.8.2"
+agp = "8.9.0"
 androidxNavigationCompose = "2.8.9"
 androidxHiltNavigationCompose = "1.2.0"
 coilCompose = "2.7.0"

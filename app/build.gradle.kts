@@ -61,6 +61,8 @@ dependencies {
     implementation(libs.glide)
     implementation(libs.androidx.material3.window.size.class1.android)
     implementation(libs.firebase.components)
+
+    implementation("androidx.mediarouter:mediarouter:1.7.0")
     kapt(libs.compiler)
 
     implementation(libs.androidx.recyclerview)

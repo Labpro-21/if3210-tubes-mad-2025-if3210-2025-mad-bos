@@ -58,6 +58,7 @@ fun FullPlayerScreen(
     customTopBar: @Composable (() -> Unit) = {},
     isCompact: Boolean
 ) {
+    var showAudioDialog by rememberSaveable { mutableStateOf(false) }
     var snackbarMessage by rememberSaveable { mutableStateOf<String?>(null) }
 
     val dominantColor = rememberDominantColor(song.coverUrl ?: "").copy(alpha = 0.9f)
@@ -198,6 +199,15 @@ fun FullPlayerScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                IconButton(onClick = { showAudioDialog = true }) {
+                    Icon(
+                        imageVector = Icons.Default.Speaker,
+                        contentDescription = "Ganti Output Audio",
+                        tint = Color.White
+                    )
+                }
+
+                CurrentAudioDeviceIndicator()
                 IconButton(onClick = onToggleShuffle) {
                     Icon(
                         imageVector = Icons.Default.Shuffle,
@@ -262,6 +272,9 @@ fun FullPlayerScreen(
                 songToEdit = song,
                 onSongUpdate = onSongUpdate
             )
+        }
+        if (showAudioDialog) {
+            AudioRoutingDialog(onDismiss = { showAudioDialog = false })
         }
     }
 }

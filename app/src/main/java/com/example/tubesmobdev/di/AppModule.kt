@@ -22,6 +22,7 @@ import com.example.tubesmobdev.data.repository.IAuthRepository
 import com.example.tubesmobdev.data.repository.ListeningRecordRepository
 import com.example.tubesmobdev.data.repository.OnlineSongRepository
 import com.example.tubesmobdev.data.repository.SongRepository
+import com.example.tubesmobdev.manager.AudioRoutingManager
 import com.example.tubesmobdev.manager.PlaybackConnection
 import com.example.tubesmobdev.manager.PlayerManager
 import dagger.Module
@@ -39,6 +40,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
     @Provides
     @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor =
@@ -117,7 +119,13 @@ object AppModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): SongDatabase {
-        return Room.databaseBuilder(context, SongDatabase::class.java, "songs.db").build()
+        return Room.databaseBuilder(
+            context,
+            SongDatabase::class.java,
+            "song_db"
+        )
+            .fallbackToDestructiveMigration() // 🔥 Reset DB if version mismatch
+            .build()
     }
 
     @Provides
@@ -171,5 +179,11 @@ object AppModule {
     @Singleton
     fun provideOnlineSongRepository(apiService: SongApi): OnlineSongRepository {
         return OnlineSongRepository(apiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAudioRoutingManager(@ApplicationContext context: Context): AudioRoutingManager {
+        return AudioRoutingManager(context)
     }
 }
