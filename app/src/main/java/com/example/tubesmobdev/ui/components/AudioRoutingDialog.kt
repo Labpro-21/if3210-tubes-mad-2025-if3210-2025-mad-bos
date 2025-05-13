@@ -83,7 +83,6 @@ fun AudioRoutingDialog(
         }
     }
 
-    // Jika permission ditolak permanen atau tidak ada perangkat yang terdeteksi
     val noDeviceDetected = viewModel.devices.isEmpty()
 
     LaunchedEffect(permissionDeniedPermanently, noDeviceDetected) {
@@ -97,7 +96,6 @@ fun AudioRoutingDialog(
         }
     }
 
-    // Dialog tetap bisa muncul kalau perlu
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Pilih Output Audio") },

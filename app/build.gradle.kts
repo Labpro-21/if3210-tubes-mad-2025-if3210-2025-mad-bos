@@ -45,7 +45,6 @@ android {
 
 dependencies {
 
-    // Jika pakai Gradle langsung:
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.media3.ui)
@@ -62,7 +61,7 @@ dependencies {
     implementation(libs.androidx.material3.window.size.class1.android)
     implementation(libs.firebase.components)
 
-    implementation("androidx.mediarouter:mediarouter:1.7.0")
+    implementation(libs.androidx.mediarouter)
     kapt(libs.compiler)
 
     implementation(libs.androidx.recyclerview)

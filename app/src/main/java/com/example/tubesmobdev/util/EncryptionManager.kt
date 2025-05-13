@@ -33,10 +33,8 @@ class EncryptionManager(context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Keyset corrupt or unreadable, attempting reset", e)
 
-            // 🔥 Hapus shared preferences yang menyimpan keyset
             context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE).edit().clear().apply()
 
-            // 💡 Coba generate ulang keyset
             AndroidKeysetManager.Builder()
                 .withSharedPref(context, KEYSET_NAME, PREF_NAME)
                 .withKeyTemplate(AeadKeyTemplates.AES256_GCM)

@@ -124,7 +124,7 @@ object AppModule {
             SongDatabase::class.java,
             "song_db"
         )
-            .fallbackToDestructiveMigration() // 🔥 Reset DB if version mismatch
+            .fallbackToDestructiveMigration()
             .build()
     }
 
