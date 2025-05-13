@@ -207,7 +207,6 @@ class PlayerViewModel @OptIn(UnstableApi::class)
         val endTime = System.currentTimeMillis()
         val listenedMs = endTime - startTime
 
-        // Simpan hanya jika lebih dari 5 detik
         if (listenedMs >= 5000 && !song.isOnline) {
             val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
             val record = ListeningRecord(

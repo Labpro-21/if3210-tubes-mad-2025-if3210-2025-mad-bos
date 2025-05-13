@@ -68,7 +68,6 @@ class OnlineSongViewModel @Inject constructor(
         song: OnlineSong,
         onResult: (Result<Unit>) -> Unit
     ) {
-        // If already downloading, don't start a new download
         if (_isDownloading.value) {
             onResult(Result.failure(Exception("Another download is already in progress")))
             return
@@ -90,7 +89,8 @@ class OnlineSongViewModel @Inject constructor(
             withContext(Dispatchers.IO) {
                 try {
                     val resolver = context.contentResolver
-                    val values = ContentValues().apply {
+
+                    val audioValues = ContentValues().apply {
                         put(MediaStore.Audio.Media.DISPLAY_NAME, "${song.title}.mp3")
                         put(MediaStore.Audio.Media.MIME_TYPE, "audio/mpeg")
                         put(MediaStore.Audio.Media.TITLE, song.title)
@@ -98,61 +98,76 @@ class OnlineSongViewModel @Inject constructor(
                         put(MediaStore.Audio.Media.IS_MUSIC, 1)
                         put(MediaStore.Audio.Media.RELATIVE_PATH, "Music/MyApp")
                     }
+                    val audioUri =
+                        resolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, audioValues)
+                            ?: throw Exception("Failed to create MediaStore entry for audio")
 
-                    val uri = resolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, values)
-                    if (uri != null) {
-                        resolver.openOutputStream(uri)?.use { outputStream ->
-                            val url = URL(song.url)
-                            val connection = url.openConnection() as HttpURLConnection
-                            connection.connect()
+                    resolver.openOutputStream(audioUri)?.use { outputStream ->
+                        val url = URL(song.url)
+                        val connection = url.openConnection() as HttpURLConnection
+                        connection.connect()
 
-                            // Get file size if available
-                            val fileLength = connection.contentLength
+                        val fileLength = connection.contentLength
+                        val inputStream = BufferedInputStream(connection.inputStream)
+                        val buffer = ByteArray(8192)
+                        var bytesRead: Int
+                        var totalBytesRead = 0L
 
-                            val inputStream = BufferedInputStream(connection.inputStream)
-                            val buffer = ByteArray(8192) // Larger buffer for better performance
-                            var bytesRead: Int
-                            var totalBytesRead: Long = 0
+                        while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                            outputStream.write(buffer, 0, bytesRead)
+                            totalBytesRead += bytesRead
 
-                            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                                outputStream.write(buffer, 0, bytesRead)
-                                totalBytesRead += bytesRead
-
-                                // Update progress if file length is known
-                                if (fileLength > 0) {
-                                    val progress = totalBytesRead.toFloat() / fileLength.toFloat()
-                                    withContext(Dispatchers.Main) {
-                                        _downloadProgress.value = progress
-                                    }
+                            if (fileLength > 0) {
+                                val progress = totalBytesRead.toFloat() / fileLength
+                                withContext(Dispatchers.Main) {
+                                    _downloadProgress.value = progress * 0.8f
                                 }
                             }
-
-                            inputStream.close()
-                            outputStream.flush()
                         }
 
-                        withContext(Dispatchers.Main) {
-                            insertSong(
-                                uri,
-                                song.title,
-                                song.artist,
-                                song.artwork.let { Uri.parse(it) },
-                                parseDuration(song.duration)
-                            )
-                            _downloadProgress.value = 1f
-                            _isDownloading.value = false
-                            _currentDownloadTitle.value = ""
-                            onResult(Result.success(Unit))
+                        inputStream.close()
+                        outputStream.flush()
+                    }
+
+                    val artworkUri = run {
+                        val imageValues = ContentValues().apply {
+                            put(MediaStore.Images.Media.DISPLAY_NAME, "${song.title}_artwork.jpg")
+                            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                            put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/MyApp")
                         }
-                    } else {
-                        withContext(Dispatchers.Main) {
-                            _isDownloading.value = false
-                            _currentDownloadTitle.value = ""
-                            onResult(Result.failure(Exception("Failed to create MediaStore entry")))
+                        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, imageValues)
+                        if (uri != null) {
+                            resolver.openOutputStream(uri)?.use { outputStream ->
+                                val connection = URL(song.artwork).openConnection() as HttpURLConnection
+                                connection.connect()
+                                val inputStream = BufferedInputStream(connection.inputStream)
+                                val buffer = ByteArray(8192)
+                                var bytesRead: Int
+                                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                                    outputStream.write(buffer, 0, bytesRead)
+                                }
+                                inputStream.close()
+                                outputStream.flush()
+                            }
                         }
+                        uri
+                    }
+
+                    withContext(Dispatchers.Main) {
+                        insertSong(
+                            audioUri,
+                            song.title,
+                            song.artist,
+                            artworkUri,
+                            parseDuration(song.duration)
+                        )
+                        _downloadProgress.value = 1f
+                        _isDownloading.value = false
+                        _currentDownloadTitle.value = ""
+                        onResult(Result.success(Unit))
                     }
                 } catch (e: Exception) {
-                    Log.e("Download", "Error downloading song", e)
+                    Log.e("Download", "Error downloading song/artwork", e)
                     withContext(Dispatchers.Main) {
                         _isDownloading.value = false
                         _currentDownloadTitle.value = ""

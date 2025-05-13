@@ -233,7 +233,7 @@ fun FullPlayerScreen(
                     val repeatIconColor = when (repeatMode) {
                         RepeatMode.NONE -> Color.Gray
                         RepeatMode.REPEAT_ALL -> Color.White
-                        RepeatMode.REPEAT_ONE -> Color(0xFF4CAF50) // Hijau misal
+                        RepeatMode.REPEAT_ONE -> Color(0xFF4CAF50)
                     }
 
                     Icon(
@@ -259,7 +259,7 @@ fun FullPlayerScreen(
                     }
                     onCloseSheet()
                 },
-                songToEdit = song, // LANGSUNG current song aja
+                songToEdit = song,
                 onSongUpdate = onSongUpdate
             )
         }

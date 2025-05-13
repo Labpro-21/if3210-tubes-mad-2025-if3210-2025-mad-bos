@@ -28,7 +28,6 @@ class AuthPreferences @Inject constructor(@ApplicationContext private val contex
         context.dataStore.edit { prefs ->
             prefs[TOKEN_KEY] = encrypted
         }
-        // Extract and store the userId from the token
         setUserIdFromToken(token)
     }
 
@@ -86,7 +85,6 @@ class AuthPreferences @Inject constructor(@ApplicationContext private val contex
         }
     }
 
-    // Retrieve the stored userId from the datastore.
     override suspend fun getUserId(): Long? {
         return context.dataStore.data.map { it[USER_ID_KEY] }.first()?.toLong()
     }

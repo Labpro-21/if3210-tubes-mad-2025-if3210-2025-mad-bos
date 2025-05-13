@@ -43,7 +43,6 @@ class NetworkConnectivityObserver @Inject constructor(
         val request = NetworkRequest.Builder().build()
         connectivityManager.registerNetworkCallback(request, callback)
 
-        // When the flow collection is cancelled, unregister the callback.
         awaitClose {
             connectivityManager.unregisterNetworkCallback(callback)
         }
