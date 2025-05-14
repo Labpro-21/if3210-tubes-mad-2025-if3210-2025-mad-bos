@@ -1,5 +1,7 @@
 package com.example.tubesmobdev.ui.viewmodel
 
+import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,10 +13,12 @@ import com.example.tubesmobdev.data.repository.ProfileRepository
 import com.example.tubesmobdev.data.repository.SongRepository
 import com.example.tubesmobdev.manager.PlayerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -117,6 +121,21 @@ class ProfileViewModel @Inject constructor(
             servicePreferences.setShouldRestartService(false)
             authRepository.logout()
             playerManager.clearWithCallback()
+        }
+    }
+    fun updateProfilePhoto(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val result = withContext(Dispatchers.IO) {
+                profileRepository.updateProfilePhoto(context, uri)
+            }
+            result.onSuccess {
+                fetchProfile()
+                Log.d("Profile","Success")
+            }.onFailure {
+                _errorMessage.value = it.message
+            }
+            _isLoading.value = false
         }
     }
 }

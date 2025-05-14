@@ -8,6 +8,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
@@ -40,16 +46,27 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
     connectionViewModel: ConnectionViewModel = hiltViewModel()
 ) {
+    val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
     val profile by viewModel.profile.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val allSongsCount by viewModel.allSongsCount.collectAsState()
     val likedSongsCount by viewModel.likedSongsCount.collectAsState()
     val listenedSongsCount by viewModel.listenedSongsCount.collectAsState()
-
+    val context = LocalContext.current as Activity
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedImageUri.value = uri
+        uri?.let {
+            viewModel.updateProfilePhoto(context, it)
+        }
+    }
     val baseUrl = "http://34.101.226.132:3000/uploads/profile-picture/"
     val photoUrl = profile?.profilePhoto?.let { baseUrl + it } ?: ""
-
+    val imagePainter: Painter = rememberAsyncImagePainter(
+        model = selectedImageUri.value ?: photoUrl
+    )
     val painter: Painter = rememberAsyncImagePainter(photoUrl)
     val dominantColor: Color = rememberDominantColor(painter.toString())
 
@@ -59,7 +76,6 @@ fun ProfileScreen(
         endY = 1200f
     )
 
-    val context = LocalContext.current as Activity
     val windowSizeClass = calculateWindowSizeClass(context)
     val isLargeScreen = windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact
 
@@ -117,7 +133,7 @@ fun ProfileScreen(
                             contentDescription = "Profile Photo",
                             modifier = Modifier
                                 .size(if (isLargeScreen) 150.dp else 120.dp)
-                                .clip(CircleShape),
+                                .clip(CircleShape).clickable { launcher.launch("image/*") },
                             contentScale = ContentScale.Crop
                         )
 
