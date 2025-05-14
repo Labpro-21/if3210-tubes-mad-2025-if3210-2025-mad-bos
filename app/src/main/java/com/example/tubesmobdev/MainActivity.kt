@@ -20,18 +20,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         navigationViewModel = ViewModelProvider(this)[NavigationViewModel::class.java]
-        val navigateToFullPlayer = intent?.getBooleanExtra("NAVIGATE_TO_FULL_PLAYER", false) == true
-
-        Log.d("Intent", navigateToFullPlayer.toString())
         installSplashScreen()
         enableEdgeToEdge()
-
-        if (navigateToFullPlayer) {
-            navigationViewModel.triggerNavigateToFullPlayer()
-        }
-
+        handleIntent(intent)
         setContent {
             TubesMobdevTheme {
                 AppNavigation(navigationViewModel = navigationViewModel)
@@ -41,12 +33,30 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
+        handleIntent(intent)
         val navigateToFullPlayer = intent?.getBooleanExtra("NAVIGATE_TO_FULL_PLAYER", false) == true
         Log.d("MainLayout", navigateToFullPlayer.toString())
 
-
         if (navigateToFullPlayer) {
             navigationViewModel.triggerNavigateToFullPlayer()
+        }
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        val navigateToFullPlayer = intent?.getBooleanExtra("NAVIGATE_TO_FULL_PLAYER", false) == true
+        val deepLink = intent?.data
+
+        when {
+            navigateToFullPlayer -> {
+                navigationViewModel.triggerNavigateToFullPlayer()
+            }
+            deepLink != null && deepLink.scheme == "purrytify" && deepLink.host == "song" -> {
+                val songId = deepLink.lastPathSegment
+                if (songId != null) {
+                    Log.d("DeepLink", "Received song ID: $songId")
+                    navigationViewModel.triggerNavigateToSongId(songId)
+                }
+            }
         }
     }
 }

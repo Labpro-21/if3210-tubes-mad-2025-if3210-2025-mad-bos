@@ -54,6 +54,7 @@ fun FullPlayerScreen(
     sheetState: SheetState,
     onCloseSheet: () -> Unit,
     onSongUpdate: (Song) -> Unit,
+    onShareClicked: () -> Unit,
     onShowSnackbar: (String) -> Unit,
     customTopBar: @Composable (() -> Unit) = {},
     isCompact: Boolean
@@ -144,6 +145,17 @@ fun FullPlayerScreen(
                         .aspectRatio(1f)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = if (song.isOnline) "Online" else "Offline",
+                    color = if (song.isOnline) Color.Cyan else Color.LightGray,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .background(
+                            color = if (song.isOnline) Color(0xFF003344) else Color(0xFF444444),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -199,15 +211,6 @@ fun FullPlayerScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { showAudioDialog = true }) {
-                    Icon(
-                        imageVector = Icons.Default.Speaker,
-                        contentDescription = "Ganti Output Audio",
-                        tint = Color.White
-                    )
-                }
-
-                CurrentAudioDeviceIndicator()
                 IconButton(onClick = onToggleShuffle) {
                     Icon(
                         imageVector = Icons.Default.Shuffle,
@@ -254,8 +257,36 @@ fun FullPlayerScreen(
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 0.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { showAudioDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Speaker,
+                            contentDescription = "Ganti Output Audio",
+                            tint = Color.White
+                        )
+                    }
+                    CurrentAudioDeviceIndicator()
+                }
+                if (song.isOnline) {
+                    IconButton(onClick = onShareClicked) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Share Song",
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+            }
         }
-
         if (isSheetOpen) {
             AddSongDrawer(
                 sheetState = sheetState,

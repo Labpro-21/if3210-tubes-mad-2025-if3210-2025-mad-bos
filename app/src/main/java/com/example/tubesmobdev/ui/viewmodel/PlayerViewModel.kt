@@ -1,6 +1,7 @@
 package com.example.tubesmobdev.ui.viewmodel
 
 import android.app.Application
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.annotation.OptIn
@@ -336,5 +337,16 @@ class PlayerViewModel @OptIn(UnstableApi::class)
         updatedQueue.add(newSong)
         _currentQueue.value = updatedQueue
         updateQueue(updatedQueue)
+    }
+
+    fun shareSong(song: Song) {
+        val songUri = "purrytify://song/${song.id}"
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, "Dengarkan lagu favoritku di Purrytify!\n$songUri")
+        }
+        app.applicationContext.startActivity(
+            Intent.createChooser(shareIntent, "Bagikan lagu melalui").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
     }
 }

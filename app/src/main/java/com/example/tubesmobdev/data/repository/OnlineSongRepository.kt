@@ -7,4 +7,5 @@ import javax.inject.Inject
 class OnlineSongRepository @Inject constructor(private val apiService: SongApi) {
     suspend fun getTopGlobalSongs(): List<OnlineSong> = apiService.getTopGlobalSongs()
     suspend fun getTopSongsByCountry(code: String): List<OnlineSong> = apiService.getTopSongsByCountry(code)
+    suspend fun getOnlineSong(id:String):OnlineSong = apiService.getOnlineSong(id)
 }

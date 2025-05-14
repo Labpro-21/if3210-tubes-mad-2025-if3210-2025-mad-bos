@@ -23,8 +23,9 @@ class NavigationViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _navigateToFullPlayer = MutableSharedFlow<Unit>(extraBufferCapacity = 1,replay = 1)
+    private val _navigateToSongId = MutableSharedFlow<String>(extraBufferCapacity = 1,replay = 1)
     val navigateToFullPlayer = _navigateToFullPlayer
-
+    val navigateToSongId = _navigateToSongId
     private val _isInitialized = MutableStateFlow(false)
     val isInitialized: StateFlow<Boolean> = _isInitialized
     val isLoggedIn: StateFlow<Boolean> = authPreferences.isLoggedInFlow
@@ -44,6 +45,12 @@ class NavigationViewModel @Inject constructor(
     fun triggerNavigateToFullPlayer() {
         Log.d("MainLayout", "triggerNavigateToFullPlayer")
         val res = _navigateToFullPlayer.tryEmit(Unit)
+        Log.d("MainLayout", "tryemit: $res")
+    }
+
+    fun triggerNavigateToSongId(songId: String) {
+        Log.d("MainLayout", "triggerNavigateToSongId")
+        val res = _navigateToSongId.tryEmit(songId)
         Log.d("MainLayout", "tryemit: $res")
     }
 

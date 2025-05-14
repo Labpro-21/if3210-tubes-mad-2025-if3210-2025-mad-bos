@@ -196,4 +196,8 @@ class OnlineSongViewModel @Inject constructor(
             }
         }
     }
+
+    suspend fun getOnlineSongById(id: String): OnlineSong {
+        return onlineSongRepository.getOnlineSong(id)
+    }
 }

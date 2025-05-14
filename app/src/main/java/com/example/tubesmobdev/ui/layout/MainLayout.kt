@@ -31,6 +31,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.tubesmobdev.data.remote.response.toLocalSong
 import com.example.tubesmobdev.service.ConnectivityStatus
 import com.example.tubesmobdev.ui.components.*
 import com.example.tubesmobdev.ui.home.HomeScreen
@@ -41,6 +42,7 @@ import com.example.tubesmobdev.ui.topsongs.TopSongsScreen
 import com.example.tubesmobdev.ui.viewmodel.ConnectionViewModel
 import com.example.tubesmobdev.ui.viewmodel.NavigationViewModel
 import com.example.tubesmobdev.ui.viewmodel.PlayerViewModel
+import com.example.tubesmobdev.ui.viewmodel.OnlineSongViewModel
 import com.example.tubesmobdev.util.rememberDominantColor
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
@@ -49,7 +51,7 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
     val navController = rememberNavController()
     val playerViewModel: PlayerViewModel = hiltViewModel()
     val connectionViewModel: ConnectionViewModel = hiltViewModel()
-
+    val onlineSongViewModel: OnlineSongViewModel = hiltViewModel()
 
 
     val connectivityStatus by connectionViewModel.connectivityStatus.collectAsState()
@@ -94,6 +96,19 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                 navController.navigate("fullplayer")
             } else {
                 Log.d("MainLayout", "Already at fullplayer")
+            }
+        }
+    }
+    LaunchedEffect(Unit) {
+        navigationViewModel.navigateToSongId.collect { songId ->
+            Log.d("MainLayout", "Received deep link to songId: $songId")
+            try {
+                val onlineSong = onlineSongViewModel.getOnlineSongById(songId)
+                val song = onlineSong.toLocalSong()
+//                playerViewModel.playSong(song)
+                Log.d("Wilson", "Successfully fetched and played song: ${song.title}")
+            } catch (e: Exception) {
+                Log.e("MainLayout", "Error fetching or playing song: $e")
             }
         }
     }
@@ -326,6 +341,9 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                         onCloseSheet = { isSheetOpen = false },
                                         onShowSnackbar = { snackbarMessage = it },
                                         isCompact = isCompact,
+                                        onShareClicked = {
+                                            playerViewModel.shareSong(it)
+                                        },
                                         customTopBar = {
                                             ScreenHeader(
                                                 isCompact = isCompact,
