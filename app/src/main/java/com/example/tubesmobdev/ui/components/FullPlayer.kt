@@ -86,36 +86,13 @@ fun FullPlayerScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(dominantColor)
-            .pointerInput(Unit) {
-                detectHorizontalDragGestures(
-                    onHorizontalDrag = { _, dragAmount ->
-                        offsetX += dragAmount
-                        coroutineScope.launch {
-                            swipeOffset.snapTo(offsetX)
-                        }
-                    },
-                    onDragEnd = {
-                        when {
-                            offsetX > swipeThreshold -> {
-                                onSwipeRight()
-                            }
-                            offsetX < -swipeThreshold -> {
-                                onSwipeLeft()
-                            }
-                        }
-                        offsetX = 0f
-                        coroutineScope.launch {
-                            swipeOffset.animateTo(0f, animationSpec = tween(300))
-                        }
-                    }
-                )
-            }
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+
+            .padding(start = 12.dp, end = 12.dp, bottom = 8.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -145,17 +122,6 @@ fun FullPlayerScreen(
                         .aspectRatio(1f)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = if (song.isOnline) "Online" else "Offline",
-                    color = if (song.isOnline) Color.Cyan else Color.LightGray,
-                    fontSize = 12.sp,
-                    modifier = Modifier
-                        .background(
-                            color = if (song.isOnline) Color(0xFF003344) else Color(0xFF444444),
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -181,8 +147,25 @@ fun FullPlayerScreen(
                             overflow = TextOverflow.Ellipsis
                         )
                     }
-
-                    if (!song.isOnline){
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = { showAudioDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Speaker,
+                                contentDescription = "Ganti Output Audio",
+                                tint = Color.White
+                            )
+                        }
+                    }
+                    if (song.isOnline) {
+                        IconButton(onClick = onShareClicked) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = "Share Song",
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    }else{
                         IconButton(onClick = onAddClicked) {
                             Icon(
                                 imageVector = if (song.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
@@ -265,26 +248,7 @@ fun FullPlayerScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { showAudioDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Speaker,
-                            contentDescription = "Ganti Output Audio",
-                            tint = Color.White
-                        )
-                    }
-                    CurrentAudioDeviceIndicator()
-                }
-                if (song.isOnline) {
-                    IconButton(onClick = onShareClicked) {
-                        Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = "Share Song",
-                            tint = Color.White,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
+
             }
         }
         if (isSheetOpen) {

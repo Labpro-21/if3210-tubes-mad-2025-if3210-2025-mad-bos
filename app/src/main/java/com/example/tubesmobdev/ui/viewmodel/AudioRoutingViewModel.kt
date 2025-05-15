@@ -1,5 +1,9 @@
 package com.example.tubesmobdev.ui.viewmodel
 
+import android.Manifest
+import android.content.Context
+import android.util.Log
+import androidx.annotation.RequiresPermission
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -8,8 +12,6 @@ import com.example.tubesmobdev.domain.model.AudioOutputDevice
 import com.example.tubesmobdev.manager.AudioRoutingManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-
-
 @HiltViewModel
 class AudioRoutingViewModel @Inject constructor(
     private val audioRoutingManager: AudioRoutingManager
@@ -21,11 +23,11 @@ class AudioRoutingViewModel @Inject constructor(
     private val _selectedDevice = mutableStateOf<AudioOutputDevice?>(null)
     val selectedDevice: State<AudioOutputDevice?> = _selectedDevice
 
+    private var isObserving = false
+
     init {
         loadDevices()
-        audioRoutingManager.observeRouteChanges {
-            loadDevices()
-        }
+        observeRouteChanges() // ⬅️ pindahkan ke sini
     }
 
     fun loadDevices() {
@@ -36,5 +38,15 @@ class AudioRoutingViewModel @Inject constructor(
 
     fun selectDevice(device: AudioOutputDevice) {
         audioRoutingManager.selectDevice(device.id)
+        loadDevices()
+    }
+
+    fun observeRouteChanges() {
+        if (isObserving) return
+        isObserving = true
+
+        audioRoutingManager.observeRouteChanges {
+            loadDevices()
+        }
     }
 }

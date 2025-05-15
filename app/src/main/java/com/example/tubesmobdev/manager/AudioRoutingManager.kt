@@ -1,6 +1,13 @@
 package com.example.tubesmobdev.manager
 
+import android.Manifest
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothManager
 import android.content.Context
+import android.content.Intent
+import android.provider.Settings
+import androidx.annotation.RequiresPermission
 import androidx.mediarouter.media.MediaRouter
 import androidx.mediarouter.media.MediaRouteSelector
 import androidx.mediarouter.media.MediaRouter.RouteInfo
@@ -17,7 +24,7 @@ class AudioRoutingManager @Inject constructor(
     private val mediaRouter: MediaRouter = MediaRouter.getInstance(context)
 
     fun getAvailableRoutes(): List<AudioOutputDevice> {
-        return mediaRouter.routes
+        val mediaRoutes = mediaRouter.routes
             .filter { it.isEnabled }
             .map {
                 AudioOutputDevice(
@@ -26,12 +33,17 @@ class AudioRoutingManager @Inject constructor(
                     id = it.id
                 )
             }
+
+
+        val allDevices = (mediaRoutes)
+            .distinctBy { it.id }
+
+        return allDevices.sortedByDescending { it.isConnected }
     }
 
     fun selectDevice(deviceId: String) {
         mediaRouter.routes.firstOrNull { it.id == deviceId }?.let { mediaRouter.selectRoute(it) }
     }
-
 
     fun observeRouteChanges(onChange: () -> Unit) {
         val selector = MediaRouteSelector.Builder().build()
