@@ -63,6 +63,7 @@ fun FullPlayerScreen(
     var snackbarMessage by rememberSaveable { mutableStateOf<String?>(null) }
 
     val dominantColor = rememberDominantColor(song.coverUrl ?: "").copy(alpha = 0.9f)
+    val bgPainter = rememberAsyncImagePainter(song.coverUrl ?: "")
     val totalDurationMillis = song.duration.toInt()
     val totalDurationSeconds = (totalDurationMillis / 1000L).toInt()
     val currentSeconds = (progress * totalDurationSeconds).roundToInt()
@@ -87,167 +88,244 @@ fun FullPlayerScreen(
             .fillMaxSize()
             .background(dominantColor)
 
-            .padding(start = 12.dp, end = 12.dp, bottom = 8.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            if (!isCompact){
-                customTopBar()
-            }
+        if (!isCompact) {
+            Image(
+                painter       = bgPainter,
+                contentScale  = ContentScale.Crop,
+                contentDescription = null,
+                modifier      = Modifier
+                    .matchParentSize()
+            )
+            Box(modifier = Modifier
+                .matchParentSize()
+                .background(Color.Black.copy(alpha = 0.4f)))
+        } else {
+            Box(modifier = Modifier
+                .matchParentSize()
+                .background(dominantColor))
+        }
+        if (!isCompact) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .offset { IntOffset(swipeOffset.value.roundToInt(), 0) }
-                    .size(450.dp),
+                    .fillMaxSize()
+                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Image(
-                    painter = if (song.coverUrl.isNullOrEmpty()) {
-                        painterResource(id = R.drawable.music)
-                    } else {
-                        rememberAsyncImagePainter(song.coverUrl)
-                    },
-                    contentDescription = song.title + "-image",
-                    contentScale = ContentScale.Crop,
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(0.6f)
-                        .clip(RoundedCornerShape(12.dp))
-                        .size(200.dp)
-                        .aspectRatio(1f)
-                )
+                        .weight(1f)
+                        .verticalScroll(
+                            rememberScrollState()
+                        )
+                ) {
+                    customTopBar()
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    SeekSlider(
+                        progress        = progress,
+                        durationMillis  = totalDurationMillis,
+                        onSeekFinished  = onSeekTo,
+                        modifier        = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier              = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment     = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = onSkipPrevious) {
+                            Icon(
+                                Icons.Default.SkipPrevious,
+                                contentDescription = "Previous",
+                                tint               = Color.White
+                            )
+                        }
+                        IconButton(
+                            onClick   = onTogglePlayPause,
+                            modifier  = Modifier
+                                .size(48.dp)
+                                .background(
+                                    color = Color.White.copy(alpha = 0.5f),
+                                    shape = CircleShape
+                                )
+                        ) {
+                            Icon(
+                                imageVector        = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                contentDescription = "Play/Pause",
+                                tint               = Color.Black,
+                                modifier           = Modifier.size(32.dp)
+                            )
+                        }
+                        IconButton(onClick = onSkipNext) {
+                            Icon(
+                                Icons.Default.SkipNext,
+                                contentDescription = "Next",
+                                tint               = Color.White,
+                                modifier           = Modifier.size(32.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }else{
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .offset { IntOffset(swipeOffset.value.roundToInt(), 0) }
+                        .size(450.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Image(
+                        painter = if (song.coverUrl.isNullOrEmpty()) {
+                            painterResource(id = R.drawable.music)
+                        } else {
+                            rememberAsyncImagePainter(song.coverUrl)
+                        },
+                        contentDescription = song.title + "-image",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(0.6f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .size(200.dp)
+                            .aspectRatio(1f)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 8.dp, end = 16.dp)
+                        ) {
+                            Text(
+                                text = song.title,
+                                color = Color.White,
+                                fontSize = 20.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = song.artist,
+                                color = Color.LightGray,
+                                fontSize = 14.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = { showAudioDialog = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Speaker,
+                                    contentDescription = "Ganti Output Audio",
+                                    tint = Color.White
+                                )
+                            }
+                        }
+                        if (song.isOnline) {
+                            IconButton(onClick = onShareClicked) {
+                                Icon(
+                                    imageVector = Icons.Default.Share,
+                                    contentDescription = "Share Song",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                        }else{
+                            IconButton(onClick = onAddClicked) {
+                                Icon(
+                                    imageVector = if (song.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                    contentDescription = "Like/Unlike",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
+
+                SeekSlider(
+                    progress = progress,
+                    durationMillis = totalDurationMillis,
+                    onSeekFinished = onSeekTo,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 8.dp, end = 16.dp)
-                    ) {
-                        Text(
-                            text = song.title,
-                            color = Color.White,
-                            fontSize = 20.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = song.artist,
-                            color = Color.LightGray,
-                            fontSize = 14.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                    IconButton(onClick = onToggleShuffle) {
+                        Icon(
+                            imageVector = Icons.Default.Shuffle,
+                            contentDescription = "Shuffle",
+                            tint = if (isShuffle) Color.Yellow else Color.White
                         )
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = { showAudioDialog = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Speaker,
-                                contentDescription = "Ganti Output Audio",
-                                tint = Color.White
-                            )
+                    IconButton(onClick = onSkipPrevious) {
+                        Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", tint = Color.White)
+                    }
+                    IconButton(onClick = onTogglePlayPause,    modifier = Modifier
+                        .size(48.dp)
+                        .background(
+                            color = Color.White.copy(alpha = 0.5f),
+                            shape = CircleShape
+                        )) {
+                        Icon(
+                            imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            contentDescription = "Play/Pause",
+                            tint = Color.Black,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                    IconButton(onClick = onSkipNext) {
+                        Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = Color.White, modifier = Modifier.size(32.dp))
+                    }
+                    IconButton(onClick = onCycleRepeat) {
+                        val repeatIcon = when (repeatMode) {
+                            RepeatMode.REPEAT_ONE -> Icons.Default.RepeatOne
+                            else -> Icons.Default.Repeat
                         }
-                    }
-                    if (song.isOnline) {
-                        IconButton(onClick = onShareClicked) {
-                            Icon(
-                                imageVector = Icons.Default.Share,
-                                contentDescription = "Share Song",
-                                tint = Color.White,
-                                modifier = Modifier.size(28.dp)
-                            )
+
+                        val repeatIconColor = when (repeatMode) {
+                            RepeatMode.NONE -> Color.Gray
+                            RepeatMode.REPEAT_ALL -> Color.White
+                            RepeatMode.REPEAT_ONE -> Color(0xFF4CAF50)
                         }
-                    }else{
-                        IconButton(onClick = onAddClicked) {
-                            Icon(
-                                imageVector = if (song.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                contentDescription = "Like/Unlike",
-                                tint = Color.White,
-                                modifier = Modifier.size(32.dp)
-                            )
-                        }
+
+                        Icon(
+                            imageVector = repeatIcon,
+                            contentDescription = "Repeat",
+                            tint = repeatIconColor,
+                            modifier = Modifier.size(32.dp)
+                        )
                     }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            SeekSlider(
-                progress = progress,
-                durationMillis = totalDurationMillis,
-                onSeekFinished = onSeekTo,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onToggleShuffle) {
-                    Icon(
-                        imageVector = Icons.Default.Shuffle,
-                        contentDescription = "Shuffle",
-                        tint = if (isShuffle) Color.Yellow else Color.White
-                    )
-                }
-                IconButton(onClick = onSkipPrevious) {
-                    Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", tint = Color.White)
-                }
-                IconButton(onClick = onTogglePlayPause,    modifier = Modifier
-                    .size(48.dp)
-                    .background(
-                        color = Color.White.copy(alpha = 0.5f),
-                        shape = CircleShape
-                    )) {
-                    Icon(
-                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = "Play/Pause",
-                        tint = Color.Black,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-                IconButton(onClick = onSkipNext) {
-                    Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = Color.White, modifier = Modifier.size(32.dp))
-                }
-                IconButton(onClick = onCycleRepeat) {
-                    val repeatIcon = when (repeatMode) {
-                        RepeatMode.REPEAT_ONE -> Icons.Default.RepeatOne
-                        else -> Icons.Default.Repeat
-                    }
-
-                    val repeatIconColor = when (repeatMode) {
-                        RepeatMode.NONE -> Color.Gray
-                        RepeatMode.REPEAT_ALL -> Color.White
-                        RepeatMode.REPEAT_ONE -> Color(0xFF4CAF50)
-                    }
-
-                    Icon(
-                        imageVector = repeatIcon,
-                        contentDescription = "Repeat",
-                        tint = repeatIconColor,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 0.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+                Spacer(modifier = Modifier.height(16.dp))
 
             }
         }

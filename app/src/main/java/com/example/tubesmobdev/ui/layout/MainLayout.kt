@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -348,17 +349,10 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                             ScreenHeader(
                                                 isCompact = isCompact,
                                                 isMainMenu = false,
-                                                title = "fullplayer",
+                                                title = "",
                                                 onBack = { navController.popBackStack() },
-                                                dominantColor = dominantColor,
-                                                actions = {
-                                                    IconButton(onClick = { isSheetOpen = true }) {
-                                                        Icon(
-                                                            Icons.Default.Edit,
-                                                            contentDescription = "Edit"
-                                                        )
-                                                    }
-                                                }
+                                                dominantColor = Color.Transparent,
+                                                iconOnBack = Icons.Filled.ArrowDownward
                                             )
                                         }
                                     )

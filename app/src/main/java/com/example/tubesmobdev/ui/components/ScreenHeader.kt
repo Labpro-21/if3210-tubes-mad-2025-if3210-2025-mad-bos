@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,7 +27,8 @@ fun ScreenHeader(
     onBack: () -> Unit = {},
     onClick: () -> Unit = {},
     dominantColor: Color = MaterialTheme.colorScheme.background,
-    isCompact: Boolean = true
+    isCompact: Boolean = true,
+    iconOnBack: ImageVector = Icons.AutoMirrored.Filled.ArrowBack,
 ) {
     if (isCompact) {
         if (isMainMenu) {
@@ -65,7 +67,6 @@ fun ScreenHeader(
             )
         }
     } else {
-
         Row(
             modifier = modifier
                 .fillMaxWidth()
@@ -75,7 +76,7 @@ fun ScreenHeader(
         ) {
             if (!isMainMenu) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(iconOnBack, contentDescription = "Back")
                 }
             }
 
