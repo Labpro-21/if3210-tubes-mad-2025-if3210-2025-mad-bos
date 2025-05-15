@@ -53,6 +53,11 @@ fun ProfileScreen(
     val allSongsCount by viewModel.allSongsCount.collectAsState()
     val likedSongsCount by viewModel.likedSongsCount.collectAsState()
     val listenedSongsCount by viewModel.listenedSongsCount.collectAsState()
+    val topSong by viewModel.topSong.collectAsState()
+    val topArtist by viewModel.topArtist.collectAsState()
+    val streakSong by viewModel.streakSong.collectAsState()
+    val streakDays by viewModel.streakDays.collectAsState()
+    val streakRange by viewModel.streakRange.collectAsState()
     val context = LocalContext.current as Activity
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -71,7 +76,7 @@ fun ProfileScreen(
     val dominantColor: Color = rememberDominantColor(painter.toString())
 
     val topGradient = Brush.verticalGradient(
-        colors = listOf(dominantColor, Color.Transparent),
+        colors = listOf(dominantColor, Color.Black),
         startY = 0f,
         endY = 1200f
     )
@@ -180,48 +185,16 @@ fun ProfileScreen(
                         }
 
                         Spacer(modifier = Modifier.height(40.dp))
-
-                        Text(
-                            text = "Your Sound Capsule",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontSize = 20.sp,
-                            modifier = Modifier.align(Alignment.Start)
+                        SoundCapsuleSection(
+                            month             = "April 2025",
+                            minutesListened   = viewModel.totalListeningMinutes.collectAsState().value,
+                            topArtist         = topArtist,
+                            topSong           = topSong,
+                            streakDays        = streakDays,
+                            streakSong        = streakSong,
+                            streakRange       = streakRange, // misal "Mar 21–25, 2025"
+                            onShareStreak     = { /* panggil share intent */ }
                         )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            text = "April 2025",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color.Gray,
-                            modifier = Modifier.align(Alignment.Start)
-                        )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Text(
-                            text = "${viewModel.totalListeningMinutes.collectAsState().value} minutes",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = Color(0xFF41D18D)
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text("Top artist", color = Color.Gray)
-                                Text(viewModel.topArtist.collectAsState().value)
-                            }
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text("Top song", color = Color.Gray)
-                                Text(viewModel.topSong.collectAsState().value)
-                            }
-                        }
-                        Text("You had a 5-day streak", style = MaterialTheme.typography.bodyLarge)
-//                        Text("You played '${streakSong}' for 5 days in a row", style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             }

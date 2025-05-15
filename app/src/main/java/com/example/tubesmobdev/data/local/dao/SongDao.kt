@@ -50,4 +50,7 @@ interface SongDao {
     @Query("SELECT * FROM songs WHERE title = :title AND artist = :artist LIMIT 1")
     suspend fun findSongByTitleAndArtist(title: String, artist: String): Song?
 
+    @Query("SELECT * FROM songs WHERE id = :songId AND creatorId = :userId LIMIT 1")
+    suspend fun getSongById(songId: Int, userId: Long): Song?
+
 }

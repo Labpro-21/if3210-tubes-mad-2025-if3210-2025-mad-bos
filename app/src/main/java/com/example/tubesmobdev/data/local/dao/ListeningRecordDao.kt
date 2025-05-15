@@ -6,6 +6,8 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.tubesmobdev.data.model.ListeningRecord
 import com.example.tubesmobdev.data.model.StreakEntry
+import com.example.tubesmobdev.data.model.TopArtist
+import com.example.tubesmobdev.data.model.TopSong
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -21,30 +23,48 @@ interface ListeningRecordDao {
     fun getTotalListeningTime(userId: Long): Flow<Long?>
 
     @Query("""
-        SELECT artist 
-        FROM listening_records 
-        WHERE creatorId = :userId 
-        GROUP BY artist 
-        ORDER BY SUM(durationListened) DESC 
+      WITH top_artist AS (
+        SELECT artist
+        FROM listening_records
+        WHERE creatorId = :userId
+        GROUP BY artist
+        ORDER BY SUM(durationListened) DESC
         LIMIT 1
+      )
+      SELECT
+        ta.artist    AS artist,
+        s.coverUrl   AS coverUrl
+      FROM top_artist ta
+      JOIN songs s
+        ON s.artist = ta.artist
+      LIMIT 1
     """)
-    fun getTopArtist(userId: Long): Flow<String>
+    fun getTopArtist(userId: Long): Flow<TopArtist>
 
     @Query("""
-        SELECT title 
-        FROM listening_records 
-        WHERE creatorId = :userId 
-        GROUP BY title 
-        ORDER BY SUM(durationListened) DESC 
+      WITH top_song AS (
+        SELECT songId
+        FROM listening_records
+        WHERE creatorId = :userId
+        GROUP BY songId
+        ORDER BY SUM(durationListened) DESC
         LIMIT 1
+      )
+      SELECT
+        s.title      AS title,
+        s.coverUrl   AS coverUrl
+      FROM top_song ts
+      JOIN songs s
+        ON s.id = ts.songId
+      LIMIT 1
     """)
-    fun getTopSong(userId: Long): Flow<String>
+    fun getTopSong(userId: Long): Flow<TopSong>
 
     @Query("""
-        SELECT songId, title, date 
-        FROM listening_records 
-        WHERE creatorId = :userId 
-        ORDER BY songId, date
+      SELECT songId, title, date 
+      FROM listening_records 
+      WHERE creatorId = :userId 
+      ORDER BY songId, date
     """)
     suspend fun getRecordsForStreakAnalysis(userId: Long): List<StreakEntry>
 }

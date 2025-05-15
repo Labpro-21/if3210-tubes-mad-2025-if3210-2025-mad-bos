@@ -4,6 +4,8 @@ import com.example.tubesmobdev.data.local.dao.ListeningRecordDao
 import com.example.tubesmobdev.data.local.preferences.IAuthPreferences
 import com.example.tubesmobdev.data.model.ListeningRecord
 import com.example.tubesmobdev.data.model.StreakEntry
+import com.example.tubesmobdev.data.model.TopArtist
+import com.example.tubesmobdev.data.model.TopSong
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -41,21 +43,21 @@ class ListeningRecordRepository @Inject constructor(
         }
     }
 
-    suspend fun getTopArtist(): Flow<String> {
+    suspend fun getTopArtist(): Flow<TopArtist> {
         val userId = authPreferences.getUserId()
         return if (userId != null) {
             dao.getTopArtist(userId)
         } else {
-            flowOf("")
+            flowOf()
         }
     }
 
-    suspend fun getTopSong(): Flow<String> {
+    suspend fun getTopSong(): Flow<TopSong> {
         val userId = authPreferences.getUserId()
         return if (userId != null) {
             dao.getTopSong(userId)
         } else {
-            flowOf("")
+            flowOf()
         }
     }
 
