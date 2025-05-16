@@ -41,7 +41,7 @@ class AudioRoutingViewModel @Inject constructor(
         loadDevices()
     }
 
-    fun observeRouteChanges() {
+    private fun observeRouteChanges() {
         if (isObserving) return
         isObserving = true
 

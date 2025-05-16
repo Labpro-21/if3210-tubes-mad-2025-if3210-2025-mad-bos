@@ -161,7 +161,7 @@ object AppModule {
         return PlayerManager(context)
     }
 
-    @OptIn(UnstableApi::class)
+    @OptIn(androidx.media3.common.util.UnstableApi::class)
     @Provides
     @Singleton
     fun providePlaybackConnection(@ApplicationContext context: Context): PlaybackConnection {

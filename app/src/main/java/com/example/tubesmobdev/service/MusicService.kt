@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
 class MusicService : MediaSessionService() {
     private var mediaSession: MediaSession? = null
     private var player: ExoPlayer? = null
-    private var notificationManager: PlayerNotificationManager? = null
+//    private var notificationManager: PlayerNotificationManager? = null
 
     private var currentQueue: List<Song> = emptyList()
     private var currentIndex: Int = 0
@@ -52,8 +52,8 @@ class MusicService : MediaSessionService() {
 
 
     companion object {
-        private const val NOTIFICATION_ID = 69
-        private const val CHANNEL_ID = "music_channel"
+//        private const val NOTIFICATION_ID = 69
+//        private const val CHANNEL_ID = "music_channel"
 
         const val ACTION_PLAY = "com.example.tubesmobdev.PLAY"
         const val ACTION_STOP = "com.example.tubesmobdev.STOP"
@@ -66,6 +66,13 @@ class MusicService : MediaSessionService() {
         const val EXTRA_SHUFFLE = "EXTRA_SHUFFLE"
         const val EXTRA_REPEAT = "EXTRA_REPEAT"
 
+    }
+
+    private fun isConnectedToInternet(): Boolean {
+        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val activeNetwork = connectivityManager.activeNetwork
+        val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork)
+        return capabilities != null && capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
     private inner class CustomCallback : MediaSession.Callback {
@@ -270,6 +277,12 @@ class MusicService : MediaSessionService() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
+
+        if (!isConnectedToInternet()) {
+            Log.w("MusicService", "No internet connection!")
+            stopSelf()
+            return START_NOT_STICKY
+        }
         when (intent?.action) {
             ACTION_PLAY -> {
                 val queueJson = intent.getStringExtra(EXTRA_QUEUE)
