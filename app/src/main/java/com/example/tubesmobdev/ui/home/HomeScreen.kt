@@ -18,6 +18,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.ui.components.TopSongSection
+import com.example.tubesmobdev.ui.viewmodel.ConnectionViewModel
 import com.example.tubesmobdev.ui.viewmodel.HomeViewModel
 import com.example.tubesmobdev.ui.viewmodel.ProfileViewModel
 
@@ -26,6 +27,7 @@ fun HomeScreen(
     navController: NavController,
     viewModel: HomeViewModel = hiltViewModel(),
     profileViewModel: ProfileViewModel = hiltViewModel(),
+    connectionViewModel: ConnectionViewModel = hiltViewModel(),
     onSongClick: (Song) -> Unit,
     onHomeSongClick: (Song) -> Unit,
     customTopBar: @Composable (() -> Unit) = {},
@@ -36,6 +38,8 @@ fun HomeScreen(
 
     val profile by profileViewModel.profile.collectAsState()
     val isLoadingProfile by profileViewModel.isLoading.collectAsState()
+
+    val connectivityStatus by connectionViewModel.connectivityStatus.collectAsState()
 
     LaunchedEffect (Unit) {
         profileViewModel.fetchProfile()
@@ -55,7 +59,8 @@ fun HomeScreen(
                 onChartClick = { chartCode ->
                     navController.navigate("top_songs/$chartCode")
                 },
-                location = profile?.location
+                location = profile?.location,
+                connectionStatus = connectivityStatus
             )
         }
 

@@ -225,14 +225,26 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
 
                             composable("top_songs/{chartCode}") { backStackEntry ->
                                 val chartCode = backStackEntry.arguments?.getString("chartCode") ?: "global"
+
                                 topBarContent = {
                                     ScreenHeader(
-                                        title = if (chartCode == "global") "Top 50 Global" else "Top 10 $chartCode",
+                                        title = if (connectivityStatus == ConnectivityStatus.Available) {
+                                            if (chartCode == "global") "Top 50 Global" else "Top 10 $chartCode"
+                                        } else {
+                                            "Top Songs"
+                                        },
                                         isMainMenu = false,
                                         onBack = { navController.popBackStack() },
-                                        dominantColor = if (chartCode == "global") Color(0xFF1d7d75) else Color(0xFFf16975)
+                                        dominantColor = if (connectivityStatus != ConnectivityStatus.Available) {
+                                            Color(0xFFB0B0B0)
+                                        } else if (chartCode == "global") {
+                                            Color(0xFF1d7d75)
+                                        } else {
+                                            Color(0xFFf16975)
+                                        }
                                     )
                                 }
+
                                 TopSongsScreen(
                                     chartCode = chartCode,
                                     onSongClick = { song, songs ->
@@ -241,9 +253,9 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                         playerViewModel.playSong(song)
                                     },
                                     onShowSnackbar = { snackbarMessage = it },
-
                                 )
                             }
+
                             composable("library") {
                                 topBarContent = {
                                     ScreenHeader("Library", actions = {

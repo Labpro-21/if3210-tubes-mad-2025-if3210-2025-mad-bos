@@ -47,25 +47,33 @@ class OnlineSongViewModel @Inject constructor(
     private val _currentDownloadTitle = MutableStateFlow("")
     val currentDownloadTitle: StateFlow<String> = _currentDownloadTitle
 
-    private fun insertSong(uri: Uri, title: String, artist: String, imageUri: Uri?, duration: Long) {
+    private fun insertSong(serverId: Int, uri: Uri, title: String, artist: String, imageUri: Uri?, duration: Long) {
         viewModelScope.launch {
             val song = Song(
+                serverId = serverId,
                 title = title,
                 artist = artist,
                 filePath = uri.toString(),
                 coverUrl = imageUri?.toString(),
                 duration = duration,
                 createdAt = System.currentTimeMillis(),
-                isDownloaded = true
+                isDownloaded = true,
+                isOnline = false,
             )
 
             songRepository.insertSong(song)
         }
     }
 
+    private fun updateSong(song: Song) {
+        viewModelScope.launch {
+            songRepository.updateSong(song)
+        }
+    }
+
     fun downloadAndInsertSong(
         context: Context,
-        song: OnlineSong,
+        onlineSong: OnlineSong,
         onResult: (Result<Unit>) -> Unit
     ) {
         if (_isDownloading.value) {
@@ -76,9 +84,9 @@ class OnlineSongViewModel @Inject constructor(
         viewModelScope.launch {
             _isDownloading.value = true
             _downloadProgress.value = 0f
-            _currentDownloadTitle.value = song.title
+            _currentDownloadTitle.value = onlineSong.title
 
-            val existing = songRepository.findSongByTitleAndArtist(song.title, song.artist)
+            val existing = songRepository.findSongByServerId(onlineSong.id)
             if (existing != null && existing.isDownloaded) {
                 _isDownloading.value = false
                 _currentDownloadTitle.value = ""
@@ -91,10 +99,10 @@ class OnlineSongViewModel @Inject constructor(
                     val resolver = context.contentResolver
 
                     val audioValues = ContentValues().apply {
-                        put(MediaStore.Audio.Media.DISPLAY_NAME, "${song.title}.mp3")
+                        put(MediaStore.Audio.Media.DISPLAY_NAME, "${onlineSong.title}.mp3")
                         put(MediaStore.Audio.Media.MIME_TYPE, "audio/mpeg")
-                        put(MediaStore.Audio.Media.TITLE, song.title)
-                        put(MediaStore.Audio.Media.ARTIST, song.artist)
+                        put(MediaStore.Audio.Media.TITLE, onlineSong.title)
+                        put(MediaStore.Audio.Media.ARTIST, onlineSong.artist)
                         put(MediaStore.Audio.Media.IS_MUSIC, 1)
                         put(MediaStore.Audio.Media.RELATIVE_PATH, "Music/MyApp")
                     }
@@ -103,7 +111,7 @@ class OnlineSongViewModel @Inject constructor(
                             ?: throw Exception("Failed to create MediaStore entry for audio")
 
                     resolver.openOutputStream(audioUri)?.use { outputStream ->
-                        val url = URL(song.url)
+                        val url = URL(onlineSong.url)
                         val connection = url.openConnection() as HttpURLConnection
                         connection.connect()
 
@@ -131,14 +139,14 @@ class OnlineSongViewModel @Inject constructor(
 
                     val artworkUri = run {
                         val imageValues = ContentValues().apply {
-                            put(MediaStore.Images.Media.DISPLAY_NAME, "${song.title}_artwork.jpg")
+                            put(MediaStore.Images.Media.DISPLAY_NAME, "${onlineSong.title}_artwork.jpg")
                             put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
                             put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/MyApp")
                         }
                         val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, imageValues)
                         if (uri != null) {
                             resolver.openOutputStream(uri)?.use { outputStream ->
-                                val connection = URL(song.artwork).openConnection() as HttpURLConnection
+                                val connection = URL(onlineSong.artwork).openConnection() as HttpURLConnection
                                 connection.connect()
                                 val inputStream = BufferedInputStream(connection.inputStream)
                                 val buffer = ByteArray(8192)
@@ -154,13 +162,28 @@ class OnlineSongViewModel @Inject constructor(
                     }
 
                     withContext(Dispatchers.Main) {
-                        insertSong(
-                            audioUri,
-                            song.title,
-                            song.artist,
-                            artworkUri,
-                            parseDuration(song.duration)
-                        )
+                        if (existing == null){
+                            insertSong(
+                                onlineSong.id,
+                                audioUri,
+                                onlineSong.title,
+                                onlineSong.artist,
+                                artworkUri,
+                                parseDuration(onlineSong.duration)
+                            )
+                        } else {
+                            val updatedSong = existing.copy(
+                                filePath = audioUri.toString(),
+                                title = onlineSong.title,
+                                artist = onlineSong.artist,
+                                coverUrl = artworkUri.toString(),
+                                duration = parseDuration(onlineSong.duration),
+                                isOnline = false,
+                                isDownloaded = true
+                            )
+
+                            updateSong(updatedSong)
+                        }
                         _downloadProgress.value = 1f
                         _isDownloading.value = false
                         _currentDownloadTitle.value = ""

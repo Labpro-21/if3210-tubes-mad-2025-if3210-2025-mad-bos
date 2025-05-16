@@ -27,7 +27,7 @@ class AudioRoutingViewModel @Inject constructor(
 
     init {
         loadDevices()
-        observeRouteChanges() // ⬅️ pindahkan ke sini
+        observeRouteChanges()
     }
 
     fun loadDevices() {

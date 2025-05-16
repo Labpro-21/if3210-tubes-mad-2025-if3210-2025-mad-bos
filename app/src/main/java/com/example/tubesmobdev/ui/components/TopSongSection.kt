@@ -15,10 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.tubesmobdev.service.ConnectivityStatus
 import com.example.tubesmobdev.util.ProfileUtil
 
 @Composable
-fun TopSongSection(onChartClick: (String) -> Unit, location: String?) {
+fun TopSongSection(onChartClick: (String) -> Unit, location: String?, connectionStatus: ConnectivityStatus?) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -26,24 +27,42 @@ fun TopSongSection(onChartClick: (String) -> Unit, location: String?) {
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Column(modifier = Modifier.width(100.dp)) {
-            TopSongCard(
-                title = "Top 50",
-                subtitle = "GLOBAL",
-                gradient = Brush.verticalGradient(
-                    colors = listOf(Color(0xFF1d7d75), Color(0xFF1d4c6a), Color(0xFF1e3264))
-                ),
-                onClick = { onChartClick("global") }
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = "Top Song Global",
-                style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.padding(top = 4.dp, start = 4.dp)
-            )
+            if (connectionStatus == ConnectivityStatus.Available) {
+                TopSongCard(
+                    title = "Top 50",
+                    subtitle = "GLOBAL",
+                    gradient = Brush.verticalGradient(
+                        colors = listOf(Color(0xFF1d7d75), Color(0xFF1d4c6a), Color(0xFF1e3264))
+                    ),
+                    onClick = { onChartClick("global") }
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Top Song Global",
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                )
+            } else {
+                TopSongCard(
+                    title = "No Internet",
+                    subtitle = "",
+                    gradient = Brush.verticalGradient(
+                        colors = listOf(Color(0xFFB0B0B0), Color(0xFF8C8C8C))
+                    ),
+                    onClick = {}
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Top Song Global",
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(top = 4.dp, start = 4.dp),
+                    color = Color.Gray
+                )
+            }
         }
 
-        if (location != null){
-            Column(modifier = Modifier.width(100.dp)) {
+        Column(modifier = Modifier.width(100.dp)) {
+            if (connectionStatus == ConnectivityStatus.Available && location != null) {
                 TopSongCard(
                     title = "Top 10",
                     subtitle = ProfileUtil.getCountryName(location).uppercase(),
@@ -58,10 +77,25 @@ fun TopSongSection(onChartClick: (String) -> Unit, location: String?) {
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(top = 4.dp, start = 4.dp)
                 )
+            } else {
+                TopSongCard(
+                    title = "No Internet",
+                    subtitle = "",
+                    gradient = Brush.verticalGradient(
+                        colors = listOf(Color(0xFFB0B0B0), Color(0xFF8C8C8C))
+                    ),
+                    onClick = {}
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Top Song Local",
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(top = 4.dp, start = 4.dp),
+                    color = Color.Gray
+                )
             }
         }
     }
 
     Spacer(modifier = Modifier.height(24.dp))
 }
-

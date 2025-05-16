@@ -74,12 +74,14 @@ class LibraryViewModel @Inject constructor(
         viewModelScope.launch {
             val song = Song(
                 title = title,
+                serverId = null,
                 artist = artist,
                 filePath = uri.toString(),
                 coverUrl = imageUri?.toString(),
                 duration = duration,
                 createdAt = System.currentTimeMillis(),
-                isDownloaded = false
+                isDownloaded = false,
+                isOnline = false,
             )
 
             val result = repository.insertSong(song)

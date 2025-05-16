@@ -17,6 +17,7 @@ data class OnlineSong(
 
 fun OnlineSong.toLocalSong(): Song {
     val song = Song(
+        serverId = this.id,
         title = this.title,
         artist = this.artist,
         filePath = this.url,
