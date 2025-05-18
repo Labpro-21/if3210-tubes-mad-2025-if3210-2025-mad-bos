@@ -62,8 +62,9 @@ dependencies {
     implementation(libs.firebase.components)
 
     implementation(libs.androidx.mediarouter)
+    implementation(libs.play.services.location)
     kapt(libs.compiler)
-
+    implementation("com.google.accompanist:accompanist-permissions:0.30.1")
     implementation(libs.androidx.recyclerview)
 
     implementation(libs.coil.compose)

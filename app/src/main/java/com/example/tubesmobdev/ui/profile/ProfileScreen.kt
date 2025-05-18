@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.tubesmobdev.service.ConnectivityStatus
+import com.example.tubesmobdev.ui.components.EditLocationSheet
 import com.example.tubesmobdev.ui.components.ErrorStateProfile
 import com.example.tubesmobdev.ui.components.StatsColumn
 import com.example.tubesmobdev.ui.viewmodel.ConnectionViewModel
@@ -48,6 +50,7 @@ fun ProfileScreen(
 ) {
     val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
     val profile by viewModel.profile.collectAsState()
+    val isSheetOpen = remember { mutableStateOf(false) }
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val allSongsCount by viewModel.allSongsCount.collectAsState()
@@ -158,7 +161,21 @@ fun ProfileScreen(
                             fontSize = 16.sp,
                             color = Color.Gray
                         )
-
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Button(
+                            onClick = {
+                                isSheetOpen.value = true
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF3E3F3F),
+                                contentColor = Color.White
+                            ),
+                            modifier = Modifier
+                                .width(200.dp)
+                                .height(45.dp)
+                        ) {
+                            Text("Edit Profile")
+                        }
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Button(
@@ -175,6 +192,7 @@ fun ProfileScreen(
                         ) {
                             Text("Logout")
                         }
+
 
                         Spacer(modifier = Modifier.height(50.dp))
 
@@ -197,7 +215,18 @@ fun ProfileScreen(
                         )
                     }
                 }
+
             }
         }
+    }
+    if (isSheetOpen.value) {
+        EditLocationSheet(
+
+            onDismiss = { isSheetOpen.value = false },
+            onSave = { countryCode ->
+                Log.d("Wilson", "Selected country code: $countryCode")
+                isSheetOpen.value = false
+            }
+        )
     }
 }
