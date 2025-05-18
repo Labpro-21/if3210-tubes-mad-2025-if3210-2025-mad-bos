@@ -277,7 +277,6 @@ class MusicService : MediaSessionService() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-
         if (!isConnectedToInternet()) {
             Log.w("MusicService", "No internet connection!")
             stopSelf()

@@ -106,8 +106,8 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
             try {
                 val onlineSong = onlineSongViewModel.getOnlineSongById(songId)
                 val song = onlineSong.toLocalSong()
-//                playerViewModel.playSong(song)
-                Log.d("Wilson", "Successfully fetched and played song: ${song.title}")
+                playerViewModel.playSong(song)
+                Log.d("Wilson", "Successfully fetched and played song: ${song.filePath}")
             } catch (e: Exception) {
                 Log.e("MainLayout", "Error fetching or playing song: $e")
             }

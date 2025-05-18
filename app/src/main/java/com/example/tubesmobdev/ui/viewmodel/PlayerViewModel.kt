@@ -225,8 +225,8 @@ class PlayerViewModel @OptIn(UnstableApi::class)
     }
 
     fun playSong(song: Song) {
-        _currentSong.value = song
-
+        _currentQueue.value = listOf(song)
+        Log.d("Wilson","Queue ${_currentQueue.value}")
         val queue = _currentQueue.value.ifEmpty { _songList.value }
 
         playerManager.play(
@@ -340,7 +340,7 @@ class PlayerViewModel @OptIn(UnstableApi::class)
     }
 
     fun shareSong(song: Song) {
-        val songUri = "purrytify://song/${song.id}"
+        val songUri = "purrytify://song/${song.serverId}"
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, "Dengarkan lagu favoritku di Purrytify!\n$songUri")
