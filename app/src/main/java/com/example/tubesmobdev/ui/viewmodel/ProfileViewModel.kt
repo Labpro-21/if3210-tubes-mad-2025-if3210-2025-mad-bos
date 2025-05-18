@@ -188,7 +188,7 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             val result = withContext(Dispatchers.IO) { profileRepository.updateProfilePhoto(context, uri) }
-            result.onSuccess { fetchProfile() }
+            result.onSuccess { }
                 .onFailure { _errorMessage.value = it.message }
             _isLoading.value = false
         }

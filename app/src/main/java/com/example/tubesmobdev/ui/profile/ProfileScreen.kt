@@ -1,33 +1,31 @@
 package com.example.tubesmobdev.ui.profile
 
 import android.app.Activity
+import android.content.ContentValues
+import android.content.Context
+import android.net.Uri
+import android.provider.MediaStore
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import android.net.Uri
-import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -42,6 +40,17 @@ import com.example.tubesmobdev.ui.viewmodel.ConnectionViewModel
 import com.example.tubesmobdev.ui.viewmodel.ProfileViewModel
 import com.example.tubesmobdev.util.rememberDominantColor
 
+fun createImageUri(context: Context): Uri {
+    val contentValues = ContentValues().apply {
+        put(MediaStore.Images.Media.DISPLAY_NAME, "profile_${System.currentTimeMillis()}.jpg")
+        put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+    }
+    return context.contentResolver.insert(
+        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+        contentValues
+    )!!
+}
+
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun ProfileScreen(
@@ -49,8 +58,11 @@ fun ProfileScreen(
     connectionViewModel: ConnectionViewModel = hiltViewModel()
 ) {
     val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
-    val profile by viewModel.profile.collectAsState()
+    val tempCameraImageUri = remember { mutableStateOf<Uri?>(null) }
+    val showPhotoPicker = remember { mutableStateOf(false) }
     val isSheetOpen = remember { mutableStateOf(false) }
+
+    val profile by viewModel.profile.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val allSongsCount by viewModel.allSongsCount.collectAsState()
@@ -61,22 +73,35 @@ fun ProfileScreen(
     val streakSong by viewModel.streakSong.collectAsState()
     val streakDays by viewModel.streakDays.collectAsState()
     val streakRange by viewModel.streakRange.collectAsState()
+
     val context = LocalContext.current as Activity
-    val launcher = rememberLauncherForActivityResult(
+
+    val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        selectedImageUri.value = uri
         uri?.let {
+            selectedImageUri.value = it
             viewModel.updateProfilePhoto(context, it)
         }
     }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            tempCameraImageUri.value?.let {
+                selectedImageUri.value = it
+                viewModel.updateProfilePhoto(context, it)
+            }
+        }
+    }
+
     val baseUrl = "http://34.101.226.132:3000/uploads/profile-picture/"
     val photoUrl = profile?.profilePhoto?.let { baseUrl + it } ?: ""
     val imagePainter: Painter = rememberAsyncImagePainter(
         model = selectedImageUri.value ?: photoUrl
     )
-    val painter: Painter = rememberAsyncImagePainter(photoUrl)
-    val dominantColor: Color = rememberDominantColor(painter.toString())
+    val dominantColor: Color = rememberDominantColor(photoUrl)
 
     val topGradient = Brush.verticalGradient(
         colors = listOf(dominantColor, Color.Black),
@@ -86,7 +111,6 @@ fun ProfileScreen(
 
     val windowSizeClass = calculateWindowSizeClass(context)
     val isLargeScreen = windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact
-
     val connectivityStatus by connectionViewModel.connectivityStatus.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -94,33 +118,12 @@ fun ProfileScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .background(topGradient)
-        )
+        Box(modifier = Modifier.matchParentSize().background(topGradient))
 
         when {
-            connectivityStatus == ConnectivityStatus.Unavailable -> {
-                ErrorStateProfile(
-                    message = "No internet connection",
-                    onLogout = { viewModel.logout() }
-                )
-            }
-
-            errorMessage != null -> {
-                ErrorStateProfile(
-                    message = "Something went wrong when fetch profile data",
-                    onLogout = { viewModel.logout() }
-                )
-            }
-
-            isLoading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-
+            connectivityStatus == ConnectivityStatus.Unavailable -> ErrorStateProfile("No internet connection") { viewModel.logout() }
+            errorMessage != null -> ErrorStateProfile("Something went wrong when fetching profile data") { viewModel.logout() }
+            isLoading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             profile != null -> {
                 Box(
                     modifier = Modifier
@@ -129,102 +132,88 @@ fun ProfileScreen(
                         .padding(vertical = 16.dp, horizontal = if (isLargeScreen) 100.dp else 24.dp)
                 ) {
                     Column(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .widthIn(max = 600.dp),
+                        modifier = Modifier.align(Alignment.TopCenter).widthIn(max = 600.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Spacer(modifier = Modifier.height(100.dp))
 
                         Image(
-                            painter = painter,
+                            painter = imagePainter,
                             contentDescription = "Profile Photo",
                             modifier = Modifier
                                 .size(if (isLargeScreen) 150.dp else 120.dp)
-                                .clip(CircleShape).clickable { launcher.launch("image/*") },
+                                .clip(CircleShape)
+                                .clickable { showPhotoPicker.value = true },
                             contentScale = ContentScale.Crop
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            text = profile!!.username,
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontSize = 20.sp
-                        )
-
+                        Text(profile!!.username, style = MaterialTheme.typography.headlineSmall, fontSize = 20.sp)
                         Spacer(modifier = Modifier.height(16.dp))
+                        Text(profile!!.location, style = MaterialTheme.typography.bodyLarge, fontSize = 16.sp, color = Color.Gray)
 
-                        Text(
-                            text = profile!!.location,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontSize = 16.sp,
-                            color = Color.Gray
-                        )
                         Spacer(modifier = Modifier.height(24.dp))
-                        Button(
-                            onClick = {
-                                isSheetOpen.value = true
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF3E3F3F),
-                                contentColor = Color.White
-                            ),
-                            modifier = Modifier
-                                .width(200.dp)
-                                .height(45.dp)
-                        ) {
+                        Button(onClick = { isSheetOpen.value = true }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3E3F3F), contentColor = Color.White), modifier = Modifier.width(200.dp).height(45.dp)) {
                             Text("Edit Profile")
                         }
                         Spacer(modifier = Modifier.height(24.dp))
-
-                        Button(
-                            onClick = {
-                                viewModel.logout()
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF3E3F3F),
-                                contentColor = Color.White
-                            ),
-                            modifier = Modifier
-                                .width(200.dp)
-                                .height(45.dp)
-                        ) {
+                        Button(onClick = { viewModel.logout() }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3E3F3F), contentColor = Color.White), modifier = Modifier.width(200.dp).height(45.dp)) {
                             Text("Logout")
                         }
 
-
                         Spacer(modifier = Modifier.height(50.dp))
-
                         Row(modifier = Modifier.fillMaxWidth()) {
                             StatsColumn(allSongsCount, "SONGS", Modifier.weight(1f))
                             StatsColumn(likedSongsCount, "LIKED", Modifier.weight(1f))
                             StatsColumn(listenedSongsCount, "LISTENED", Modifier.weight(1f))
                         }
-
                         Spacer(modifier = Modifier.height(40.dp))
                         SoundCapsuleSection(
-                            month             = "April 2025",
-                            minutesListened   = viewModel.totalListeningMinutes.collectAsState().value,
-                            topArtist         = topArtist,
-                            topSong           = topSong,
-                            streakDays        = streakDays,
-                            streakSong        = streakSong,
-                            streakRange       = streakRange, // misal "Mar 21–25, 2025"
-                            onShareStreak     = { /* panggil share intent */ }
+                            month = "April 2025",
+                            minutesListened = viewModel.totalListeningMinutes.collectAsState().value,
+                            topArtist = topArtist,
+                            topSong = topSong,
+                            streakDays = streakDays,
+                            streakSong = streakSong,
+                            streakRange = streakRange,
+                            onShareStreak = {}
                         )
                     }
                 }
-
             }
         }
     }
+
+    if (showPhotoPicker.value) {
+        AlertDialog(
+            onDismissRequest = { showPhotoPicker.value = false },
+            title = { Text("Choose Image Source") },
+            confirmButton = {
+                TextButton(onClick = {
+                    val uri = createImageUri(context)
+                    tempCameraImageUri.value = uri
+                    cameraLauncher.launch(uri)
+                    showPhotoPicker.value = false
+                }) {
+                    Text("Camera")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    galleryLauncher.launch("image/*")
+                    showPhotoPicker.value = false
+                }) {
+                    Text("Gallery")
+                }
+            }
+        )
+    }
+
     if (isSheetOpen.value) {
         EditLocationSheet(
-
             onDismiss = { isSheetOpen.value = false },
-            onSave = { countryCode ->
-                Log.d("Wilson", "Selected country code: $countryCode")
+            onSave = {
+                Log.d("Wilson", "Selected country code: $it")
                 isSheetOpen.value = false
             }
         )
