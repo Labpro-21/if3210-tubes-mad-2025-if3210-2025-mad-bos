@@ -1,8 +1,10 @@
 package com.example.tubesmobdev.ui.layout
-
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import android.app.Activity
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -12,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -45,6 +48,7 @@ import com.example.tubesmobdev.ui.viewmodel.NavigationViewModel
 import com.example.tubesmobdev.ui.viewmodel.PlayerViewModel
 import com.example.tubesmobdev.ui.viewmodel.OnlineSongViewModel
 import com.example.tubesmobdev.util.rememberDominantColor
+import kotlinx.coroutines.CoroutineScope
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -268,6 +272,13 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                         IconButton(onClick = { isSheetOpen = true }) {
                                             Icon(Icons.Default.Add, contentDescription = "Add")
                                         }
+                                        IconButton(onClick = { navController.navigate("qrScan") }) {
+                                            Icon(
+                                                imageVector = Icons.Default.QrCodeScanner,
+                                                contentDescription = "Scan QR",
+                                                tint = Color.White
+                                            )
+                                        }
                                     })
                                 }
                                 LibraryScreen(
@@ -395,6 +406,29 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                     },
                                     onShowSnackbar = { snackbarMessage = it },
                                     onAddQueueClick = { playerViewModel.addQueue(it) }
+                                )
+                            }
+                            composable("qrScan") {
+                                QRScannerScreen(
+                                    onScanResult = { result ->
+                                        navController.popBackStack()
+
+                                        val songId = result.toLongOrNull()
+                                        if (songId != null) {
+                                            CoroutineScope(Dispatchers.Main).launch {
+                                                try {
+                                                    val onlineSong = onlineSongViewModel.getOnlineSongById(songId.toString())
+                                                    val song = onlineSong.toLocalSong()
+                                                    playerViewModel.playSong(song)
+                                                    Toast.makeText(context, "Playing song: ${song.title}", Toast.LENGTH_SHORT).show()
+                                                } catch (e: Exception) {
+                                                    Toast.makeText(context, "Failed to load song", Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                        } else {
+                                            Toast.makeText(context, "Invalid QR format", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
                                 )
                             }
                         }

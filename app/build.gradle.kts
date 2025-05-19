@@ -67,9 +67,14 @@ dependencies {
     kapt(libs.compiler)
     implementation("com.google.accompanist:accompanist-permissions:0.30.1")
     implementation(libs.androidx.recyclerview)
+    implementation("androidx.camera:camera-core:1.2.3")
+    implementation("androidx.camera:camera-camera2:1.2.3")
+    implementation("androidx.camera:camera-lifecycle:1.2.3")
+    implementation("androidx.camera:camera-view:1.3.0-alpha07")
+    implementation("com.google.mlkit:barcode-scanning:17.2.0")
 
     implementation(libs.coil.compose)
-
+    implementation("com.google.accompanist:accompanist-permissions:0.31.1-alpha")
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.room.runtime)
     kapt (libs.androidx.room.compiler)
