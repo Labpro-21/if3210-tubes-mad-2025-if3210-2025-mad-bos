@@ -9,7 +9,12 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.SessionCommand
-import androidx.lifecycle.viewmodel.compose.viewModel
+import android.graphics.Bitmap
+import android.graphics.Color
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
+import android.content.ContentValues
+import android.provider.MediaStore
 import com.example.tubesmobdev.data.model.ListeningRecord
 import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.data.repository.ListeningRecordRepository
@@ -30,6 +35,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
+import android.content.Context
+import android.widget.Toast
+import androidx.core.content.FileProvider
+import java.io.File
+import java.io.FileOutputStream
+
 import kotlin.math.log
 
 @HiltViewModel
@@ -349,4 +360,61 @@ class PlayerViewModel @OptIn(UnstableApi::class)
             Intent.createChooser(shareIntent, "Bagikan lagu melalui").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         )
     }
+
+    fun generateQRCodeUrl(song: Song): Bitmap {
+        val songUri = "purrytify://song/${song.serverId}"
+        val writer = QRCodeWriter()
+        val bitMatrix = writer.encode(songUri, BarcodeFormat.QR_CODE, 512, 512)
+        val width = bitMatrix.width
+        val height = bitMatrix.height
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
+
+        for (x in 0 until width) {
+            for (y in 0 until height) {
+                bitmap.setPixel(x, y, if (bitMatrix[x, y]) Color.BLACK else Color.WHITE)
+            }
+        }
+
+        return bitmap
+    }
+
+    fun shareQRCode(context: Context, song: Song) {
+        try {
+            val bitmap = generateQRCodeUrl(song)
+
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, "qr_${song.serverId}.png")
+                put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+                put(MediaStore.Images.Media.WIDTH, bitmap.width)
+                put(MediaStore.Images.Media.HEIGHT, bitmap.height)
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/QR")
+            }
+
+            val uri = context.contentResolver.insert(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                contentValues
+            )
+
+            uri?.let {
+                context.contentResolver.openOutputStream(it)?.use { out ->
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+                }
+
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "image/png"
+                    putExtra(Intent.EXTRA_STREAM, it)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+
+                context.startActivity(Intent.createChooser(shareIntent, "Share QR Code"))
+            }
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(context, "Failed to share QR code", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+
 }

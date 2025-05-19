@@ -311,6 +311,7 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                 }
                             }
                             composable("fullplayer") {
+                                val context = LocalContext.current
                                 topBarContent = {
                                     ScreenHeader(
                                         isMainMenu = false,
@@ -355,7 +356,8 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                         onShowSnackbar = { snackbarMessage = it },
                                         isCompact = isCompact,
                                         onShareClicked = {
-                                            playerViewModel.shareSong(it)
+
+                                            playerViewModel.shareQRCode(context,it)
                                         },
                                         customTopBar = {
                                             ScreenHeader(
