@@ -111,7 +111,7 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                 val onlineSong = onlineSongViewModel.getOnlineSongById(songId)
                 val song = onlineSong.toLocalSong()
                 playerViewModel.playSong(song)
-                Log.d("Wilson", "Successfully fetched and played song: ${song.filePath}")
+                navController.navigate("fullplayer")
             } catch (e: Exception) {
                 Log.e("MainLayout", "Error fetching or playing song: $e")
             }
@@ -412,6 +412,7 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                 )
                             }
                             composable("qrScan") {
+                                topBarContent = {Spacer(modifier = Modifier.height(0.dp))}
                                 QRScannerScreen(
                                     onScanResult = { result ->
                                         navController.popBackStack()
@@ -423,6 +424,7 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                                     val onlineSong = onlineSongViewModel.getOnlineSongById(songId.toString())
                                                     val song = onlineSong.toLocalSong()
                                                     playerViewModel.playSong(song)
+                                                    navController.navigate("fullplayer")
                                                     Toast.makeText(context, "Playing song: ${song.title}", Toast.LENGTH_SHORT).show()
                                                 } catch (e: Exception) {
                                                     Toast.makeText(context, "Failed to load song", Toast.LENGTH_SHORT).show()
@@ -436,7 +438,7 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                             }
                         }
 
-                        if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact && currentRoute != "fullplayer") {
+                        if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact && currentRoute != "fullplayer" && currentRoute != "qrScan") {
                             currentSong?.let {
                                 Column(
                                     modifier = Modifier
