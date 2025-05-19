@@ -60,9 +60,10 @@ dependencies {
     implementation(libs.glide)
     implementation(libs.androidx.material3.window.size.class1.android)
     implementation(libs.firebase.components)
-
+    implementation("com.google.zxing:core:3.5.2")
     implementation(libs.androidx.mediarouter)
     implementation(libs.play.services.location)
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     kapt(libs.compiler)
     implementation("com.google.accompanist:accompanist-permissions:0.30.1")
     implementation(libs.androidx.recyclerview)
