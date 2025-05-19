@@ -366,9 +366,12 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                         onCloseSheet = { isSheetOpen = false },
                                         onShowSnackbar = { snackbarMessage = it },
                                         isCompact = isCompact,
-                                        onShareClicked = {
+                                        onQRClicked = {
 
                                             playerViewModel.shareQRCode(context,it)
+                                        },
+                                        onShareClicked = {
+                                            playerViewModel.shareSong(it)
                                         },
                                         customTopBar = {
                                             ScreenHeader(

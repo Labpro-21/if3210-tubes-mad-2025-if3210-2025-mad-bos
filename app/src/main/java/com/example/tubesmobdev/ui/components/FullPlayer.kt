@@ -3,7 +3,8 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -18,6 +19,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
@@ -32,7 +39,42 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import com.example.tubesmobdev.R
 import androidx.compose.ui.res.painterResource
+import com.example.tubesmobdev.service.generateQRCodeUrl
 
+@Composable
+fun ShareOption(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .padding(8.dp)
+            .clickable(onClick = onClick)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = Color.White,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = label,
+            color = Color.White,
+            fontSize = 12.sp
+        )
+    }
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FullPlayerScreen(
@@ -50,6 +92,7 @@ fun FullPlayerScreen(
     onSeekTo: (Float) -> Unit,
     onSwipeLeft: () -> Unit,
     onSwipeRight: () -> Unit,
+    onQRClicked: () -> Unit,
     isSheetOpen: Boolean,
     sheetState: SheetState,
     onCloseSheet: () -> Unit,
@@ -61,7 +104,8 @@ fun FullPlayerScreen(
 ) {
     var showAudioDialog by rememberSaveable { mutableStateOf(false) }
     var snackbarMessage by rememberSaveable { mutableStateOf<String?>(null) }
-
+    val shareSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var isShareSheetOpen by remember { mutableStateOf(false) }
     val dominantColor = rememberDominantColor(song.coverUrl ?: "").copy(alpha = 0.9f)
     val bgPainter = rememberAsyncImagePainter(song.coverUrl ?: "")
     val totalDurationMillis = song.duration.toInt()
@@ -242,7 +286,7 @@ fun FullPlayerScreen(
                             }
                         }
                         if (song.isOnline) {
-                            IconButton(onClick = onShareClicked) {
+                            IconButton(onClick = { isShareSheetOpen = true }) {
                                 Icon(
                                     imageVector = Icons.Default.Share,
                                     contentDescription = "Share Song",
@@ -348,6 +392,93 @@ fun FullPlayerScreen(
         }
         if (showAudioDialog) {
             AudioRoutingDialog(onDismiss = { showAudioDialog = false })
+        }
+        if (isShareSheetOpen) {
+            val qrBitmap = remember(song) { generateQRCodeUrl(song) }
+            val qrPainter = remember(qrBitmap) { BitmapPainter(qrBitmap.asImageBitmap()) }
+            val clipboardManager = LocalClipboardManager.current
+            val context = LocalContext.current
+            ModalBottomSheet(
+                onDismissRequest = { isShareSheetOpen = false },
+                sheetState = shareSheetState,
+                containerColor = Color.Black,
+                shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // ✅ QR Code Image
+                    Image(
+                        painter = qrPainter,
+                        contentDescription = "QR Code",
+                        modifier = Modifier
+                            .size(160.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // ✅ Song title and artist
+                    Text(
+                        text = song.title,
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = song.artist,
+                        color = Color.LightGray,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // ✅ Share buttons
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        ShareOption(
+                            icon = Icons.Default.ContentCopy,
+                            label = "Copy Link",
+                            onClick = {
+                                val uri = "purrytify://song/${song.serverId}"
+                                clipboardManager.setText(AnnotatedString(uri))
+                                Toast.makeText(context, "Link copied to clipboard", Toast.LENGTH_SHORT).show()
+                                isShareSheetOpen = false
+                            }
+                        )
+
+                        ShareOption(
+                            icon = Icons.Default.Link,
+                            label = "Share Link",
+                            onClick = {
+                                isShareSheetOpen = false
+                                onShareClicked()
+                            }
+                        )
+
+                        ShareOption(
+                            icon = Icons.Default.QrCode,
+                            label = "Share QR",
+                            onClick = {
+                                isShareSheetOpen = false
+                                onQRClicked()
+                            }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
         }
     }
 }

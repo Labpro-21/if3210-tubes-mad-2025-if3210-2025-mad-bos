@@ -38,6 +38,7 @@ import javax.inject.Inject
 import android.content.Context
 import android.widget.Toast
 import androidx.core.content.FileProvider
+import com.example.tubesmobdev.service.generateQRCodeUrl
 import java.io.File
 import java.io.FileOutputStream
 
@@ -361,22 +362,7 @@ class PlayerViewModel @OptIn(UnstableApi::class)
         )
     }
 
-    fun generateQRCodeUrl(song: Song): Bitmap {
-        val songUri = "purrytify://song/${song.serverId}"
-        val writer = QRCodeWriter()
-        val bitMatrix = writer.encode(songUri, BarcodeFormat.QR_CODE, 512, 512)
-        val width = bitMatrix.width
-        val height = bitMatrix.height
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
 
-        for (x in 0 until width) {
-            for (y in 0 until height) {
-                bitmap.setPixel(x, y, if (bitMatrix[x, y]) Color.BLACK else Color.WHITE)
-            }
-        }
-
-        return bitmap
-    }
 
     fun shareQRCode(context: Context, song: Song) {
         try {
