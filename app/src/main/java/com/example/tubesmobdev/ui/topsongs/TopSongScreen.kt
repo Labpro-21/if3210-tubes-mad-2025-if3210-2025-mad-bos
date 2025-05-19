@@ -1,11 +1,9 @@
 package com.example.tubesmobdev.ui.topsongs
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
@@ -18,8 +16,10 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -49,6 +49,26 @@ fun TopSongsScreen(
     val currentDownloadTitle by viewModel.currentDownloadTitle.collectAsState()
 
     val connectivityStatus by connectionViewModel.connectivityStatus.collectAsState()
+
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
+
+    val cardWidth = (screenWidth * 0.6f).coerceAtMost(230.dp)
+    val verticalPadding = (screenHeight * 0.06f).coerceAtMost(50.dp).coerceAtLeast(20.dp)
+
+    val titleFontSize = when {
+        screenWidth < 320.dp -> 20.sp
+        screenWidth > 600.dp -> 32.sp
+        else -> (20 + (screenWidth.value - 320) / (600 - 320) * (32 - 20)).sp
+    }
+
+    val bodyFontSize = when {
+        screenWidth < 320.dp -> 12.sp
+        screenWidth > 600.dp -> 16.sp
+        else -> (12 + (screenWidth.value - 320) / (600 - 320) * (16 - 12)).sp
+    }
+
 
     LaunchedEffect(chartCode) {
         viewModel.fetchSongs(chartCode)
@@ -91,18 +111,21 @@ fun TopSongsScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 50.dp),
+                            .padding(vertical = verticalPadding),
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Box(
                             modifier = Modifier
-                                .width(230.dp)
+                                .width(cardWidth)
                                 .aspectRatio(1f)
                                 .shadow(8.dp, RoundedCornerShape(16.dp), clip = false)
                                 .background(cardGradient, RoundedCornerShape(16.dp)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(16.dp)
+                            ) {
                                 Text(
                                     text = if (connectivityStatus == ConnectivityStatus.Available) {
                                         if (chartCode == "global") "Top 50" else "Top 10"
@@ -111,16 +134,17 @@ fun TopSongsScreen(
                                     },
                                     color = Color.White,
                                     style = MaterialTheme.typography.titleLarge.copy(
-                                        fontSize = 32.sp,
+                                        fontSize = titleFontSize,
                                         fontWeight = FontWeight.ExtraBold
-                                    )
+                                    ),
+                                    textAlign = TextAlign.Center
                                 )
 
                                 if (connectivityStatus == ConnectivityStatus.Available) {
                                     Spacer(modifier = Modifier.height(20.dp))
                                     HorizontalDivider(
                                         modifier = Modifier
-                                            .width(120.dp)
+                                            .width(cardWidth * 0.5f)
                                             .height(1.dp),
                                         color = Color.White
                                     )
@@ -129,7 +153,8 @@ fun TopSongsScreen(
                                         text = if (chartCode == "global") chartCode.uppercase()
                                         else ProfileUtil.getCountryName(chartCode).uppercase(),
                                         color = Color.White,
-                                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp)
+                                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = bodyFontSize),
+                                        textAlign = TextAlign.Center
                                     )
                                 }
                             }
@@ -144,6 +169,7 @@ fun TopSongsScreen(
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
                         Spacer(modifier = Modifier.height(6.dp))
+
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(horizontal = 16.dp)
@@ -173,7 +199,10 @@ fun TopSongsScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             if (isDownloading) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f)
+                                ) {
                                     Icon(
                                         imageVector = Icons.Default.Download,
                                         contentDescription = "Downloading",
@@ -184,12 +213,14 @@ fun TopSongsScreen(
                                     LinearProgressIndicator(
                                         progress = { downloadProgress },
                                         modifier = Modifier
-                                            .width(150.dp)
+                                            .fillMaxWidth(0.7f)
                                             .height(4.dp),
                                         color = Color(0xFF1DB954),
                                         trackColor = Color.White.copy(alpha = 0.3f)
                                     )
                                 }
+                            } else {
+                                Spacer(modifier = Modifier.weight(1f))
                             }
 
                             IconButton(
@@ -226,7 +257,8 @@ fun TopSongsScreen(
                                 text = "Error: $error",
                                 color = Color.Red,
                                 style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(top = 12.dp, start = 16.dp)
+                                modifier = Modifier.padding(top = 12.dp, start = 16.dp, end = 16.dp),
+                                textAlign = TextAlign.Center
                             )
                         }
 
@@ -245,8 +277,8 @@ fun TopSongsScreen(
                         },
                         onDownloadClick = {
                             if (!isDownloading) {
-                                viewModel.downloadAndInsertSong(context, song) { result ->
-                                    val message = if (result.isSuccess) {
+                                viewModel.downloadAndInsertSong(context, song, connectionViewModel.connectivityStatus) { result ->
+                                val message = if (result.isSuccess) {
                                         "Lagu berhasil diunduh"
                                     } else {
                                         result.exceptionOrNull()?.message ?: "Gagal mengunduh lagu"

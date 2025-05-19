@@ -62,7 +62,11 @@ fun TopSongSection(onChartClick: (String) -> Unit, location: String?, connection
         }
 
         Column(modifier = Modifier.width(100.dp)) {
-            if (connectionStatus == ConnectivityStatus.Available && location != null) {
+            if (
+                connectionStatus == ConnectivityStatus.Available &&
+                location != null &&
+                ProfileUtil.getCountryName(location) != "Negara tidak tersedia"
+            ) {
                 TopSongCard(
                     title = "Top 10",
                     subtitle = ProfileUtil.getCountryName(location).uppercase(),

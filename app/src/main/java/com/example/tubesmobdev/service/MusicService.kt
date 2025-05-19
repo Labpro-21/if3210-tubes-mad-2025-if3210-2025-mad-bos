@@ -415,13 +415,24 @@ class MusicService : MediaSessionService() {
     }
 
     override fun onDestroy() {
-//        notificationManager?.setPlayer(null)
         mediaSession?.run {
             player.release()
             release()
             mediaSession = null
         }
         super.onDestroy()
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        Log.d("MusicService", "App removed from recent apps → Stop Service")
+        mediaSession?.run {
+            player.release()
+            release()
+            mediaSession = null
+        }
+
+        stopSelf()
     }
 
 

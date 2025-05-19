@@ -12,6 +12,7 @@ import com.example.tubesmobdev.data.remote.response.OnlineSong
 import com.example.tubesmobdev.data.remote.response.parseDuration
 import com.example.tubesmobdev.data.repository.OnlineSongRepository
 import com.example.tubesmobdev.data.repository.SongRepository
+import com.example.tubesmobdev.service.ConnectivityStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -74,6 +75,7 @@ class OnlineSongViewModel @Inject constructor(
     fun downloadAndInsertSong(
         context: Context,
         onlineSong: OnlineSong,
+        connectivityStatus: StateFlow<ConnectivityStatus>,
         onResult: (Result<Unit>) -> Unit
     ) {
         if (_isDownloading.value) {
@@ -122,6 +124,13 @@ class OnlineSongViewModel @Inject constructor(
                         var totalBytesRead = 0L
 
                         while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                            if (connectivityStatus.value != ConnectivityStatus.Available) {
+                                inputStream.close()
+                                outputStream.close()
+                                resolver.delete(audioUri, null, null)
+                                throw Exception("Koneksi internet terputus. Download dibatalkan.")
+                            }
+
                             outputStream.write(buffer, 0, bytesRead)
                             totalBytesRead += bytesRead
 
@@ -143,22 +152,36 @@ class OnlineSongViewModel @Inject constructor(
                             put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
                             put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/MyApp")
                         }
+
                         val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, imageValues)
-                        if (uri != null) {
-                            resolver.openOutputStream(uri)?.use { outputStream ->
-                                val connection = URL(onlineSong.artwork).openConnection() as HttpURLConnection
-                                connection.connect()
-                                val inputStream = BufferedInputStream(connection.inputStream)
-                                val buffer = ByteArray(8192)
-                                var bytesRead: Int
-                                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                                    outputStream.write(buffer, 0, bytesRead)
+                        try {
+                            if (uri != null) {
+                                resolver.openOutputStream(uri)?.use { outputStream ->
+                                    val connection = URL(onlineSong.artwork).openConnection() as HttpURLConnection
+                                    connection.connect()
+                                    val inputStream = BufferedInputStream(connection.inputStream)
+                                    val buffer = ByteArray(8192)
+                                    var bytesRead: Int
+                                    while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                                        if (connectivityStatus.value != ConnectivityStatus.Available) {
+                                            inputStream.close()
+                                            outputStream.close()
+                                            resolver.delete(uri, null, null)
+                                            resolver.delete(audioUri, null, null)
+                                            throw Exception("Koneksi internet terputus saat mengunduh artwork. Lagu dibatalkan.")
+                                        }
+                                        outputStream.write(buffer, 0, bytesRead)
+                                    }
+                                    inputStream.close()
+                                    outputStream.flush()
                                 }
-                                inputStream.close()
-                                outputStream.flush()
                             }
+                            uri
+                        } catch (e: Exception) {
+                            if (uri != null) resolver.delete(uri, null, null)
+                            resolver.delete(audioUri, null, null)
+                            throw e
                         }
-                        uri
                     }
 
                     withContext(Dispatchers.Main) {
