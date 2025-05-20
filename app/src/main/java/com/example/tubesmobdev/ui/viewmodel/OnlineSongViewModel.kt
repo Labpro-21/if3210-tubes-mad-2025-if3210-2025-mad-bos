@@ -24,7 +24,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 import java.io.BufferedInputStream
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import javax.inject.Inject
@@ -141,7 +143,7 @@ class OnlineSongViewModel @Inject constructor(
                         put(MediaStore.Audio.Media.TITLE, onlineSong.title)
                         put(MediaStore.Audio.Media.ARTIST, onlineSong.artist)
                         put(MediaStore.Audio.Media.IS_MUSIC, 1)
-                        put(MediaStore.Audio.Media.RELATIVE_PATH, "Music/MyApp")
+                        put(MediaStore.Audio.Media.RELATIVE_PATH, "Music/Purrytify")
                     }
 
                     val audioUri = resolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, audioValues)
@@ -173,7 +175,7 @@ class OnlineSongViewModel @Inject constructor(
                         val imageValues = ContentValues().apply {
                             put(MediaStore.Images.Media.DISPLAY_NAME, "${onlineSong.title}_artwork.jpg")
                             put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-                            put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/MyApp")
+                            put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Purrytify")
                         }
 
                         val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, imageValues)

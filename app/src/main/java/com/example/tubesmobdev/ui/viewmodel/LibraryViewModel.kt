@@ -122,7 +122,13 @@ class LibraryViewModel @Inject constructor(
 
     fun deleteSong(song: Song) {
         viewModelScope.launch {
-            repository.deleteSong(song)
+            val shouldDeleteDownloaded = song.isDownloaded
+
+            if (shouldDeleteDownloaded) {
+                repository.deleteSongDownloaded(song)
+            } else {
+                repository.deleteSong(song)
+            }
         }
     }
 

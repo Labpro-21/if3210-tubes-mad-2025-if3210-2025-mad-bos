@@ -130,8 +130,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideSongRepository(songDao: SongDao, authPreferences: IAuthPreferences): SongRepository {
-        return SongRepository(songDao, authPreferences)
+    fun provideSongRepository(songDao: SongDao, onlineApi: SongApi, authPreferences: IAuthPreferences): SongRepository {
+        return SongRepository(songDao, onlineApi, authPreferences)
     }
 
     @Provides

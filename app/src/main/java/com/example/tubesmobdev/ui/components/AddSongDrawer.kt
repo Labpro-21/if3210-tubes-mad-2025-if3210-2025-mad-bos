@@ -2,6 +2,7 @@ package com.example.tubesmobdev.ui.components
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -56,7 +57,7 @@ fun AddSongDrawer(
     onSongUpdate: (Song) -> Unit,
     songToEdit: Song? = null
 ) {
-    var songUri by rememberSaveable { mutableStateOf<Uri?>(songToEdit?.filePath?.let { Uri.parse(it) }) }
+    var songUri by rememberSaveable { mutableStateOf(songToEdit?.filePath?.let { Uri.parse(it) }) }
     val initialImageUri = songToEdit?.coverUrl?.let { Uri.parse(it) }
     var imageUri by rememberSaveable { mutableStateOf(initialImageUri) }
     var title by rememberSaveable { mutableStateOf(songToEdit?.title ?: "") }
@@ -86,10 +87,12 @@ fun AddSongDrawer(
 
     LaunchedEffect(songUri) {
         songUri?.let { uri ->
-            val metadata = SongUtil.getAudioMetadata(context, uri)
-            title = metadata.title ?: ""
-            artist = metadata.artist ?: ""
-            duration = metadata.duration
+            if (songToEdit == null){
+                val metadata = SongUtil.getAudioMetadata(context, uri)
+                title = metadata.title ?: ""
+                artist = metadata.artist ?: ""
+                duration = metadata.duration
+            }
         }
     }
 

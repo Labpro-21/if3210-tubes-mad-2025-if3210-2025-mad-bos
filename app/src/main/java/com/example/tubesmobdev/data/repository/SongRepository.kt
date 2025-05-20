@@ -4,13 +4,17 @@ import com.example.tubesmobdev.data.local.dao.SongDao
 import com.example.tubesmobdev.data.local.preferences.AuthPreferences
 import com.example.tubesmobdev.data.local.preferences.IAuthPreferences
 import com.example.tubesmobdev.data.model.Song
+import com.example.tubesmobdev.data.remote.api.SongApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import retrofit2.HttpException
+import java.io.IOException
 import javax.inject.Inject
 
 class SongRepository @Inject constructor(
     private val songDao: SongDao,
+    private val onlineApi: SongApi,
     private val authPreferences: IAuthPreferences
 ) {
     suspend fun getAllSongs(): Flow<List<Song>> {
@@ -81,7 +85,18 @@ class SongRepository @Inject constructor(
         }
     }
     suspend fun deleteSong(song: Song) {
-        songDao.deleteSong(song)
+            songDao.deleteSong(song)
+    }
+
+    suspend fun deleteSongDownloaded(song: Song) {
+        try {
+            val onlineSong = onlineApi.getOnlineSong(song.serverId.toString())
+            updateSong(song.copy(isDownloaded = false, isOnline = true, filePath = onlineSong.url, coverUrl = onlineSong.artwork))
+        } catch (e: HttpException) {
+            songDao.deleteSong(song)
+        } catch (e: IOException) {
+            songDao.deleteSong(song)
+        }
     }
 
 
@@ -90,7 +105,7 @@ class SongRepository @Inject constructor(
             val serverId = song.serverId ?: return
             val existing = songDao.findSongByServerId(serverId)
             if (existing != null) {
-                songDao.updateLikedStatus(existing.id, song.isLiked)
+                updateSong(existing.copy(isLiked = song.isLiked))
             } else {
                 val newSong = song.copy(
                     isLiked = true,
@@ -111,7 +126,7 @@ class SongRepository @Inject constructor(
             val serverId = song.serverId ?: return
             val existing = songDao.findSongByServerId(serverId)
             if (existing != null) {
-                songDao.updateLastPlayed(existing.id,timestamp)
+                updateSong(existing.copy(lastPlayed = timestamp))
             } else {
                 val newSong = song.copy(
                     isOnline = true,

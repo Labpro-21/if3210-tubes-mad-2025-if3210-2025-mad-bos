@@ -47,7 +47,7 @@ class SongAdapter(
         holder.itemView.setOnClickListener {
             onItemClick(songs[position])
         }
-        if (onEditClick != null || onDeleteClick != null) {
+        if ((onEditClick != null || onDeleteClick != null) && !song.isOnline) {
             holder.menuIcon.visibility = View.VISIBLE
             holder.menuIcon.setOnClickListener { view ->
                 val popup = PopupMenu(view.context, view)

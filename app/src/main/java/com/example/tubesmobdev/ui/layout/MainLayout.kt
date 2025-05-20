@@ -114,6 +114,7 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                 playerViewModel.playSong(song)
                 navController.navigate("fullplayer")
             } catch (e: Exception) {
+                snackbarMessage = "Error fetching or playing song"
                 Log.e("MainLayout", "Error fetching or playing song: $e")
             }
         }
@@ -191,7 +192,10 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                     onSwipeLeft = { playerViewModel.playNext() },
                                     onSwipeRight = { playerViewModel.playPrevious() },
                                     onlineSongViewModel = onlineSongViewModel,
-                                    onShowSnackbar = { snackbarMessage = it },
+                                    onShowSnackbar = {
+//                                        snackbarMessage = it
+                                        Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                                    },
                                 )
                             }
                         }
@@ -260,7 +264,10 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                         playerViewModel.playSong(song)
                                     },
                                     viewModel = onlineSongViewModel,
-                                    onShowSnackbar = { snackbarMessage = it },
+                                    onShowSnackbar = {
+//                                        snackbarMessage = it
+                                        Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                                    },
                                 )
                             }
 
@@ -300,7 +307,10 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                     isSheetOpen = isSheetOpen,
                                     sheetState = sheetState,
                                     onCloseSheet = { isSheetOpen = false },
-                                    onShowSnackbar = { snackbarMessage = it },
+                                    onShowSnackbar = {
+//                                        snackbarMessage = it
+                                        Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                                    },
                                     onAddQueueClick = { playerViewModel.addQueue(it) },
                                     isCompact = isCompact,
                                     customTopBar = {
@@ -402,7 +412,10 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                         isSheetOpen = isSheetOpen,
                                         sheetState = sheetState,
                                         onCloseSheet = { isSheetOpen = false },
-                                        onShowSnackbar = { snackbarMessage = it },
+                                        onShowSnackbar = {
+//                                        snackbarMessage = it
+                                            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                                        },
                                         isCompact = isCompact,
                                         onQRClicked = {
 
@@ -489,7 +502,10 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                             it
                                         )
                                     },
-                                    onShowSnackbar = { snackbarMessage = it },
+                                    onShowSnackbar = {
+//                                        snackbarMessage = it
+                                        Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                                    },
                                     onAddQueueClick = { playerViewModel.addQueue(it) }
                                 )
                             }
@@ -538,7 +554,10 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                         onSwipeLeft = { playerViewModel.playNext() },
                                         onSwipeRight = { playerViewModel.playPrevious() },
                                         onlineSongViewModel = onlineSongViewModel,
-                                        onShowSnackbar = { snackbarMessage = it },
+                                        onShowSnackbar = {
+//                                        snackbarMessage = it
+                                            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                                        },
                                     )
                                 }
                             }

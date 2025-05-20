@@ -42,17 +42,13 @@ fun SearchLibraryScreen(
 
     var songToDelete by rememberSaveable  { mutableStateOf<Song?>(null) }
     var songToEdit by rememberSaveable { mutableStateOf<Song?>(null) }
-
-    var snackbarMessage by rememberSaveable { mutableStateOf<String?>(null) }
+    
     val errorMessage by viewModel.errorMessage.collectAsState()
 
     var isSheetOpen by rememberSaveable { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    LaunchedEffect(snackbarMessage, errorMessage) {
-        snackbarMessage?.let {
-            onShowSnackbar(it)
-        }
+    LaunchedEffect(errorMessage) {
 
         errorMessage?.let {
             onShowSnackbar(it)
@@ -119,7 +115,7 @@ fun SearchLibraryScreen(
                     onSongDelete(song)
                     viewModel.deleteSong(song)
                     songToDelete = null
-                    snackbarMessage = "Lagu dihapus"
+                    onShowSnackbar("Lagu dihapus")
                 }) {
                     Text("Hapus")
                 }
@@ -144,10 +140,10 @@ fun SearchLibraryScreen(
                 isSheetOpen = false
             },
             onResult = { result: Result<Unit> ->
-                snackbarMessage = if (result.isSuccess) {
-                    "Lagu berhasil disimpan"
+                if (result.isSuccess) {
+                    onShowSnackbar("Lagu berhasil disimpan")
                 } else {
-                    "Gagal menyimpan lagu"
+                    onShowSnackbar("Gagal menyimpan lagu")
                 }
                 songToEdit = null
                 isSheetOpen = false

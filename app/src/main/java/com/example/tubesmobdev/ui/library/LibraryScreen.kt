@@ -54,8 +54,6 @@ fun LibraryScreen(
     val tabs = listOf("All", "Liked", "Downloaded", "Queue")
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
 
-    var snackbarMessage by rememberSaveable { mutableStateOf<String?>(null) }
-
     val allSongs by viewModel.songs.collectAsState()
     val likedSongs by viewModel.likedSongs.collectAsState()
     val queueSongs by viewModel.currentQueue.collectAsState()
@@ -66,11 +64,7 @@ fun LibraryScreen(
     var songToDelete by rememberSaveable  { mutableStateOf<Song?>(null) }
     var songToEdit by rememberSaveable { mutableStateOf<Song?>(null) }
 
-    LaunchedEffect(snackbarMessage, errorMessage) {
-        snackbarMessage?.let {
-            onShowSnackbar(it)
-        }
-
+    LaunchedEffect(errorMessage) {
         errorMessage?.let {
             onShowSnackbar(it)
             viewModel.clearError()
@@ -147,10 +141,10 @@ fun LibraryScreen(
                     onCloseSheet()
                 },
                 onResult = { result: Result<Unit> ->
-                    snackbarMessage = if (result.isSuccess) {
-                        "Lagu berhasil disimpan"
+                    if (result.isSuccess) {
+                        onShowSnackbar("Lagu berhasil disimpan")
                     } else {
-                        "Gagal menyimpan lagu"
+                        onShowSnackbar("Gagal menyimpan lagu")
                     }
                     songToEdit = null
                     onCloseSheet()
@@ -171,7 +165,7 @@ fun LibraryScreen(
                         onSongDelete(song)
                         viewModel.deleteSong(song)
                         songToDelete = null
-                        snackbarMessage = "Lagu dihapus"
+                        onShowSnackbar("Lagu dihapus")
                     }) {
                         Text("Hapus")
                     }

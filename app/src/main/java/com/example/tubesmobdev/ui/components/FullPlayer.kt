@@ -103,7 +103,6 @@ fun FullPlayerScreen(
     isCompact: Boolean
 ) {
     var showAudioDialog by rememberSaveable { mutableStateOf(false) }
-    var snackbarMessage by rememberSaveable { mutableStateOf<String?>(null) }
     val shareSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isShareSheetOpen by remember { mutableStateOf(false) }
     val dominantColor = rememberDominantColor(song.coverUrl ?: "").copy(alpha = 0.9f)
@@ -121,11 +120,7 @@ fun FullPlayerScreen(
     val swipeOffset = remember { Animatable(0f) }
     val swipeThreshold = 100f
 
-    LaunchedEffect(snackbarMessage) {
-        snackbarMessage?.let {
-            onShowSnackbar(it)
-        }
-    }
+
 
     Box(
         modifier = Modifier
@@ -387,10 +382,10 @@ fun FullPlayerScreen(
                 onDismissRequest = onCloseSheet,
                 onClose = onCloseSheet,
                 onResult = { result: Result<Unit> ->
-                    snackbarMessage = if (result.isSuccess) {
-                        "Lagu berhasil disimpan"
+                    if (result.isSuccess) {
+                        onShowSnackbar("Lagu berhasil disimpan")
                     } else {
-                        "Gagal menyimpan lagu"
+                        onShowSnackbar("Gagal menyimpan lagu")
                     }
                     onCloseSheet()
                 },
@@ -420,7 +415,7 @@ fun FullPlayerScreen(
                 ) {
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // ✅ QR Code Image
+
                     Image(
                         painter = qrPainter,
                         contentDescription = "QR Code",
@@ -431,7 +426,6 @@ fun FullPlayerScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // ✅ Song title and artist
                     Text(
                         text = song.title,
                         color = Color.White,
@@ -449,7 +443,7 @@ fun FullPlayerScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // ✅ Share buttons
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
