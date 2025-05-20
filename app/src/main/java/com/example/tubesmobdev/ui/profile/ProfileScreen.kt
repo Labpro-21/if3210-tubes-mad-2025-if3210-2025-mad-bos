@@ -6,6 +6,9 @@ import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
+import android.widget.Toast
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -95,7 +98,17 @@ fun ProfileScreen(
             }
         }
     }
-
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            val uri = createImageUri(context)
+            tempCameraImageUri.value = uri
+            cameraLauncher.launch(uri)
+        } else {
+            Toast.makeText(context, "Camera permission denied, action canceled", Toast.LENGTH_SHORT).show()
+        }
+    }
     val baseUrl = "http://34.101.226.132:3000/uploads/profile-picture/"
     val photoUrl = profile?.profilePhoto?.let { baseUrl + it } ?: ""
     val imagePainter: Painter = rememberAsyncImagePainter(
@@ -190,9 +203,14 @@ fun ProfileScreen(
             title = { Text("Choose Image Source") },
             confirmButton = {
                 TextButton(onClick = {
-                    val uri = createImageUri(context)
-                    tempCameraImageUri.value = uri
-                    cameraLauncher.launch(uri)
+                    if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA)
+                        == PackageManager.PERMISSION_GRANTED) {
+                        val uri = createImageUri(context)
+                        tempCameraImageUri.value = uri
+                        cameraLauncher.launch(uri)
+                    } else {
+                        cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                    }
                     showPhotoPicker.value = false
                 }) {
                     Text("Camera")

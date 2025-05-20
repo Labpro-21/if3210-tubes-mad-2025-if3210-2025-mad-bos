@@ -1,7 +1,6 @@
 package com.example.tubesmobdev.ui.components
 
 import android.Manifest
-import android.app.Activity
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.util.Log
@@ -22,33 +21,36 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import java.lang.SecurityException
 import java.util.Locale
+
 enum class LocationStatus {
     Loading,
     GpsEnabled,
     Failed
 }
+
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun EditLocationSheet(
-
     onDismiss: () -> Unit,
     onSave: (String) -> Unit
 ) {
     val gpsResolutionStatus = remember { mutableStateOf(LocationStatus.Loading) }
     val context = LocalContext.current
-    remember { LocationServices.getFusedLocationProviderClient(context) }
+    val fusedClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     val locationPermission = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
     val countryCode = remember { mutableStateOf<String?>(null) }
+
     val gpsLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
             gpsResolutionStatus.value = LocationStatus.GpsEnabled
         } else {
             gpsResolutionStatus.value = LocationStatus.Failed
         }
     }
-    LaunchedEffect(Unit) {
+
+    LaunchedEffect(locationPermission.status.isGranted) {
         if (locationPermission.status.isGranted) {
             val locationRequest = com.google.android.gms.location.LocationRequest.create()
                 .setPriority(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY)
@@ -76,8 +78,10 @@ fun EditLocationSheet(
                 }
         } else {
             locationPermission.launchPermissionRequest()
+            gpsResolutionStatus.value = LocationStatus.Failed
         }
     }
+
     LaunchedEffect(gpsResolutionStatus.value) {
         if (gpsResolutionStatus.value == LocationStatus.GpsEnabled) {
             val hasPermission = ContextCompat.checkSelfPermission(
@@ -87,7 +91,7 @@ fun EditLocationSheet(
 
             if (hasPermission) {
                 try {
-                    LocationServices.getFusedLocationProviderClient(context).getCurrentLocation(
+                    fusedClient.getCurrentLocation(
                         com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY,
                         null
                     ).addOnSuccessListener { location ->
@@ -103,9 +107,12 @@ fun EditLocationSheet(
                     Log.e("EditLocation", "SecurityException: ${e.localizedMessage}")
                     gpsResolutionStatus.value = LocationStatus.Failed
                 }
+            } else {
+                gpsResolutionStatus.value = LocationStatus.Failed
             }
         }
     }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = Color(0xff212121),
