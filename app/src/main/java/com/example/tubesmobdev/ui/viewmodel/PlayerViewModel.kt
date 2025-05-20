@@ -10,9 +10,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.SessionCommand
 import android.graphics.Bitmap
-import android.graphics.Color
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.qrcode.QRCodeWriter
 import android.content.ContentValues
 import android.provider.MediaStore
 import com.example.tubesmobdev.data.model.ListeningRecord
@@ -37,12 +34,7 @@ import java.util.Locale
 import javax.inject.Inject
 import android.content.Context
 import android.widget.Toast
-import androidx.core.content.FileProvider
 import com.example.tubesmobdev.service.generateQRCodeUrl
-import java.io.File
-import java.io.FileOutputStream
-
-import kotlin.math.log
 
 @HiltViewModel
 class PlayerViewModel @OptIn(UnstableApi::class)
@@ -114,7 +106,7 @@ class PlayerViewModel @OptIn(UnstableApi::class)
                                 val newLikedState = event.isLiked
                                 _currentSong.value = song.copy(isLiked = newLikedState)
                                 viewModelScope.launch {
-                                    songRepository.updateLikedStatus(song.id, newLikedState)
+                                    songRepository.updateLikedStatus(song.copy(isLiked = newLikedState))
                                 }
                             }
                         }
@@ -205,9 +197,7 @@ class PlayerViewModel @OptIn(UnstableApi::class)
             _currentSong.value = song
             listeningStartTime = System.currentTimeMillis()
 
-            if (!song.isOnline) {
-                songRepository.updateLastPlayed(song.id, System.currentTimeMillis())
-            }
+            songRepository.updateLastPlayed(song, System.currentTimeMillis())
 
             currentQueueIndex = _currentQueue.value.indexOfFirst { it.id == song.id }
                 .takeIf { it != -1 } ?: currentQueueIndex
@@ -248,10 +238,8 @@ class PlayerViewModel @OptIn(UnstableApi::class)
             repeatMode = _repeatMode.value
         )
 
-        if (!song.isOnline) {
-            viewModelScope.launch {
-                songRepository.updateLastPlayed(song.id, System.currentTimeMillis())
-            }
+        viewModelScope.launch {
+            songRepository.updateLastPlayed(song, System.currentTimeMillis())
         }
 
     }

@@ -3,6 +3,8 @@ package com.example.tubesmobdev.data.model
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.tubesmobdev.data.remote.response.OnlineSong
+import com.example.tubesmobdev.data.remote.response.parseDuration
 
 @Entity(tableName = "songs",
     indices = [Index(value = ["serverId"], unique = true)])
@@ -20,6 +22,26 @@ data class Song(
     var creatorId: Long? = null,
     val isDownloaded: Boolean = false,
     var isOnline: Boolean = false,
-) {
+)
 
+fun Song.toOnlineSong(): OnlineSong {
+    val onlineSong = OnlineSong(
+        id = this.serverId ?: 0,
+        title = this.title,
+        artist = this.artist,
+        url = this.filePath,
+        artwork = this.coverUrl ?: "",
+        duration = formatDuration(this.duration),
+        rank = 0,
+        createdAt = "",
+        updatedAt = "",
+        country = ""
+    )
+    return onlineSong
+}
+
+fun formatDuration(durationMillis: Long): String {
+    val minutes = durationMillis / 60_000
+    val seconds = (durationMillis % 60_000) / 1000
+    return "%02d:%02d".format(minutes, seconds)
 }

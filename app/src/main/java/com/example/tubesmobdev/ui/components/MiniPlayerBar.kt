@@ -17,8 +17,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -30,6 +32,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,6 +45,9 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 import com.example.tubesmobdev.R
 import androidx.compose.ui.res.painterResource
+import com.example.tubesmobdev.data.model.toOnlineSong
+import com.example.tubesmobdev.ui.viewmodel.OnlineSongViewModel
+import kotlinx.coroutines.flow.StateFlow
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -52,15 +58,19 @@ fun MiniPlayerBar(
     onTogglePlayPause: () -> Unit,
     onAddClicked: () -> Unit,
     onSwipeLeft: () -> Unit,
-    onSwipeRight: () -> Unit
+    onSwipeRight: () -> Unit,
+    onlineSongViewModel: OnlineSongViewModel,
+    onShowSnackbar: (String) -> Unit
 ) {
     val dominantColor = rememberDominantColor(song.coverUrl ?: "").copy(alpha = 0.9f)
     val swipeThreshold = 200f
-    var offsetX by remember { mutableStateOf(0f) }
+    var offsetX by remember { mutableFloatStateOf(0f) }
     val swipeOffset = remember { Animatable(0f) }
     val coroutineScope = rememberCoroutineScope()
     var isSwiping by remember { mutableStateOf(false) }
-
+    val context = LocalContext.current
+    val downloadingSongs by onlineSongViewModel.downloadingSongs.collectAsState()
+    val isDownloading = downloadingSongs[song.serverId ?: -1] == true
 
     val maxOffsetForAlpha = 300f
     val alpha = 1f - (abs(swipeOffset.value) / maxOffsetForAlpha).coerceIn(0f, 0.7f)
@@ -155,6 +165,42 @@ fun MiniPlayerBar(
                             fontSize = 12.sp,
                             maxLines = 1,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+            if (song.isOnline && !song.isDownloaded) {
+                if (isDownloading) {
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .padding(horizontal = 12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                } else {
+                    IconButton(
+                        onClick = {
+                            if (!isDownloading){
+                                onlineSongViewModel.downloadAndInsertSong(context, song.toOnlineSong()) { result ->
+                                    val message = if (result.isSuccess) {
+                                        "Lagu berhasil diunduh"
+                                    } else {
+                                        result.exceptionOrNull()?.message ?: "Gagal mengunduh lagu"
+                                    }
+                                    onShowSnackbar(message)
+                                }
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Download,
+                            contentDescription = "Download",
                         )
                     }
                 }

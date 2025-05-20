@@ -83,12 +83,47 @@ class SongRepository @Inject constructor(
     suspend fun deleteSong(song: Song) {
         songDao.deleteSong(song)
     }
-    suspend fun updateLikedStatus(songId: Int, isLiked: Boolean) {
-        songDao.updateLikedStatus(songId, isLiked)
+
+
+    suspend fun updateLikedStatus(song: Song) {
+        if (song.isOnline) {
+            val serverId = song.serverId ?: return
+            val existing = songDao.findSongByServerId(serverId)
+            if (existing != null) {
+                songDao.updateLikedStatus(existing.id, song.isLiked)
+            } else {
+                val newSong = song.copy(
+                    isLiked = true,
+                    isOnline = true,
+                    isDownloaded = false
+                )
+                insertSong(newSong)
+            }
+        } else {
+            songDao.updateLikedStatus(song.id, song.isLiked)
+        }
     }
 
-    suspend fun updateLastPlayed(songId: Int, timestamp: Long) {
-        songDao.updateLastPlayed(songId, timestamp)
+
+
+    suspend fun updateLastPlayed(song: Song, timestamp: Long) {
+        if (song.isOnline) {
+            val serverId = song.serverId ?: return
+            val existing = songDao.findSongByServerId(serverId)
+            if (existing != null) {
+                songDao.updateLastPlayed(existing.id,timestamp)
+            } else {
+                val newSong = song.copy(
+                    isOnline = true,
+                    isDownloaded = false,
+                    lastPlayed = timestamp
+                )
+                insertSong(newSong)
+            }
+        } else {
+            songDao.updateLastPlayed(song.id,timestamp)
+
+        }
     }
 
     suspend fun updateSong(song: Song) {

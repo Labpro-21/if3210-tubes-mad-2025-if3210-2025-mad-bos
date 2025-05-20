@@ -7,10 +7,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.data.repository.PlayerPreferencesRepository
 import com.example.tubesmobdev.data.repository.SongRepository
+import com.example.tubesmobdev.service.ConnectivityObserver
+import com.example.tubesmobdev.service.ConnectivityStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,6 +23,7 @@ import javax.inject.Inject
 class LibraryViewModel @Inject constructor(
     private val repository: SongRepository,
     private val playerRepository: PlayerPreferencesRepository,
+    connectivityObserver: ConnectivityObserver,
 ): ViewModel() {
     private val _songs = MutableStateFlow<List<Song>>(emptyList())
     val songs: StateFlow<List<Song>> get() = _songs
@@ -37,6 +43,13 @@ class LibraryViewModel @Inject constructor(
     private val _downloadedSongs = MutableStateFlow<List<Song>>(emptyList())
     val downloadedSongs: StateFlow<List<Song>> = _downloadedSongs
 
+    private val connectivityStatus: StateFlow<ConnectivityStatus> =
+        connectivityObserver.observe().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = ConnectivityStatus.Available
+        )
+
     init {
         fetchSongs()
     }
@@ -45,15 +58,28 @@ class LibraryViewModel @Inject constructor(
     private fun fetchSongs() {
         viewModelScope.launch {
             launch {
-                repository.getAllSongs()
-                    .catch { e -> _errorMessage.value = "Gagal memuat semua lagu: ${e.message}" }
-                    .collect { _songs.value = it }
+                combine(repository.getAllSongs(), connectivityStatus) { songs, status ->
+                    if (status == ConnectivityStatus.Unavailable) {
+                        songs.filterNot { it.isOnline }
+                    } else songs
+                }.catch { e ->
+                    _errorMessage.value = "Gagal memuat semua lagu: ${e.message}"
+                }.collect {
+                    _songs.value = it
+                }
             }
 
             launch {
-                repository.getLikedSongs()
-                    .catch { e -> _errorMessage.value = "Gagal memuat liked songs: ${e.message}" }
-                    .collect { _likedSongs.value = it }
+                combine(repository.getLikedSongs(), connectivityStatus) { songs, status ->
+                    if (status == ConnectivityStatus.Unavailable) {
+                        songs.filterNot { it.isOnline }
+                    } else songs
+
+                }.catch { e ->
+                    _errorMessage.value = "Gagal memuat liked songs: ${e.message}"
+                }.collect {
+                    _likedSongs.value = it
+                }
             }
 
             launch {

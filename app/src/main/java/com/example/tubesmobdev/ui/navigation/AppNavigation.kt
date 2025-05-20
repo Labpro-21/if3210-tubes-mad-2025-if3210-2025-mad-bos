@@ -15,13 +15,12 @@ import com.example.tubesmobdev.ui.auth.login.LoginScreen
 import com.example.tubesmobdev.ui.layout.MainLayout
 import com.example.tubesmobdev.ui.splash.SplashScreen
 import com.example.tubesmobdev.ui.viewmodel.NavigationViewModel
-import com.example.tubesmobdev.ui.viewmodel.TokenRefreshViewModel
 import com.example.tubesmobdev.util.ServiceUtil
 
 @Composable
 fun AppNavigation(
     authViewModel: NavigationViewModel = hiltViewModel(),
-    tokenRefreshViewModel: TokenRefreshViewModel = hiltViewModel(),
+//    tokenRefreshViewModel: TokenRefreshViewModel = hiltViewModel(),
     navigationViewModel: NavigationViewModel = hiltViewModel(),
     initialDestination: String = "home"
 ) {

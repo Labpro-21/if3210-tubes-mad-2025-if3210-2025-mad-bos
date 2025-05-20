@@ -294,6 +294,14 @@ fun FullPlayerScreen(
                                     modifier = Modifier.size(28.dp)
                                 )
                             }
+                            IconButton(onClick = onAddClicked) {
+                                Icon(
+                                    imageVector = if (song.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                    contentDescription = "Like/Unlike",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
                         }else{
                             IconButton(onClick = onAddClicked) {
                                 Icon(

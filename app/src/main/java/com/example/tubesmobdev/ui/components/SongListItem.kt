@@ -1,19 +1,11 @@
 package com.example.tubesmobdev.ui.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.DownloadDone
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,7 +24,8 @@ fun SongListItem(
     song: OnlineSong,
     onClick: () -> Unit,
     onDownloadClick: () -> Unit,
-    isDownloadDisabled: Boolean = false
+    isDownloading: Boolean = false,
+    isDownloaded: Boolean = false
 ) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp
@@ -122,16 +115,39 @@ fun SongListItem(
             Spacer(modifier = Modifier.width(8.dp))
         }
 
-        IconButton (
-            onClick = onDownloadClick,
-            enabled = !isDownloadDisabled,
-            modifier = Modifier.size(iconSize + 24.dp)
+        Box(
+            modifier = Modifier
+                .size(iconSize + 24.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.Download,
-                contentDescription = "Download",
-                modifier = Modifier.size(iconSize)
-            )
+            when {
+                isDownloaded -> {
+                    Icon(
+                        imageVector = Icons.Default.DownloadDone,
+                        contentDescription = "Downloaded",
+                        modifier = Modifier.size(iconSize)
+                    )
+                }
+                isDownloading -> {
+                    CircularProgressIndicator(
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(iconSize),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                else -> {
+                    IconButton(
+                        onClick = onDownloadClick,
+                        modifier = Modifier.size(iconSize + 12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Download,
+                            contentDescription = "Download",
+                            modifier = Modifier.size(iconSize)
+                        )
+                    }
+                }
+            }
         }
     }
 }

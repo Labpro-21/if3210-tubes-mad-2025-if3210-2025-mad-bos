@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,7 +24,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.tubesmobdev.R
 import com.example.tubesmobdev.data.model.Song
-import com.example.tubesmobdev.data.remote.response.toLocalSong
 import com.example.tubesmobdev.service.ConnectivityStatus
 import com.example.tubesmobdev.ui.components.SongListItem
 import com.example.tubesmobdev.ui.viewmodel.ConnectionViewModel
@@ -44,11 +42,13 @@ fun TopSongsScreen(
     val onlineSongs by viewModel.songs.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
-    val isDownloading by viewModel.isDownloading.collectAsState()
-    val downloadProgress by viewModel.downloadProgress.collectAsState()
-    val currentDownloadTitle by viewModel.currentDownloadTitle.collectAsState()
 
     val connectivityStatus by connectionViewModel.connectivityStatus.collectAsState()
+
+    val downloadingSongs by viewModel.downloadingSongs.collectAsState()
+
+    val downloadedSongIds by viewModel.downloadedSongIds.collectAsState()
+
 
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
@@ -74,11 +74,6 @@ fun TopSongsScreen(
         viewModel.fetchSongs(chartCode)
     }
 
-    LaunchedEffect(isDownloading) {
-        if (isDownloading) {
-            onShowSnackbar("Downloading $currentDownloadTitle")
-        }
-    }
 
     val songs = onlineSongs.sortedBy { it.rank }
 
@@ -198,37 +193,14 @@ fun TopSongsScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            if (isDownloading) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Download,
-                                        contentDescription = "Downloading",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    LinearProgressIndicator(
-                                        progress = { downloadProgress },
-                                        modifier = Modifier
-                                            .fillMaxWidth(0.7f)
-                                            .height(4.dp),
-                                        color = Color(0xFF1DB954),
-                                        trackColor = Color.White.copy(alpha = 0.3f)
-                                    )
-                                }
-                            } else {
-                                Spacer(modifier = Modifier.weight(1f))
-                            }
-
+                            Spacer(modifier = Modifier.weight(1f)) // kosongkan bagian kiri
                             IconButton(
                                 onClick = {
-                                    if (songs.isNotEmpty()) onSongClick(
-                                        songs[0].toLocalSong(),
-                                        songs.map { it.toLocalSong() }
-                                    )
+                                    if (songs.isNotEmpty()) {
+                                        viewModel.convertToLocalSongs(songs) { localSongs ->
+                                            onSongClick(localSongs.first(), localSongs)
+                                        }
+                                    }
                                 },
                                 enabled = connectivityStatus == ConnectivityStatus.Available
                             ) {
@@ -273,23 +245,22 @@ fun TopSongsScreen(
                         number = song.rank,
                         song = song,
                         onClick = {
-                            onSongClick(song.toLocalSong(), listOf(song.toLocalSong()))
-                        },
-                        onDownloadClick = {
-                            if (!isDownloading) {
-                                viewModel.downloadAndInsertSong(context, song, connectionViewModel.connectivityStatus) { result ->
-                                val message = if (result.isSuccess) {
-                                        "Lagu berhasil diunduh"
-                                    } else {
-                                        result.exceptionOrNull()?.message ?: "Gagal mengunduh lagu"
-                                    }
-                                    onShowSnackbar(message)
-                                }
-                            } else {
-                                onShowSnackbar("Download sedang berjalan. Tunggu hingga selesai.")
+                            viewModel.convertToLocalSongs(listOf(song)) { localSongs ->
+                                onSongClick(localSongs.first(), localSongs)
                             }
                         },
-                        isDownloadDisabled = isDownloading
+                        onDownloadClick = {
+                            viewModel.downloadAndInsertSong(context, song) { result -> val message = if (result.isSuccess) {
+                                "Lagu berhasil diunduh"
+                            } else {
+                                result.exceptionOrNull()?.message ?: "Gagal mengunduh lagu"
+                            }
+                                onShowSnackbar(message)
+                            }
+
+                        },
+                        isDownloading = downloadingSongs[song.id] == true,
+                        isDownloaded = downloadedSongIds.contains(song.id)
                     )
                 }
             }

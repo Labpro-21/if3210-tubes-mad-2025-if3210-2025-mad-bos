@@ -23,7 +23,6 @@ fun OnlineSong.toLocalSong(): Song {
         filePath = this.url,
         coverUrl = this.artwork,
         duration = parseDuration(this.duration),
-        createdAt = System.currentTimeMillis()
     )
     song.isOnline = true
     return song

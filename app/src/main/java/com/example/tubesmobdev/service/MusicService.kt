@@ -349,15 +349,14 @@ class MusicService : MediaSessionService() {
             )
             .build()
 
-        val likeBtn = if (!song.isOnline) {
-            CommandButton.Builder()
-                .setDisplayName("Like")
-                .setSessionCommand(customCommandLike)
-                .setIconResId(
-                    if (song.isLiked) R.drawable.ic_liked else R.drawable.ic_like
-                )
-                .build()
-        } else null
+        val likeBtn = CommandButton.Builder()
+            .setDisplayName("Like")
+            .setSessionCommand(customCommandLike)
+            .setIconResId(
+                if (song.isLiked) R.drawable.ic_liked else R.drawable.ic_like
+            )
+            .build()
+
 
         //            add(
 //                CommandButton.Builder()
@@ -375,9 +374,8 @@ class MusicService : MediaSessionService() {
 
         buttons.add(shuffleBtn)
 
-        if (likeBtn != null) {
-            buttons.add(likeBtn)
-        }
+        buttons.add(likeBtn)
+
         mediaSession?.setCustomLayout(buttons)
     }
 

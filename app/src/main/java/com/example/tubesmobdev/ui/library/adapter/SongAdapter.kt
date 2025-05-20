@@ -1,5 +1,6 @@
 package com.example.tubesmobdev.ui.library.adapter
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -92,6 +93,7 @@ class SongAdapter(
         return songs.size
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun updateSongs(newSongs: List<Song>) {
         songs = newSongs
         notifyDataSetChanged()

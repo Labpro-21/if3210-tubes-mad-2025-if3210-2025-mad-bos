@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
@@ -28,14 +29,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.tubesmobdev.data.remote.response.toLocalSong
+import com.example.tubesmobdev.data.model.toOnlineSong
 import com.example.tubesmobdev.service.ConnectivityStatus
 import com.example.tubesmobdev.ui.components.*
 import com.example.tubesmobdev.ui.home.HomeScreen
@@ -65,6 +64,8 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
     val isShuffle by playerViewModel.isShuffle.collectAsState()
     val isPlaying by playerViewModel.isPlaying.collectAsState()
     val progress by playerViewModel.progress.collectAsState()
+
+    val downloadingSongs by onlineSongViewModel.downloadingSongs.collectAsState()
 
     var topBarContent by remember { mutableStateOf<@Composable () -> Unit>({}) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -109,7 +110,7 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
             Log.d("MainLayout", "Received deep link to songId: $songId")
             try {
                 val onlineSong = onlineSongViewModel.getOnlineSongById(songId)
-                val song = onlineSong.toLocalSong()
+                val song = onlineSongViewModel.convertToLocalSong(onlineSong)
                 playerViewModel.playSong(song)
                 navController.navigate("fullplayer")
             } catch (e: Exception) {
@@ -188,7 +189,9 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                     onTogglePlayPause = { playerViewModel.togglePlayPause() },
                                     onAddClicked = { playerViewModel.toggleLike() },
                                     onSwipeLeft = { playerViewModel.playNext() },
-                                    onSwipeRight = { playerViewModel.playPrevious() }
+                                    onSwipeRight = { playerViewModel.playPrevious() },
+                                    onlineSongViewModel = onlineSongViewModel,
+                                    onShowSnackbar = { snackbarMessage = it },
                                 )
                             }
                         }
@@ -256,6 +259,7 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                         playerViewModel.setCurrentQueue(songs)
                                         playerViewModel.playSong(song)
                                     },
+                                    viewModel = onlineSongViewModel,
                                     onShowSnackbar = { snackbarMessage = it },
                                 )
                             }
@@ -322,7 +326,6 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                 }
                             }
                             composable("fullplayer") {
-                                val context = LocalContext.current
                                 topBarContent = {
                                     ScreenHeader(
                                         isMainMenu = false,
@@ -334,6 +337,41 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                                 if (!song.isOnline) {
                                                     IconButton(onClick = { isSheetOpen = true }) {
                                                         Icon(Icons.Default.Edit, contentDescription = "Edit")
+                                                    }
+                                                } else {
+                                                    if (downloadingSongs[song.serverId] == true) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .size(24.dp)
+                                                                .padding(horizontal = 12.dp),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            CircularProgressIndicator(
+                                                                color = Color.White,
+                                                                strokeWidth = 2.dp,
+                                                                modifier = Modifier.size(18.dp)
+                                                            )
+                                                        }
+                                                    } else {
+                                                        IconButton(
+                                                            onClick = {
+                                                                if (!(downloadingSongs[song.serverId] == true)){
+                                                                    onlineSongViewModel.downloadAndInsertSong(context, song.toOnlineSong()) { result ->
+                                                                        val message = if (result.isSuccess) {
+                                                                            "Lagu berhasil diunduh"
+                                                                        } else {
+                                                                            result.exceptionOrNull()?.message ?: "Gagal mengunduh lagu"
+                                                                        }
+                                                                        snackbarMessage = message
+                                                                    }
+                                                                }
+                                                            }
+                                                        ) {
+                                                            Icon(
+                                                                imageVector = Icons.Default.Download,
+                                                                contentDescription = "Download",
+                                                            )
+                                                        }
                                                     }
                                                 }
                                             }
@@ -380,7 +418,51 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                                 title = "",
                                                 onBack = { navController.popBackStack() },
                                                 dominantColor = Color.Transparent,
-                                                iconOnBack = Icons.Filled.ArrowDownward
+                                                iconOnBack = Icons.Filled.ArrowDownward,
+                                                actions = {
+                                                    currentSong?.let { song ->
+                                                        if (!song.isOnline) {
+                                                            IconButton(onClick = { isSheetOpen = true }) {
+                                                                Icon(Icons.Default.Edit, contentDescription = "Edit")
+                                                            }
+                                                        } else {
+                                                            if (downloadingSongs[song.serverId] == true) {
+                                                                Box(
+                                                                    modifier = Modifier
+                                                                        .size(24.dp)
+                                                                        .padding(horizontal = 12.dp),
+                                                                    contentAlignment = Alignment.Center
+                                                                ) {
+                                                                    CircularProgressIndicator(
+                                                                        color = Color.White,
+                                                                        strokeWidth = 2.dp,
+                                                                        modifier = Modifier.size(18.dp)
+                                                                    )
+                                                                }
+                                                            } else {
+                                                                IconButton(
+                                                                    onClick = {
+                                                                        if (!(downloadingSongs[song.serverId] == true)){
+                                                                            onlineSongViewModel.downloadAndInsertSong(context, song.toOnlineSong()) { result ->
+                                                                                val message = if (result.isSuccess) {
+                                                                                    "Lagu berhasil diunduh"
+                                                                                } else {
+                                                                                    result.exceptionOrNull()?.message ?: "Gagal mengunduh lagu"
+                                                                                }
+                                                                                snackbarMessage = message
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                ) {
+                                                                    Icon(
+                                                                        imageVector = Icons.Default.Download,
+                                                                        contentDescription = "Download",
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
                                             )
                                         }
                                     )
@@ -422,7 +504,7 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                             CoroutineScope(Dispatchers.Main).launch {
                                                 try {
                                                     val onlineSong = onlineSongViewModel.getOnlineSongById(songId.toString())
-                                                    val song = onlineSong.toLocalSong()
+                                                    val song = onlineSongViewModel.convertToLocalSong(onlineSong)
                                                     playerViewModel.playSong(song)
                                                     navController.navigate("fullplayer")
                                                     Toast.makeText(context, "Playing song: ${song.title}", Toast.LENGTH_SHORT).show()
@@ -454,7 +536,9 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                         onTogglePlayPause = { playerViewModel.togglePlayPause() },
                                         onAddClicked = { playerViewModel.toggleLike() },
                                         onSwipeLeft = { playerViewModel.playNext() },
-                                        onSwipeRight = { playerViewModel.playPrevious() }
+                                        onSwipeRight = { playerViewModel.playPrevious() },
+                                        onlineSongViewModel = onlineSongViewModel,
+                                        onShowSnackbar = { snackbarMessage = it },
                                     )
                                 }
                             }

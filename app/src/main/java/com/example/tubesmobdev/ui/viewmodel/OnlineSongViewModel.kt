@@ -10,13 +10,18 @@ import androidx.lifecycle.viewModelScope
 import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.data.remote.response.OnlineSong
 import com.example.tubesmobdev.data.remote.response.parseDuration
+import com.example.tubesmobdev.data.remote.response.toLocalSong
 import com.example.tubesmobdev.data.repository.OnlineSongRepository
 import com.example.tubesmobdev.data.repository.SongRepository
+import com.example.tubesmobdev.service.ConnectivityObserver
 import com.example.tubesmobdev.service.ConnectivityStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.BufferedInputStream
@@ -27,7 +32,8 @@ import javax.inject.Inject
 @HiltViewModel
 class OnlineSongViewModel @Inject constructor(
     private val onlineSongRepository: OnlineSongRepository,
-    private val songRepository: SongRepository
+    private val songRepository: SongRepository,
+    connectivityObserver: ConnectivityObserver,
 ) : ViewModel() {
 
     private val _songs = MutableStateFlow<List<OnlineSong>>(emptyList())
@@ -39,14 +45,27 @@ class OnlineSongViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
-    private val _isDownloading = MutableStateFlow(false)
-    val isDownloading: StateFlow<Boolean> = _isDownloading
+    private val _downloadedSongIds = MutableStateFlow<Set<Int>>(emptySet())
+    val downloadedSongIds: StateFlow<Set<Int>> = _downloadedSongIds
 
-    private val _downloadProgress = MutableStateFlow(0f)
-    val downloadProgress: StateFlow<Float> = _downloadProgress
 
-    private val _currentDownloadTitle = MutableStateFlow("")
-    val currentDownloadTitle: StateFlow<String> = _currentDownloadTitle
+    private val _downloadingSongs = MutableStateFlow<Map<Int, Boolean>>(emptyMap())
+    val downloadingSongs: StateFlow<Map<Int, Boolean>> = _downloadingSongs
+
+    private val connectivityStatus: StateFlow<ConnectivityStatus> =
+        connectivityObserver.observe().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = ConnectivityStatus.Available
+        )
+
+    init {
+        viewModelScope.launch {
+            songRepository.getDownloadedSongs().collect { songs ->
+                _downloadedSongIds.value = songs.mapNotNull { it.serverId }.toSet()
+            }
+        }
+    }
 
     private fun insertSong(serverId: Int, uri: Uri, title: String, artist: String, imageUri: Uri?, duration: Long) {
         viewModelScope.launch {
@@ -66,33 +85,49 @@ class OnlineSongViewModel @Inject constructor(
         }
     }
 
+    fun isDownloading(songId: Int): Boolean {
+        return _downloadingSongs.value[songId] == true
+    }
+
     private fun updateSong(song: Song) {
         viewModelScope.launch {
             songRepository.updateSong(song)
         }
     }
 
+    fun convertToLocalSongs(songs: List<OnlineSong>, onResult: (List<Song>) -> Unit) {
+        viewModelScope.launch {
+            val result = songs.map { song ->
+                val local = songRepository.findSongByServerId(song.id)
+                local ?: song.toLocalSong()
+            }
+            onResult(result)
+        }
+    }
+
+    suspend fun convertToLocalSong(song: OnlineSong): Song {
+        val local = songRepository.findSongByServerId(song.id)
+        return local ?: song.toLocalSong()
+    }
+
     fun downloadAndInsertSong(
         context: Context,
         onlineSong: OnlineSong,
-        connectivityStatus: StateFlow<ConnectivityStatus>,
         onResult: (Result<Unit>) -> Unit
     ) {
-        if (_isDownloading.value) {
-            onResult(Result.failure(Exception("Another download is already in progress")))
+        val songId = onlineSong.id
+        if (isDownloading(songId)) {
+            onResult(Result.failure(Exception("Lagu sedang diunduh.")))
             return
         }
 
         viewModelScope.launch {
-            _isDownloading.value = true
-            _downloadProgress.value = 0f
-            _currentDownloadTitle.value = onlineSong.title
+            _downloadingSongs.update { it + (songId to true) }
 
-            val existing = songRepository.findSongByServerId(onlineSong.id)
+            val existing = songRepository.findSongByServerId(songId)
             if (existing != null && existing.isDownloaded) {
-                _isDownloading.value = false
-                _currentDownloadTitle.value = ""
-                onResult(Result.failure(Exception("This song has already been downloaded")))
+                _downloadingSongs.update { it - songId }
+                onResult(Result.failure(Exception("Lagu sudah diunduh sebelumnya.")))
                 return@launch
             }
 
@@ -108,38 +143,26 @@ class OnlineSongViewModel @Inject constructor(
                         put(MediaStore.Audio.Media.IS_MUSIC, 1)
                         put(MediaStore.Audio.Media.RELATIVE_PATH, "Music/MyApp")
                     }
-                    val audioUri =
-                        resolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, audioValues)
-                            ?: throw Exception("Failed to create MediaStore entry for audio")
+
+                    val audioUri = resolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, audioValues)
+                        ?: throw Exception("Gagal membuat file audio di MediaStore")
 
                     resolver.openOutputStream(audioUri)?.use { outputStream ->
-                        val url = URL(onlineSong.url)
-                        val connection = url.openConnection() as HttpURLConnection
+                        val connection = URL(onlineSong.url).openConnection() as HttpURLConnection
                         connection.connect()
 
-                        val fileLength = connection.contentLength
                         val inputStream = BufferedInputStream(connection.inputStream)
                         val buffer = ByteArray(8192)
                         var bytesRead: Int
-                        var totalBytesRead = 0L
 
                         while (inputStream.read(buffer).also { bytesRead = it } != -1) {
                             if (connectivityStatus.value != ConnectivityStatus.Available) {
                                 inputStream.close()
                                 outputStream.close()
                                 resolver.delete(audioUri, null, null)
-                                throw Exception("Koneksi internet terputus. Download dibatalkan.")
+                                throw Exception("Koneksi terputus, download dibatalkan.")
                             }
-
                             outputStream.write(buffer, 0, bytesRead)
-                            totalBytesRead += bytesRead
-
-                            if (fileLength > 0) {
-                                val progress = totalBytesRead.toFloat() / fileLength
-                                withContext(Dispatchers.Main) {
-                                    _downloadProgress.value = progress * 0.8f
-                                }
-                            }
                         }
 
                         inputStream.close()
@@ -161,16 +184,16 @@ class OnlineSongViewModel @Inject constructor(
                                     connection.connect()
                                     val inputStream = BufferedInputStream(connection.inputStream)
                                     val buffer = ByteArray(8192)
-                                    var bytesRead: Int
-                                    while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                                    var bytes: Int
+                                    while (inputStream.read(buffer).also { bytes = it } != -1) {
                                         if (connectivityStatus.value != ConnectivityStatus.Available) {
                                             inputStream.close()
                                             outputStream.close()
                                             resolver.delete(uri, null, null)
                                             resolver.delete(audioUri, null, null)
-                                            throw Exception("Koneksi internet terputus saat mengunduh artwork. Lagu dibatalkan.")
+                                            throw Exception("Koneksi terputus saat mengunduh artwork.")
                                         }
-                                        outputStream.write(buffer, 0, bytesRead)
+                                        outputStream.write(buffer, 0, bytes)
                                     }
                                     inputStream.close()
                                     outputStream.flush()
@@ -185,40 +208,37 @@ class OnlineSongViewModel @Inject constructor(
                     }
 
                     withContext(Dispatchers.Main) {
-                        if (existing == null){
+                        if (existing == null) {
                             insertSong(
-                                onlineSong.id,
-                                audioUri,
-                                onlineSong.title,
-                                onlineSong.artist,
-                                artworkUri,
-                                parseDuration(onlineSong.duration)
-                            )
-                        } else {
-                            val updatedSong = existing.copy(
-                                filePath = audioUri.toString(),
+                                serverId = songId,
+                                uri = audioUri,
                                 title = onlineSong.title,
                                 artist = onlineSong.artist,
-                                coverUrl = artworkUri.toString(),
-                                duration = parseDuration(onlineSong.duration),
-                                isOnline = false,
-                                isDownloaded = true
+                                imageUri = artworkUri,
+                                duration = parseDuration(onlineSong.duration)
                             )
-
-                            updateSong(updatedSong)
+                        } else {
+                            updateSong(
+                                existing.copy(
+                                    filePath = audioUri.toString(),
+                                    title = onlineSong.title,
+                                    artist = onlineSong.artist,
+                                    coverUrl = artworkUri?.toString(),
+                                    duration = parseDuration(onlineSong.duration),
+                                    isOnline = false,
+                                    isDownloaded = true
+                                )
+                            )
                         }
-                        _downloadProgress.value = 1f
-                        _isDownloading.value = false
-                        _currentDownloadTitle.value = ""
                         onResult(Result.success(Unit))
                     }
                 } catch (e: Exception) {
-                    Log.e("Download", "Error downloading song/artwork", e)
+                    Log.e("Download", "Error", e)
                     withContext(Dispatchers.Main) {
-                        _isDownloading.value = false
-                        _currentDownloadTitle.value = ""
                         onResult(Result.failure(e))
                     }
+                } finally {
+                    _downloadingSongs.update { it - songId }
                 }
             }
         }
