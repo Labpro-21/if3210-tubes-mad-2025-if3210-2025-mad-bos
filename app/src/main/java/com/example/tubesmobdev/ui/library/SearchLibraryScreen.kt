@@ -18,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -39,6 +40,8 @@ fun SearchLibraryScreen(
     onShowSnackbar: (String) -> Unit
 ) {
     val searchResults by viewModel.searchResults.collectAsState()
+
+    val context = LocalContext.current
 
     var songToDelete by rememberSaveable  { mutableStateOf<Song?>(null) }
     var songToEdit by rememberSaveable { mutableStateOf<Song?>(null) }
@@ -113,7 +116,7 @@ fun SearchLibraryScreen(
             confirmButton = {
                 androidx.compose.material3.TextButton(onClick = {
                     onSongDelete(song)
-                    viewModel.deleteSong(song)
+                    viewModel.deleteSong(song, context)
                     songToDelete = null
                     onShowSnackbar("Lagu dihapus")
                 }) {

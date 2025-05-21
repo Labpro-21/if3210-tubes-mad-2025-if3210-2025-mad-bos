@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -53,6 +54,8 @@ fun LibraryScreen(
 
     val tabs = listOf("All", "Liked", "Downloaded", "Queue")
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
+
+    val context = LocalContext.current
 
     val allSongs by viewModel.songs.collectAsState()
     val likedSongs by viewModel.likedSongs.collectAsState()
@@ -163,7 +166,7 @@ fun LibraryScreen(
                 confirmButton = {
                     androidx.compose.material3.TextButton(onClick = {
                         onSongDelete(song)
-                        viewModel.deleteSong(song)
+                        viewModel.deleteSong(song, context)
                         songToDelete = null
                         onShowSnackbar("Lagu dihapus")
                     }) {

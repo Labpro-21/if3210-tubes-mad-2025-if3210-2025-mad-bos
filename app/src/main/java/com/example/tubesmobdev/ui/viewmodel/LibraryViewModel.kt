@@ -1,6 +1,8 @@
 package com.example.tubesmobdev.ui.viewmodel
 
+import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -120,11 +122,30 @@ class LibraryViewModel @Inject constructor(
         _errorMessage.value = null
     }
 
-    fun deleteSong(song: Song) {
+    fun deleteSong(song: Song, context: Context) {
         viewModelScope.launch {
             val shouldDeleteDownloaded = song.isDownloaded
 
             if (shouldDeleteDownloaded) {
+                try {
+                    song.filePath.let { path ->
+                        val uri = Uri.parse(path)
+                        val deleted = context.contentResolver.delete(uri, null, null)
+                        Log.d("SongDelete", "File deleted: $deleted")
+                    }
+                } catch (e: Exception) {
+                    Log.w("SongDelete", "Gagal menghapus file audio: ${song.filePath}", e)
+                }
+
+                try {
+                    song.coverUrl?.let { path ->
+                        val uri = Uri.parse(path)
+                        val deleted = context.contentResolver.delete(uri, null, null)
+                        Log.d("SongDelete", "File deleted: $deleted")
+                    }
+                } catch (e: Exception) {
+                    Log.d("SongDelete", "Gagal menghapus file artwork: ${song.coverUrl}", e)
+                }
                 repository.deleteSongDownloaded(song)
             } else {
                 repository.deleteSong(song)

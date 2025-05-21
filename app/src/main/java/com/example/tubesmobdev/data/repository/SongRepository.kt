@@ -1,5 +1,7 @@
 package com.example.tubesmobdev.data.repository
 
+import android.net.Uri
+import android.util.Log
 import com.example.tubesmobdev.data.local.dao.SongDao
 import com.example.tubesmobdev.data.local.preferences.AuthPreferences
 import com.example.tubesmobdev.data.local.preferences.IAuthPreferences
@@ -9,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import retrofit2.HttpException
+import java.io.File
 import java.io.IOException
 import javax.inject.Inject
 
@@ -91,14 +94,23 @@ class SongRepository @Inject constructor(
     suspend fun deleteSongDownloaded(song: Song) {
         try {
             val onlineSong = onlineApi.getOnlineSong(song.serverId.toString())
-            updateSong(song.copy(isDownloaded = false, isOnline = true, filePath = onlineSong.url, coverUrl = onlineSong.artwork))
+
+            updateSong(
+                song.copy(
+                    isDownloaded = false,
+                    isOnline = true,
+                    filePath = onlineSong.url,
+                    coverUrl = onlineSong.artwork
+                )
+            )
         } catch (e: HttpException) {
+            Log.d("SongDelete", "Gagal fetch dari server, hapus dari DB", e)
             songDao.deleteSong(song)
         } catch (e: IOException) {
+            Log.d("SongDelete", "Gagal jaringan, hapus dari DB", e)
             songDao.deleteSong(song)
         }
     }
-
 
     suspend fun updateLikedStatus(song: Song) {
         if (song.isOnline) {
