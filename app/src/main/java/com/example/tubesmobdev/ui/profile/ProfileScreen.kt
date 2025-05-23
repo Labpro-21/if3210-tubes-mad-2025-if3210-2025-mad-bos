@@ -71,11 +71,33 @@ fun ProfileScreen(
     val allSongsCount by viewModel.allSongsCount.collectAsState()
     val likedSongsCount by viewModel.likedSongsCount.collectAsState()
     val listenedSongsCount by viewModel.listenedSongsCount.collectAsState()
-    val topSong by viewModel.topSong.collectAsState()
-    val topArtist by viewModel.topArtist.collectAsState()
-    val streakSong by viewModel.streakSong.collectAsState()
-    val streakDays by viewModel.streakDays.collectAsState()
-    val streakRange by viewModel.streakRange.collectAsState()
+    val totalListeningMinutes by viewModel.totalListeningMinutes.collectAsState()
+    val allRecords by viewModel.allRecords.collectAsState()
+    val topArtists by viewModel.topArtists.collectAsState()
+    val topSongs by viewModel.topSongs.collectAsState()
+    val monthlyStreaks by viewModel.monthlyStreaks.collectAsState()
+    val monthlyStreakSongs by viewModel.monthlyStreakSongs.collectAsState()
+
+    val capsules by remember(allRecords, topArtists, topSongs, monthlyStreaks) {
+        derivedStateOf {
+            topSongs.map { entry ->
+                // hitung menit didengar di bulan tersebut
+                val minutes = allRecords
+                    .filter { it.date.startsWith(entry.monthYear) }
+                    .sumOf { it.durationListened } / 60000
+
+                SoundCapsuleData(
+                    month         = entry.monthYear,
+                    minutesListened = minutes,
+                    topArtist     = topArtists.firstOrNull { it.monthYear == entry.monthYear },
+                    topSong       = topSongs.firstOrNull   { it.monthYear == entry.monthYear },
+                    streakEntry   = monthlyStreaks.firstOrNull{it.monthYear == entry.monthYear},
+                    streakRange = monthlyStreaks.firstOrNull{it.monthYear == entry.monthYear}?.startDate + " " + monthlyStreaks.firstOrNull{it.monthYear == entry.monthYear}?.endDate,
+                    streakSong    =  monthlyStreakSongs.firstOrNull{it.monthYear == entry.monthYear}?.song
+                )
+            }
+        }
+    }
 
     val context = LocalContext.current as Activity
 
@@ -182,14 +204,10 @@ fun ProfileScreen(
                         }
                         Spacer(modifier = Modifier.height(40.dp))
                         SoundCapsuleSection(
-                            month = "April 2025",
-                            minutesListened = viewModel.totalListeningMinutes.collectAsState().value,
-                            topArtist = topArtist,
-                            topSong = topSong,
-                            streakDays = streakDays,
-                            streakSong = streakSong,
-                            streakRange = streakRange,
-                            onShareStreak = {}
+                            capsules      = capsules,
+                            onShareStreak = { data ->
+                                // misal: share data.month, data.minutesListened, dll.
+                            }
                         )
                     }
                 }

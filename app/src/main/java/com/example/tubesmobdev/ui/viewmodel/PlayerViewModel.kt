@@ -193,7 +193,7 @@ class PlayerViewModel @OptIn(UnstableApi::class)
     private fun onSongChanged(song: Song) {
         viewModelScope.launch {
             saveListeningDuration()
-
+            Log.d("debug", "onSongChanged: ")
             _currentSong.value = song
             listeningStartTime = System.currentTimeMillis()
 
@@ -209,6 +209,8 @@ class PlayerViewModel @OptIn(UnstableApi::class)
         val startTime = listeningStartTime ?: return
         val endTime = System.currentTimeMillis()
         val listenedMs = endTime - startTime
+
+        Log.d("debug", "saveListeningDuration: "+ song.isOnline + listenedMs)
 
         if (listenedMs >= 5000 && !song.isOnline) {
             val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
@@ -388,7 +390,4 @@ class PlayerViewModel @OptIn(UnstableApi::class)
             Toast.makeText(context, "Failed to share QR code", Toast.LENGTH_SHORT).show()
         }
     }
-
-
-
 }

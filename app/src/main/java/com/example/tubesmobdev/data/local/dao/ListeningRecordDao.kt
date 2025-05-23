@@ -4,67 +4,97 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.example.tubesmobdev.data.model.ListeningRecord
-import com.example.tubesmobdev.data.model.StreakEntry
 import com.example.tubesmobdev.data.model.TopArtist
 import com.example.tubesmobdev.data.model.TopSong
+import com.example.tubesmobdev.data.model.StreakEntry
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface ListeningRecordDao {
+abstract class ListeningRecordDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertRecord(record: ListeningRecord)
+    abstract suspend fun insertRecord(record: ListeningRecord)
 
     @Query("SELECT * FROM listening_records WHERE creatorId = :userId ORDER BY date DESC")
-    fun getAllRecords(userId: Long): Flow<List<ListeningRecord>>
+    abstract fun getAllRecords(userId: Long): Flow<List<ListeningRecord>>
 
     @Query("SELECT SUM(durationListened) FROM listening_records WHERE creatorId = :userId")
-    fun getTotalListeningTime(userId: Long): Flow<Long?>
+    abstract fun getTotalListeningTime(userId: Long): Flow<Long?>
 
-    @Query("""
-      WITH top_artist AS (
-        SELECT artist
+    @Query(
+        """
+        SELECT
+          strftime('%Y-%m', date) AS monthYear,
+          (
+            SELECT artist
+            FROM listening_records lr2
+            WHERE
+              lr2.creatorId = :userId
+              AND strftime('%Y-%m', lr2.date) = strftime('%Y-%m', date)
+            GROUP BY lr2.artist
+            ORDER BY SUM(lr2.durationListened) DESC
+            LIMIT 1
+          ) AS artist,
+          (
+            SELECT s.coverUrl
+            FROM listening_records lr3
+            JOIN songs s ON s.artist = lr3.artist
+            WHERE
+              lr3.creatorId = :userId
+              AND strftime('%Y-%m', lr3.date) = strftime('%Y-%m', date)
+            GROUP BY lr3.artist
+            ORDER BY SUM(lr3.durationListened) DESC
+            LIMIT 1
+          ) AS coverUrl
         FROM listening_records
-        WHERE creatorId = :userId
-        GROUP BY artist
-        ORDER BY SUM(durationListened) DESC
-        LIMIT 1
-      )
-      SELECT
-        ta.artist    AS artist,
-        s.coverUrl   AS coverUrl
-      FROM top_artist ta
-      JOIN songs s
-        ON s.artist = ta.artist
-      LIMIT 1
-    """)
-    fun getTopArtist(userId: Long): Flow<TopArtist>
+        WHERE
+          creatorId = :userId
+          AND date(date) >= date('now', '-1 year')
+        GROUP BY strftime('%Y-%m', date)
+        ORDER BY monthYear DESC
+        """
+    )
+    abstract fun getTopArtistLastYear(userId: Long): Flow<List<TopArtist>>
 
-    @Query("""
-      WITH top_song AS (
-        SELECT songId
-        FROM listening_records
-        WHERE creatorId = :userId
-        GROUP BY songId
-        ORDER BY SUM(durationListened) DESC
-        LIMIT 1
-      )
-      SELECT
-        s.title      AS title,
-        s.coverUrl   AS coverUrl
-      FROM top_song ts
-      JOIN songs s
-        ON s.id = ts.songId
-      LIMIT 1
-    """)
-    fun getTopSong(userId: Long): Flow<TopSong>
+    @Query(
+        """
+        SELECT
+          strftime('%Y-%m', lr.date) AS monthYear,
+          (
+            SELECT s2.title
+            FROM listening_records lr2
+            JOIN songs s2 ON s2.id = lr2.songId
+            WHERE
+              lr2.creatorId = :userId
+              AND strftime('%Y-%m', lr2.date) = strftime('%Y-%m', lr.date)
+            GROUP BY lr2.songId
+            ORDER BY SUM(lr2.durationListened) DESC
+            LIMIT 1
+          ) AS title,
+          (
+            SELECT s3.coverUrl
+            FROM listening_records lr3
+            JOIN songs s3 ON s3.id = lr3.songId
+            WHERE
+              lr3.creatorId = :userId
+              AND strftime('%Y-%m', lr3.date) = strftime('%Y-%m', lr.date)
+            GROUP BY lr3.songId
+            ORDER BY SUM(lr3.durationListened) DESC
+            LIMIT 1
+          ) AS coverUrl
+        FROM listening_records AS lr
+        WHERE
+          lr.creatorId = :userId
+          AND date(lr.date) >= date('now', '-1 year')
+        GROUP BY strftime('%Y-%m', lr.date)
+        ORDER BY monthYear DESC
+        """
+    )
+    abstract fun getTopSongLastYear(userId: Long): Flow<List<TopSong>>
 
-    @Query("""
-      SELECT songId, title, date 
-      FROM listening_records 
-      WHERE creatorId = :userId 
-      ORDER BY songId, date
-    """)
-    suspend fun getRecordsForStreakAnalysis(userId: Long): List<StreakEntry>
+    @RawQuery(observedEntities = [ListeningRecord::class])
+    abstract fun getMonthlyTopStreakRaw(query: SupportSQLiteQuery): Flow<List<StreakEntry>>
 }

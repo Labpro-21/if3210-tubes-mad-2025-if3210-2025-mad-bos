@@ -1,5 +1,8 @@
 package com.example.tubesmobdev.data.repository
 
+import android.database.sqlite.SQLiteException
+import android.util.Log
+import androidx.sqlite.db.SimpleSQLiteQuery
 import com.example.tubesmobdev.data.local.dao.ListeningRecordDao
 import com.example.tubesmobdev.data.local.preferences.IAuthPreferences
 import com.example.tubesmobdev.data.model.ListeningRecord
@@ -17,6 +20,7 @@ class ListeningRecordRepository @Inject constructor(
 ) {
     suspend fun insertRecord(record: ListeningRecord): Result<Unit> {
         return try {
+            Log.d("debug", "insertRecord: "+ record.title)
             dao.insertRecord(record)
             Result.success(Unit)
         } catch (e: Exception) {
@@ -42,31 +46,98 @@ class ListeningRecordRepository @Inject constructor(
             flowOf(0L)
         }
     }
-
-    suspend fun getTopArtist(): Flow<TopArtist> {
+    suspend fun getTopArtistLastYear(): Flow<List<TopArtist>> {
         val userId = authPreferences.getUserId()
         return if (userId != null) {
-            dao.getTopArtist(userId)
+            dao.getTopArtistLastYear(userId)
         } else {
-            flowOf()
+            flowOf(emptyList())
         }
     }
 
-    suspend fun getTopSong(): Flow<TopSong> {
+    suspend fun getTopSongLastYear(): Flow<List<TopSong>> {
         val userId = authPreferences.getUserId()
         return if (userId != null) {
-            dao.getTopSong(userId)
+            dao.getTopSongLastYear(userId)
         } else {
-            flowOf()
+            flowOf(emptyList())
         }
     }
 
-    suspend fun getRecordsForStreakAnalysis(): List<StreakEntry> {
-        val userId = authPreferences.getUserId()
-        return if (userId != null) {
-            dao.getRecordsForStreakAnalysis(userId)
-        } else {
-            emptyList()
+    suspend fun getMonthlyTopStreak(): Flow<List<StreakEntry>> {
+        val sql = """
+            WITH
+              monthly_records AS (
+                SELECT
+                  songId,
+                  title,
+                  date(date)             AS date,
+                  strftime('%Y-%m',date) AS monthYear
+                FROM listening_records
+                WHERE
+                  creatorId = ? 
+                  AND date(date) >= date('now','-1 year')
+              ),
+              numbered AS (
+                SELECT
+                  songId,
+                  title,
+                  date,
+                  monthYear,
+                  ROW_NUMBER() OVER (PARTITION BY songId, monthYear ORDER BY date) AS rn
+                FROM monthly_records
+              ),
+              grouped AS (
+                SELECT
+                  songId,
+                  title,
+                  date,
+                  monthYear,
+                  CAST(julianday(date) AS INTEGER) - rn AS grp
+                FROM numbered
+              ),
+              streaks AS (
+                SELECT
+                  songId,
+                  title,
+                  monthYear,
+                  MIN(date) AS startDate,
+                  MAX(date) AS endDate,
+                  COUNT(*)  AS days
+                FROM grouped
+                GROUP BY songId, monthYear, grp
+                HAVING days >= 1
+              ),
+              top_per_month AS (
+                SELECT
+                  monthYear,
+                  songId,
+                  title,
+                  startDate,
+                  endDate,
+                  days,
+                  ROW_NUMBER() OVER (PARTITION BY monthYear ORDER BY days DESC) AS rn
+                FROM streaks
+              )
+            SELECT
+              monthYear,
+              songId,
+              title,
+              startDate,
+              endDate,
+              days
+            FROM top_per_month
+            WHERE rn = 1
+            ORDER BY monthYear DESC
+          """.trimIndent()
+        val userId = authPreferences.getUserId() ?: return flowOf(emptyList())
+        val query = SimpleSQLiteQuery(sql, arrayOf(userId))
+        return try {
+            Log.d("debug", "getMonthlyTopStreak: ")
+            dao.getMonthlyTopStreakRaw(query)
+        } catch (e: SQLiteException) {
+            Log.e("Repo", "RawQuery gagal – kemungkinan window function nggak didukung", e)
+            flowOf(emptyList())
         }
     }
 }

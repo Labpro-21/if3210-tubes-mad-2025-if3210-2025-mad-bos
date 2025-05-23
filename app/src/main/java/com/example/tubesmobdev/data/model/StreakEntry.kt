@@ -1,7 +1,15 @@
 package com.example.tubesmobdev.data.model
 
 data class StreakEntry(
-    val songId: Int,
-    val title: String,
-    val date: String
+    val monthYear: String,
+    val songId   : Int,
+    val title    : String,
+    val startDate: String,
+    val endDate  : String,
+    val days     : String,
+)
+
+data class MonthlyStreakSong(
+    val monthYear: String,
+    val song: Song
 )
