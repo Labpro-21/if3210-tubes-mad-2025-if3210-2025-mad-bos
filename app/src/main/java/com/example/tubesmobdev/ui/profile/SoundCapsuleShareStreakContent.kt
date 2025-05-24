@@ -1,0 +1,108 @@
+package com.example.tubesmobdev.ui.profile
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import com.example.tubesmobdev.data.model.SoundCapsuleStreakShareData
+import com.example.tubesmobdev.util.rememberDominantColor
+
+@Composable
+fun SoundCapsuleShareStreakContent(
+    data: SoundCapsuleStreakShareData,
+    modifier: Modifier = Modifier
+) {
+    val coverUrl = data.streakSong?.coverUrl.orEmpty()
+    val artist = data.streakSong?.artist.orEmpty()
+    val title = data.streakSong?.title.orEmpty()
+    val dominantColor = rememberDominantColor(coverUrl).copy(alpha = 0.9f)
+
+    val streakDays = data.streakSong?.let { data.streakRange }?.split("-")?.let {
+        val days = it.firstOrNull()?.takeLast(2)?.toIntOrNull()
+        val end = it.lastOrNull()?.takeLast(2)?.toIntOrNull()
+        if (days != null && end != null) (end - days + 1).coerceAtLeast(1) else 0
+    } ?: 0
+
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(dominantColor)
+            .padding(24.dp)
+            .width(300.dp)
+            .wrapContentHeight(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = Color(0xFF3B3B3B)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "My $streakDays-day streak",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.align(Alignment.Start)
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                AsyncImage(
+                    model = coverUrl,
+                    contentDescription = "Cover",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(MaterialTheme.shapes.medium),
+                    contentScale = ContentScale.Crop
+
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                Text(
+                    text = artist,
+                    color = Color.LightGray,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+
+                Text(
+                    text = title,
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.align(Alignment.Start)
+                )
+
+                Spacer(Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Purritify",
+                        color = Color.LightGray,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Text(
+                        text = data.streakRange,
+                        color = Color.LightGray,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        }
+    }
+}

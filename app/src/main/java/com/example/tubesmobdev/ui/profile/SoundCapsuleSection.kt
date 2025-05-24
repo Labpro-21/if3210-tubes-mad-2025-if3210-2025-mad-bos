@@ -19,29 +19,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import com.example.tubesmobdev.data.model.Song
-import com.example.tubesmobdev.data.model.TopArtist
-import com.example.tubesmobdev.data.model.TopSong
-import com.example.tubesmobdev.data.model.StreakEntry
+import com.example.tubesmobdev.data.model.SoundCapsuleData
 import com.example.tubesmobdev.util.extractMonthAndYear
-
-data class SoundCapsuleData(
-    val month: String,
-    val minutesListened: Long,
-    val topArtist: TopArtist?,
-    val topSong: TopSong?,
-    val streakEntry: StreakEntry?,
-    val streakSong: Song?,
-    val streakRange: String
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SoundCapsuleSection(
+    navController: NavController,
     capsules: List<SoundCapsuleData>,
-    onShareStreak: (SoundCapsuleData) -> Unit,
-    onShareSoundCapsule: (SoundCapsuleData) -> Unit,
     onArtistClick   : (String) -> Unit,
     onSongClick     : (String) -> Unit,
     onTimeListenedClick: (SoundCapsuleData) -> Unit
@@ -87,7 +74,9 @@ fun SoundCapsuleSection(
                         )
                     }
 
-                    IconButton(onClick = { onShareSoundCapsule(data) }) {
+                    IconButton(onClick = {
+                        navController.navigate("shareSoundCapsule/${data.month}")
+                    }) {
                         Icon(
                             imageVector = Icons.Default.Share,
                             contentDescription = "Share Capsule",
@@ -268,7 +257,9 @@ fun SoundCapsuleSection(
                                         color = Color.Gray,
                                         modifier = Modifier.weight(1f)
                                     )
-                                    IconButton(onClick = { onShareStreak(data) }) {
+                                    IconButton(onClick =
+                                        {navController.navigate("shareCapsuleStreak/${data.month}")}
+                                    ) {
                                         Icon(
                                             imageVector = Icons.Default.Share,
                                             contentDescription = "Share Capsule",

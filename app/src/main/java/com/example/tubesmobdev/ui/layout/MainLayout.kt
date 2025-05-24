@@ -45,6 +45,7 @@ import com.example.tubesmobdev.ui.home.HomeScreen
 import com.example.tubesmobdev.ui.library.LibraryScreen
 import com.example.tubesmobdev.ui.library.SearchLibraryScreen
 import com.example.tubesmobdev.ui.profile.ProfileScreen
+import com.example.tubesmobdev.ui.profile.SoundCapsuleSharePage
 import com.example.tubesmobdev.ui.profile.TimeListenedScreen
 import com.example.tubesmobdev.ui.topsongs.TopSongsScreen
 import com.example.tubesmobdev.ui.viewmodel.ConnectionViewModel
@@ -588,6 +589,14 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                 }
                                 val month = backStackEntry.arguments?.getString("month") ?: return@composable
                                 TimeListenedScreen(month = month, onBack = { navController.popBackStack() })
+                            }
+                            composable("shareSoundCapsule/{month}") { backStack ->
+                                val month = backStack.arguments?.getString("month") ?: return@composable
+                                SoundCapsuleSharePage(month=month, onBack = {navController.popBackStack()})
+                            }
+                            composable("shareCapsuleStreak/{month}") { backStack ->
+                                val month = backStack.arguments?.getString("month") ?: return@composable
+                                SoundCapsuleSharePage(month=month, onBack = {navController.popBackStack()}, isStreak = true)
                             }
                         }
 

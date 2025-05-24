@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.tubesmobdev.data.model.TopListItemData
-import com.example.tubesmobdev.ui.components.ScreenHeader
 import com.example.tubesmobdev.ui.viewmodel.ProfileViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.tubesmobdev.data.model.Song
@@ -84,7 +83,6 @@ fun TopListScreen(
             lineHeight = 38.sp,
             style = MaterialTheme.typography.bodyLarge
         )
-//        Text(text = summaryText, style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(32.dp))
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(0.dp)) {

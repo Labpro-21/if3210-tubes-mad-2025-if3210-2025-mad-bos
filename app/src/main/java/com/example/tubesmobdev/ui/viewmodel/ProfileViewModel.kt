@@ -9,6 +9,9 @@ import com.example.tubesmobdev.data.local.preferences.ServicePreferences
 import com.example.tubesmobdev.data.model.ListeningRecord
 import com.example.tubesmobdev.data.model.MonthlyStreakSong
 import com.example.tubesmobdev.data.model.Song
+import com.example.tubesmobdev.data.model.SoundCapsuleData
+import com.example.tubesmobdev.data.model.SoundCapsuleShareData
+import com.example.tubesmobdev.data.model.SoundCapsuleStreakShareData
 import com.example.tubesmobdev.data.model.StreakEntry
 import com.example.tubesmobdev.data.model.TopArtist
 import com.example.tubesmobdev.data.model.TopListItemData
@@ -20,7 +23,6 @@ import com.example.tubesmobdev.data.repository.ListeningRecordRepository
 import com.example.tubesmobdev.data.repository.ProfileRepository
 import com.example.tubesmobdev.data.repository.SongRepository
 import com.example.tubesmobdev.manager.PlayerManager
-import com.example.tubesmobdev.ui.profile.SoundCapsuleData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +30,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -141,7 +144,7 @@ class ProfileViewModel @Inject constructor(
     fun fetchDailyListeningData(month: String) {
         viewModelScope.launch {
             val result = listeningRecordRepository.getDailyListeningMinutes(month)
-            _dailyListeningMinutes.value = result // contoh: listOf(Pair(1, 20), Pair(2, 10), ...)
+            _dailyListeningMinutes.value = result
         }
     }
 
@@ -153,17 +156,14 @@ class ProfileViewModel @Inject constructor(
                     _totalListeningMinutes.value = millis / 60000
                 }
         }
-        // daftar top artist (tahun lalu)
         viewModelScope.launch {
             listeningRecordRepository.getTopArtistLastYear()
                 .collect { _topArtists.value = it }
         }
-        // daftar top song (tahun lalu)
         viewModelScope.launch {
             listeningRecordRepository.getTopSongLastYear()
                 .collect { _topSongs.value = it }
         }
-        // daftar streak per bulan
         viewModelScope.launch {
             listeningRecordRepository.getMonthlyTopStreak()
                 .collect { entries ->
@@ -185,14 +185,43 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    suspend fun getSoundCapsuleShareData(month: String): SoundCapsuleShareData? {
+        val allRecords = _allRecords.value
+        val artists = listeningRecordRepository.getMonthlyTopArtistsFor(month).firstOrNull()
+        val songs = listeningRecordRepository.getMonthlyTopSongsFor(month).firstOrNull()
+
+        val minutes = allRecords
+            .filter { it.date.startsWith(month) }
+            .sumOf { it.durationListened } / 60000
+
+        return SoundCapsuleShareData(
+            month = month,
+            minutesListened = minutes,
+            topArtist = artists ?: emptyList(),
+            topSong = songs ?: emptyList()
+        )
+    }
+
+    fun getStreakCapsuleShareData(month: String): SoundCapsuleStreakShareData? {
+        val streak = _monthlyStreaks.value.firstOrNull { it.monthYear == month }
+        val song = _monthlyStreakSongs.value.firstOrNull { it.monthYear == month }?.song
+
+        return streak?.let {
+            SoundCapsuleStreakShareData(
+                month = month,
+                streakSong = song,
+                streakRange = "${it.startDate} - ${it.endDate}"
+            )
+        }
+    }
+
     suspend fun getSongById(songId: Int): Song? {
         val userId = _profile.value?.id?.toLong() ?: return null
         return withContext(Dispatchers.IO) {
             songRepository.getSongById(songId, userId)
         }
     }
-
-
+    
     private fun observeAllRecords() {
         viewModelScope.launch {
             listeningRecordRepository.getAllRecords()

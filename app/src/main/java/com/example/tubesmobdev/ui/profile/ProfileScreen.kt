@@ -5,7 +5,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
-import android.util.Log
 import android.widget.Toast
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
@@ -59,9 +58,9 @@ fun createImageUri(context: Context): Uri {
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun ProfileScreen(
+    navController: NavController,
     viewModel: ProfileViewModel = hiltViewModel(),
     connectionViewModel: ConnectionViewModel = hiltViewModel(),
-    navController: NavController,
 ) {
     val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
     val tempCameraImageUri = remember { mutableStateOf<Uri?>(null) }
@@ -189,13 +188,8 @@ fun ProfileScreen(
                                 .align(Alignment.Start)
                         )
                         SoundCapsuleSection(
+                            navController = navController,
                             capsules      = capsules,
-                            onShareStreak = { data ->
-                                // misal: share data.month, data.minutesListened, dll.
-                            },
-                            onShareSoundCapsule = { data ->
-                                // misal: share data.month, data.minutesListened, dll.
-                            },
                             onArtistClick = { monthYear ->
                                 viewModel.fetchMonthlyTopList(monthYear, TopListType.Artist)
                                 navController.navigate("topList/Artist/$monthYear")
