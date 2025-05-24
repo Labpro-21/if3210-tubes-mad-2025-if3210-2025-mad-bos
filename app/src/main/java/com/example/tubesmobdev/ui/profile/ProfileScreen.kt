@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -35,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.tubesmobdev.data.model.SoundCapsuleData
 import com.example.tubesmobdev.data.model.TopListType
 import com.example.tubesmobdev.service.ConnectivityStatus
 import com.example.tubesmobdev.ui.components.EditLocationSheet
@@ -179,14 +182,29 @@ fun ProfileScreen(
                             StatsColumn(listenedSongsCount, "LISTENED", Modifier.weight(1f))
                         }
                         Spacer(modifier = Modifier.height(40.dp))
-                        Text(
-                            text = "Your Sound Capsule",
-                            style = MaterialTheme.typography.headlineSmall,
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp)
-                                .align(Alignment.Start)
-                        )
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Your Sound Capsule",
+                                style = MaterialTheme.typography.headlineSmall
+                            )
+
+                            IconButton(onClick = {
+                                val csvData = buildCsvFromCapsules(capsules)
+                                exportCsvFile(context, csvData, "sound_capsule_export.csv")
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.Download,
+                                    contentDescription = "Download Capsule",
+                                    tint = Color.White
+                                )
+                            }
+                        }
                         SoundCapsuleSection(
                             navController = navController,
                             capsules      = capsules,
@@ -246,5 +264,38 @@ fun ProfileScreen(
                 viewModel.updateLocation(it)
             }
         )
+    }
+}
+
+fun buildCsvFromCapsules(capsules: List<SoundCapsuleData>): String {
+    val header = "month,minutesListened,topArtist,topSong,streakRange,streakTitle"
+    val rows = capsules.map {
+        val artist = it.topArtist?.artist ?: "-"
+        val song = it.topSong?.title ?: "-"
+        val range = it.streakRange.ifEmpty { "-" }
+        val streakTitle = it.streakSong?.title ?: "-"
+        "${it.month},${it.minutesListened},$artist,$song,$range,$streakTitle"
+    }
+    return (listOf(header) + rows).joinToString("\n")
+}
+
+fun exportCsvFile(context: Context, content: String, filename: String) {
+    val resolver = context.contentResolver
+    val csvFileName = filename
+
+    val contentValues = ContentValues().apply {
+        put(MediaStore.MediaColumns.DISPLAY_NAME, csvFileName)
+        put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
+        put(MediaStore.MediaColumns.RELATIVE_PATH, "Download")
+    }
+
+    val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+    if (uri != null) {
+        resolver.openOutputStream(uri).use { outputStream ->
+            outputStream?.write(content.toByteArray())
+        }
+        Toast.makeText(context, "Downloaded to Downloads/$csvFileName", Toast.LENGTH_SHORT).show()
+    } else {
+        Toast.makeText(context, "Failed to export CSV", Toast.LENGTH_SHORT).show()
     }
 }

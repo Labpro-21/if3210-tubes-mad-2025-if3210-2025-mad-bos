@@ -221,7 +221,7 @@ class ProfileViewModel @Inject constructor(
             songRepository.getSongById(songId, userId)
         }
     }
-    
+
     private fun observeAllRecords() {
         viewModelScope.launch {
             listeningRecordRepository.getAllRecords()
