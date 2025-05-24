@@ -20,11 +20,15 @@ import com.example.tubesmobdev.data.repository.ListeningRecordRepository
 import com.example.tubesmobdev.data.repository.ProfileRepository
 import com.example.tubesmobdev.data.repository.SongRepository
 import com.example.tubesmobdev.manager.PlayerManager
+import com.example.tubesmobdev.ui.profile.SoundCapsuleData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -83,10 +87,12 @@ class ProfileViewModel @Inject constructor(
     private val _monthlyTopList = MutableStateFlow<List<TopListItemData>>(emptyList())
     val monthlyTopList: StateFlow<List<TopListItemData>> = _monthlyTopList.asStateFlow()
 
+    private val _dailyListeningMinutes = MutableStateFlow<List<Pair<Int, Int>>>(emptyList())
+    val dailyListeningMinutes: StateFlow<List<Pair<Int, Int>>> = _dailyListeningMinutes
+
     init {
         fetchProfile()
         fetchSongCounts()
-        observeListeningStats()
         observeAllRecords()
     }
 
@@ -102,6 +108,40 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             songRepository.getPlayedSongsCount()
                 .collect { _listenedSongsCount.value = it }
+        }
+    }
+
+    val capsules: StateFlow<List<SoundCapsuleData>> = combine(
+        topSongs,
+        topArtists,
+        monthlyStreaks,
+        monthlyStreakSongs,
+        allRecords
+    ) { songs, artists, streaks, streakSongs, records ->
+        songs.map { entry ->
+            val minutes = records.filter { it.date.startsWith(entry.monthYear) }
+                .sumOf { it.durationListened } / 60000
+
+            val streakEntry = streaks.firstOrNull { it.monthYear == entry.monthYear }
+            val streakRange = streakEntry?.let { "${it.startDate} - ${it.endDate}" } ?: ""
+            val streakSong = streakSongs.firstOrNull { it.monthYear == entry.monthYear }?.song
+
+            SoundCapsuleData(
+                month = entry.monthYear,
+                minutesListened = minutes,
+                topArtist = artists.firstOrNull { it.monthYear == entry.monthYear },
+                topSong = entry,
+                streakEntry = streakEntry,
+                streakRange = streakRange,
+                streakSong = streakSong
+            )
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun fetchDailyListeningData(month: String) {
+        viewModelScope.launch {
+            val result = listeningRecordRepository.getDailyListeningMinutes(month)
+            _dailyListeningMinutes.value = result // contoh: listOf(Pair(1, 20), Pair(2, 10), ...)
         }
     }
 
@@ -168,6 +208,7 @@ class ProfileViewModel @Inject constructor(
             profileRepository.getProfile().fold(
                 onSuccess = { resp ->
                     _profile.value = resp
+                    observeListeningStats()
                 },
                 onFailure = { err ->
                     _errorMessage.value = err.message ?: "Unknown error"

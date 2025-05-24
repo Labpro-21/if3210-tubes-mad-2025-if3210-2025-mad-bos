@@ -74,33 +74,7 @@ fun ProfileScreen(
     val allSongsCount by viewModel.allSongsCount.collectAsState()
     val likedSongsCount by viewModel.likedSongsCount.collectAsState()
     val listenedSongsCount by viewModel.listenedSongsCount.collectAsState()
-    val totalListeningMinutes by viewModel.totalListeningMinutes.collectAsState()
-    val allRecords by viewModel.allRecords.collectAsState()
-    val topArtists by viewModel.topArtists.collectAsState()
-    val topSongs by viewModel.topSongs.collectAsState()
-    val monthlyStreaks by viewModel.monthlyStreaks.collectAsState()
-    val monthlyStreakSongs by viewModel.monthlyStreakSongs.collectAsState()
-
-    val capsules by remember(allRecords, topArtists, topSongs, monthlyStreaks) {
-        derivedStateOf {
-            topSongs.map { entry ->
-                // hitung menit didengar di bulan tersebut
-                val minutes = allRecords
-                    .filter { it.date.startsWith(entry.monthYear) }
-                    .sumOf { it.durationListened } / 60000
-
-                SoundCapsuleData(
-                    month         = entry.monthYear,
-                    minutesListened = minutes,
-                    topArtist     = topArtists.firstOrNull { it.monthYear == entry.monthYear },
-                    topSong       = topSongs.firstOrNull   { it.monthYear == entry.monthYear },
-                    streakEntry   = monthlyStreaks.firstOrNull{it.monthYear == entry.monthYear},
-                    streakRange = monthlyStreaks.firstOrNull{it.monthYear == entry.monthYear}?.startDate + " " + monthlyStreaks.firstOrNull{it.monthYear == entry.monthYear}?.endDate,
-                    streakSong    =  monthlyStreakSongs.firstOrNull{it.monthYear == entry.monthYear}?.song
-                )
-            }
-        }
-    }
+    val capsules by viewModel.capsules.collectAsState()
 
     val context = LocalContext.current as Activity
 
@@ -206,9 +180,20 @@ fun ProfileScreen(
                             StatsColumn(listenedSongsCount, "LISTENED", Modifier.weight(1f))
                         }
                         Spacer(modifier = Modifier.height(40.dp))
+                        Text(
+                            text = "Your Sound Capsule",
+                            style = MaterialTheme.typography.headlineSmall,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
+                                .align(Alignment.Start)
+                        )
                         SoundCapsuleSection(
                             capsules      = capsules,
                             onShareStreak = { data ->
+                                // misal: share data.month, data.minutesListened, dll.
+                            },
+                            onShareSoundCapsule = { data ->
                                 // misal: share data.month, data.minutesListened, dll.
                             },
                             onArtistClick = { monthYear ->
@@ -218,6 +203,9 @@ fun ProfileScreen(
                             onSongClick   = { monthYear ->
                                 viewModel.fetchMonthlyTopList(monthYear, TopListType.Song)
                                 navController.navigate("topList/Song/$monthYear")
+                            } ,
+                            onTimeListenedClick  = { data ->
+                                navController.navigate("timeListened/${data.month}") // atau route yang sesuai
                             }
                         )
                     }

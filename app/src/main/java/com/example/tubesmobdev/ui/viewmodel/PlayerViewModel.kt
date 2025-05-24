@@ -200,7 +200,7 @@ class PlayerViewModel @OptIn(UnstableApi::class)
 
         Log.d("debug", "saveListeningDuration: "+ song.isOnline + listenedMs)
 
-        if (listenedMs >= 5000 && !song.isOnline) {
+        if (listenedMs >= 5000) {
             val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
             val record = ListeningRecord(
                 songId = song.id,

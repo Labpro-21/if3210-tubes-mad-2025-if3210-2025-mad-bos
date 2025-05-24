@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RawQuery
 import androidx.sqlite.db.SupportSQLiteQuery
+import com.example.tubesmobdev.data.model.DailyListeningEntry
 import com.example.tubesmobdev.data.model.ListeningRecord
 import com.example.tubesmobdev.data.model.TopArtist
 import com.example.tubesmobdev.data.model.TopSong
@@ -76,6 +77,19 @@ abstract class ListeningRecordDao {
     )
     abstract fun getTopArtistLastYear(userId: Long): Flow<List<TopArtist>>
 
+    @Query("""
+    SELECT 
+        strftime('%d', date) AS day,
+        SUM(durationListened) / 60000 AS minutes
+    FROM listening_records
+    WHERE creatorId = :userId AND strftime('%Y-%m', date) = :monthYear
+    GROUP BY day
+    ORDER BY day
+""")
+    abstract suspend fun getDailyListeningMinutes(
+        userId: Long,
+        monthYear: String
+    ): List<DailyListeningEntry>
 
     @Query(
         """

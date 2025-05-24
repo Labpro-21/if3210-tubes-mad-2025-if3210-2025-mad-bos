@@ -45,6 +45,7 @@ import com.example.tubesmobdev.ui.home.HomeScreen
 import com.example.tubesmobdev.ui.library.LibraryScreen
 import com.example.tubesmobdev.ui.library.SearchLibraryScreen
 import com.example.tubesmobdev.ui.profile.ProfileScreen
+import com.example.tubesmobdev.ui.profile.TimeListenedScreen
 import com.example.tubesmobdev.ui.topsongs.TopSongsScreen
 import com.example.tubesmobdev.ui.viewmodel.ConnectionViewModel
 import com.example.tubesmobdev.ui.viewmodel.NavigationViewModel
@@ -557,26 +558,36 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                     navArgument("monthYear") { type = NavType.StringType }
                                 )
                             ) { backStackEntry ->
-                                topBarContent = {
-                                    ScreenHeader(
-                                        title = "Top Songs",
-                                        isMainMenu = false,
-                                        onBack = { navController.popBackStack() },
-                                    )
-                                }
                                 val typeString = backStackEntry.arguments?.getString("type")!!
                                 val month = backStackEntry.arguments?.getString("monthYear")!!
                                 val type = TopListType.valueOf(typeString)
+                                topBarContent = {
+                                    ScreenHeader(
+                                        title = "Top $type"+"s",
+                                        isMainMenu = false,
+                                        onBack = { navController.popBackStack() },
+                                        useTitle = true
+                                    )
+                                }
                                 TopListScreen(
-                                    title       = "$type for $month",
                                     bulanTahun  = month,
-                                    summaryText = "Your top $type in $month",
                                     type        = type,
                                     onItemClick =
                                         {playerViewModel.clearCurrentQueue()
                                             playerViewModel.playSong(it)},
-                                    onBack      = { navController.popBackStack() }
                                 )
+                            }
+                            composable("timeListened/{month}") { backStackEntry ->
+                                topBarContent = {
+                                    ScreenHeader(
+                                        title = "Time Listened",
+                                        isMainMenu = false,
+                                        onBack = { navController.popBackStack() },
+                                        useTitle = true
+                                    )
+                                }
+                                val month = backStackEntry.arguments?.getString("month") ?: return@composable
+                                TimeListenedScreen(month = month, onBack = { navController.popBackStack() })
                             }
                         }
 

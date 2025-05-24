@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun ScreenHeader(
     title: String,
+    useTitle: Boolean = false,
     modifier: Modifier = Modifier,
     navigationIcon: @Composable (() -> Unit) = {},
     actions: @Composable RowScope.() -> Unit = {},
@@ -51,8 +52,18 @@ fun ScreenHeader(
                 )
             )
         } else {
-            TopAppBar(
-                title = {},
+            CenterAlignedTopAppBar(
+                title = {
+                    if (useTitle) {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
+                            )
+                        )
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
