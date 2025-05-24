@@ -6,7 +6,10 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tubesmobdev.data.local.preferences.ServicePreferences
+import com.example.tubesmobdev.data.model.ListeningRecord
+import com.example.tubesmobdev.data.model.MonthlyStreakSong
 import com.example.tubesmobdev.data.model.Song
+import com.example.tubesmobdev.data.model.StreakEntry
 import com.example.tubesmobdev.data.model.TopArtist
 import com.example.tubesmobdev.data.model.TopSong
 import com.example.tubesmobdev.data.remote.response.ProfileResponse
@@ -22,9 +25,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+
+
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
@@ -33,21 +36,10 @@ class ProfileViewModel @Inject constructor(
     private val songRepository: SongRepository,
     private val listeningRecordRepository: ListeningRecordRepository,
     private val playerManager: PlayerManager,
-    private val servicePreferences: ServicePreferences,
+    private val servicePreferences: ServicePreferences
 ) : ViewModel() {
 
-    val totalListeningMinutes = MutableStateFlow(0L)
-    val topArtist = MutableStateFlow<TopArtist?>(null)
-    val topSong = MutableStateFlow<TopSong?>(null)
-
-    // Sound capsule streak data
-    private val _streakDays = MutableStateFlow(0)
-    val streakDays: StateFlow<Int> = _streakDays.asStateFlow()
-    private val _streakSong = MutableStateFlow<Song?>(null)
-    val streakSong: StateFlow<Song?> = _streakSong.asStateFlow()
-    private val _streakRange = MutableStateFlow("")
-    val streakRange: StateFlow<String> = _streakRange.asStateFlow()
-
+    // --- PROFILE & LOADING STATE ---
     private val _profile = MutableStateFlow<ProfileResponse?>(null)
     val profile: StateFlow<ProfileResponse?> = _profile.asStateFlow()
 
@@ -57,6 +49,7 @@ class ProfileViewModel @Inject constructor(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+    // --- SONG COUNTS ---
     private val _allSongsCount = MutableStateFlow(0)
     val allSongsCount: StateFlow<Int> = _allSongsCount.asStateFlow()
 
@@ -66,19 +59,91 @@ class ProfileViewModel @Inject constructor(
     private val _listenedSongsCount = MutableStateFlow(0)
     val listenedSongsCount: StateFlow<Int> = _listenedSongsCount.asStateFlow()
 
+    // --- LISTENING STATS ---
+    private val _totalListeningMinutes = MutableStateFlow(0L)
+    val totalListeningMinutes: StateFlow<Long> = _totalListeningMinutes.asStateFlow()
+
+    private val _allRecords = MutableStateFlow<List<ListeningRecord>>(emptyList())
+    val allRecords: StateFlow<List<ListeningRecord>> = _allRecords.asStateFlow()
+
+    private val _topArtists = MutableStateFlow<List<TopArtist>>(emptyList())
+    val topArtists: StateFlow<List<TopArtist>> = _topArtists.asStateFlow()
+
+    private val _topSongs = MutableStateFlow<List<TopSong>>(emptyList())
+    val topSongs: StateFlow<List<TopSong>> = _topSongs.asStateFlow()
+
+    private val _monthlyStreaks = MutableStateFlow<List<StreakEntry>>(emptyList())
+    val monthlyStreaks: StateFlow<List<StreakEntry>> = _monthlyStreaks.asStateFlow()
+
+    private val _monthlyStreakSongs = MutableStateFlow<List<MonthlyStreakSong>>(emptyList())
+    val monthlyStreakSongs: StateFlow<List<MonthlyStreakSong>> = _monthlyStreakSongs.asStateFlow()
+
     init {
         fetchProfile()
         fetchSongCounts()
+        observeListeningStats()
+        observeAllRecords()
     }
 
     private fun fetchSongCounts() {
         viewModelScope.launch {
             songRepository.getAllSongsCount()
                 .collect { _allSongsCount.value = it }
+        }
+        viewModelScope.launch {
             songRepository.getLikedSongsCount()
                 .collect { _likedSongsCount.value = it }
+        }
+        viewModelScope.launch {
             songRepository.getPlayedSongsCount()
                 .collect { _listenedSongsCount.value = it }
+        }
+    }
+
+    private fun observeListeningStats() {
+        // total listening time (menit)
+        viewModelScope.launch {
+            listeningRecordRepository.getTotalListeningTime()
+                .collect { millis ->
+                    _totalListeningMinutes.value = millis / 60000
+                }
+        }
+        // daftar top artist (tahun lalu)
+        viewModelScope.launch {
+            listeningRecordRepository.getTopArtistLastYear()
+                .collect { _topArtists.value = it }
+        }
+        // daftar top song (tahun lalu)
+        viewModelScope.launch {
+            listeningRecordRepository.getTopSongLastYear()
+                .collect { _topSongs.value = it }
+        }
+        // daftar streak per bulan
+        viewModelScope.launch {
+            listeningRecordRepository.getMonthlyTopStreak()
+                .collect { entries ->
+                    _monthlyStreaks.value = entries
+                    val userId = _profile.value?.id?.toLong() ?: return@collect
+                    // Build monthYear→Song list
+                    val list = entries.mapNotNull { entry ->
+                        val song = withContext(Dispatchers.IO) {
+                            songRepository.getSongById(entry.songId, userId)
+                        } ?: return@mapNotNull null
+                        Log.d("debug", "observeListeningStats: "+ song)
+                        MonthlyStreakSong(
+                            monthYear = entry.monthYear,
+                            song = song
+                        )
+                    }
+                    _monthlyStreakSongs.value = list
+                }
+        }
+    }
+
+    private fun observeAllRecords() {
+        viewModelScope.launch {
+            listeningRecordRepository.getAllRecords()
+                .collect { _allRecords.value = it }
         }
     }
 
@@ -87,92 +152,17 @@ class ProfileViewModel @Inject constructor(
             _isLoading.value = true
             _errorMessage.value = null
 
-            val result = profileRepository.getProfile()
-            result.fold(
+            profileRepository.getProfile().fold(
                 onSuccess = { resp ->
                     _profile.value = resp
-                    setupSoundCapsule(resp.id.toLong())
                 },
                 onFailure = { err ->
                     _errorMessage.value = err.message ?: "Unknown error"
                     Log.d("ProfileViewModel", err.message.toString())
                 }
             )
+
             _isLoading.value = false
-
-            // common flows
-            viewModelScope.launch {
-                listeningRecordRepository.getTotalListeningTime()
-                    .collect { totalListeningMinutes.value = (it ?: 0L) / 60000 }
-            }
-
-            viewModelScope.launch {
-                listeningRecordRepository.getTopArtist()
-                    .collect { topArtist.value = it }
-            }
-            viewModelScope.launch {
-                listeningRecordRepository.getTopSong()
-                    .collect { topSong.value = it }
-            }
-        }
-    }
-
-
-    private fun setupSoundCapsule(userId: Long) {
-        viewModelScope.launch(Dispatchers.Default) {
-            val entries = listeningRecordRepository.getRecordsForStreakAnalysis()
-            // group by title and map to sorted distinct dates
-            val formatter = DateTimeFormatter.ISO_DATE
-            data class StreakInfo(
-                val title: String,
-                val songId: Int,
-                val dates: List<LocalDate>
-            )
-            val infoList = entries.groupBy { it.title }
-                .map { (title, list) ->
-                    val dates = list.map { LocalDate.parse(it.date, formatter) }
-                        .distinct().sorted()
-                    StreakInfo(title, list.first().songId, dates)
-                }
-            // compute max consecutive streak
-            var bestTitle = ""
-            var bestId = 0
-            var bestStart = LocalDate.now()
-            var bestEnd = LocalDate.now()
-            var maxStreak = 0
-
-            infoList.forEach { info ->
-                var current = 1
-                var start = info.dates.firstOrNull() ?: return@forEach
-                info.dates.zipWithNext().forEach { (prev, next) ->
-                    if (next == prev.plusDays(1)) {
-                        current++;
-                    } else {
-                        current = 1; start = next
-                    }
-                    if (current > maxStreak) {
-                        maxStreak = current
-                        bestTitle = info.title
-                        bestId = info.songId
-                        bestStart = start
-                        bestEnd = next
-                    }
-                }
-                // handle single-day only
-                if (info.dates.isNotEmpty() && maxStreak == 0) {
-                    maxStreak = 1; bestTitle = info.title; bestId = info.songId
-                    bestStart = info.dates.first(); bestEnd = info.dates.first()
-                }
-            }
-
-            _streakDays.value = maxStreak
-            _streakRange.value = if (maxStreak > 1) {
-                "${bestStart.format(formatter)}–${bestEnd.format(formatter)}"
-            } else "${bestStart.format(formatter)}"
-
-            // fetch coverUrl
-            val song = songRepository.getSongById(bestId, userId)
-            _streakSong.value = song
         }
     }
 
@@ -187,9 +177,26 @@ class ProfileViewModel @Inject constructor(
     fun updateProfilePhoto(context: Context, uri: Uri) {
         viewModelScope.launch {
             _isLoading.value = true
-            val result = withContext(Dispatchers.IO) { profileRepository.updateProfilePhoto(context, uri) }
-            result.onSuccess { }
-                .onFailure { _errorMessage.value = it.message }
+            val result = withContext(Dispatchers.IO) {
+                profileRepository.updateProfilePhoto(context, uri)
+            }
+            result.onFailure {
+                _errorMessage.value = it.message
+            }
+            _isLoading.value = false
+        }
+    }
+
+    fun updateLocation(location: String) {
+        _profile.value = _profile.value?.copy(location = location)
+        viewModelScope.launch {
+            _isLoading.value = true
+            val result = withContext(Dispatchers.IO) {
+                profileRepository.updateLocation(location)
+            }
+            result.onFailure {
+                _errorMessage.value = it.message
+            }
             _isLoading.value = false
         }
     }

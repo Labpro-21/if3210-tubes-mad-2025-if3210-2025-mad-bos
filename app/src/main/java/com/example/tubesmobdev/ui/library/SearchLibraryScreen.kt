@@ -22,16 +22,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.ui.components.AddSongDrawer
 import com.example.tubesmobdev.ui.viewmodel.LibraryViewModel
-import com.example.tubesmobdev.ui.viewmodel.PlayerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchLibraryScreen(
-    navController: NavController,
     query: String,
     viewModel: LibraryViewModel = hiltViewModel(),
     onSongClick: (Song, List<Song>) -> Unit,

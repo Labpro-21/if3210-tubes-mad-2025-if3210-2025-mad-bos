@@ -84,14 +84,7 @@ class PlayerViewModel @OptIn(UnstableApi::class)
     init {
         observePlaybackState()
         observeSongEvents()
-//        viewModelScope.launch {
-//            playbackConnection.isControllerReady.collect { isReady ->
-//                if (isReady && !_hasRestored) {
-//                    _hasRestored = true
-//                    restoreLastSession()
-//                }
-//            }
-//        }
+
     }
 
 
@@ -190,7 +183,7 @@ class PlayerViewModel @OptIn(UnstableApi::class)
     private fun onSongChanged(song: Song) {
         viewModelScope.launch {
             saveListeningDuration()
-
+            Log.d("debug", "onSongChanged: ")
             _currentSong.value = song
             listeningStartTime = System.currentTimeMillis()
 
@@ -206,6 +199,8 @@ class PlayerViewModel @OptIn(UnstableApi::class)
         val startTime = listeningStartTime ?: return
         val endTime = System.currentTimeMillis()
         val listenedMs = endTime - startTime
+
+        Log.d("debug", "saveListeningDuration: "+ song.isOnline + listenedMs)
 
         if (listenedMs >= 5000 && !song.isOnline) {
             val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
@@ -322,6 +317,7 @@ class PlayerViewModel @OptIn(UnstableApi::class)
     }
 
     private fun updateQueue(queue: List<Song>) {
+        _currentQueue.value = queue
         viewModelScope.launch {
             playerRepository.saveQueue(queue)
         }
@@ -329,14 +325,14 @@ class PlayerViewModel @OptIn(UnstableApi::class)
 
     fun setCurrentQueue(queue: List<Song>) {
         _currentQueue.value = queue
+        updateQueue(queue)
     }
 
     fun addQueue(newSong: Song) {
-        viewModelScope.launch {
-            val updatedQueueList = playerPreferences.getQueue.first().toMutableList()
-            updatedQueueList.add(newSong)
-            updateQueue(updatedQueueList)
-        }
+        val updatedQueue = _currentQueue.value.toMutableList()
+        updatedQueue.add(newSong)
+        _currentQueue.value = updatedQueue
+        updateQueue(updatedQueue)
     }
 
     fun shareSong(song: Song) {
@@ -389,11 +385,9 @@ class PlayerViewModel @OptIn(UnstableApi::class)
         }
     }
 
-
     @OptIn(UnstableApi::class)
     fun restoreLastSession() {
         viewModelScope.launch {
-
             val queue = playerPreferences.getLastQueue.first()
             val song = playerPreferences.getLastPlayedSong.first()
             val position = playerPreferences.getLastPosition.first()
@@ -411,8 +405,6 @@ class PlayerViewModel @OptIn(UnstableApi::class)
                 val index = queue.indexOfFirst { it.id == song.id }.coerceAtLeast(0)
                 val controller = playbackConnection.getController()
 
-                Log.d("Restore", controller.isConnected.toString())
-
                 val mediaItems = queue.map { it.toMediaItem() }
                 controller.setMediaItems(mediaItems, index, 0)
                 controller.prepare()
@@ -423,6 +415,5 @@ class PlayerViewModel @OptIn(UnstableApi::class)
             playerPreferences.clearLastSession()
         }
     }
-
 
 }

@@ -494,7 +494,6 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                     )
                                 }
                                 SearchLibraryScreen(
-                                    navController,
                                     query = searchQuery,
                                     onSongClick = { song, songs ->
                                         playerViewModel.clearCurrentQueue()
