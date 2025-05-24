@@ -34,17 +34,24 @@ import java.util.Locale
 import javax.inject.Inject
 import android.content.Context
 import android.widget.Toast
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.tubesmobdev.data.local.preferences.PlayerPreferences
+import com.example.tubesmobdev.data.model.toMediaItem
 import com.example.tubesmobdev.service.generateQRCodeUrl
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.first
 
 @HiltViewModel
 class PlayerViewModel @OptIn(UnstableApi::class)
 @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val app: Application,
     private val songRepository: SongRepository,
     private val listeningRecordRepository: ListeningRecordRepository,
     private val playerRepository: PlayerPreferencesRepository,
     private val playerManager: PlayerManager,
-    private val playbackConnection: PlaybackConnection
+    private val playbackConnection: PlaybackConnection,
+    private val playerPreferences: PlayerPreferences
 ) : AndroidViewModel(app) {
 
     private var listeningStartTime: Long? = null
@@ -52,13 +59,7 @@ class PlayerViewModel @OptIn(UnstableApi::class)
     private val _currentSong = MutableStateFlow<Song?>(null)
     val currentSong: StateFlow<Song?> = _currentSong
 
-    private val _songList = MutableStateFlow<List<Song>>(emptyList())
-    val songList: StateFlow<List<Song>> = _songList
-
     private val _currentQueue = MutableStateFlow<List<Song>>(emptyList())
-    val currentQueue: StateFlow<List<Song>> = _currentQueue
-
-    private var currentQueueIndex = -1
 
     private val _repeatMode = MutableStateFlow(RepeatMode.NONE)
     val repeatMode: StateFlow<RepeatMode> = _repeatMode
@@ -72,15 +73,27 @@ class PlayerViewModel @OptIn(UnstableApi::class)
     private val _progress = MutableStateFlow(0f)
     val progress: StateFlow<Float> = _progress
 
+    private val _hasNext = MutableStateFlow(false)
+    val hasNext: StateFlow<Boolean> = _hasNext
+
+    private val _hasPrev = MutableStateFlow(false)
+    val hasPrev: StateFlow<Boolean> = _hasPrev
+    private var _hasRestored = false
 
 
     init {
-        observeQueue()
-        observeSongs()
         observePlaybackState()
         observeSongEvents()
-
+//        viewModelScope.launch {
+//            playbackConnection.isControllerReady.collect { isReady ->
+//                if (isReady && !_hasRestored) {
+//                    _hasRestored = true
+//                    restoreLastSession()
+//                }
+//            }
+//        }
     }
+
 
     override fun onCleared() {
         super.onCleared()
@@ -135,7 +148,8 @@ class PlayerViewModel @OptIn(UnstableApi::class)
     private fun observePlaybackState() {
         viewModelScope.launch {
             val controller = playbackConnection.getController()
-            while (true) {
+            while (controller.isConnected) {
+//                Log.d("Restore", controller.duration.coerceAtLeast(1L).toString())
                 _isPlaying.value = controller.isPlaying
                 val duration = controller.duration.coerceAtLeast(1L)
                 val position = controller.currentPosition
@@ -155,40 +169,23 @@ class PlayerViewModel @OptIn(UnstableApi::class)
         }
     }
 
-    private fun observeSongs() {
+
+    @OptIn(UnstableApi::class)
+    fun checkHasNext() {
         viewModelScope.launch {
-            songRepository.getAllSongs().collect { songs ->
-                _songList.value = songs
-                validateQueueWithSongs(songs)
-            }
+            val controller = playbackConnection.getController()
+            _hasNext.value = controller.hasNextMediaItem()
         }
     }
 
-    private fun observeQueue() {
+    @OptIn(UnstableApi::class)
+    fun checkHasPrev() {
         viewModelScope.launch {
-            playerRepository.getQueue().collect { queue ->
-                _currentQueue.value = queue
-            }
+            val controller = playbackConnection.getController()
+            _hasPrev.value = controller.hasPreviousMediaItem()
         }
     }
 
-    private fun validateQueueWithSongs(songs: List<Song>) {
-        val currentQueue = _currentQueue.value
-        if (currentQueue.isEmpty()) return
-
-        val validQueue = currentQueue.filter { queueSong ->
-            songs.any { it.id == queueSong.id }
-        }
-
-        if (currentQueue.size != validQueue.size) {
-            Log.d("PlayerViewModel", "Invalid songs removed from queue")
-            updateQueue(validQueue)
-
-            if (currentQueueIndex >= validQueue.size) {
-                currentQueueIndex = validQueue.size - 1
-            }
-        }
-    }
 
     private fun onSongChanged(song: Song) {
         viewModelScope.launch {
@@ -199,8 +196,8 @@ class PlayerViewModel @OptIn(UnstableApi::class)
 
             songRepository.updateLastPlayed(song, System.currentTimeMillis())
 
-            currentQueueIndex = _currentQueue.value.indexOfFirst { it.id == song.id }
-                .takeIf { it != -1 } ?: currentQueueIndex
+            checkHasNext()
+            checkHasPrev()
         }
     }
 
@@ -227,21 +224,25 @@ class PlayerViewModel @OptIn(UnstableApi::class)
     }
 
     fun playSong(song: Song) {
-        _currentQueue.value = listOf(song)
-        Log.d("Wilson","Queue ${_currentQueue.value}")
-        val queue = _currentQueue.value.ifEmpty { _songList.value }
+        val currentQueue = _currentQueue.value
+        val isInQueue = currentQueue.any { it.id == song.id }
 
-        playerManager.play(
-            song = song,
-            queue = queue,
-            isShuffle = _isShuffle.value,
-            repeatMode = _repeatMode.value
-        )
+        val queue = if (isInQueue) currentQueue else listOf(song)
+
+        _currentQueue.value = queue
 
         viewModelScope.launch {
+            playerManager.play(
+                song = song,
+                queue = queue,
+                isShuffle = _isShuffle.value,
+                repeatMode = _repeatMode.value,
+            )
+
             songRepository.updateLastPlayed(song, System.currentTimeMillis())
         }
 
+        onSongChanged(song)
     }
 
     @OptIn(UnstableApi::class)
@@ -253,15 +254,15 @@ class PlayerViewModel @OptIn(UnstableApi::class)
     }
 
     private fun clearSong() {
-        playerManager.clearWithCallback {
-            _currentSong.value = null
+        viewModelScope.launch {
+            playerManager.clearWithCallback {
+                _currentSong.value = null
+            }
         }
     }
 
     fun clearCurrentQueue() {
         _currentQueue.value = emptyList()
-        observeQueue()
-        observeSongs()
     }
 
     fun stopIfPlaying(song: Song) {
@@ -321,7 +322,6 @@ class PlayerViewModel @OptIn(UnstableApi::class)
     }
 
     private fun updateQueue(queue: List<Song>) {
-        _currentQueue.value = queue
         viewModelScope.launch {
             playerRepository.saveQueue(queue)
         }
@@ -329,14 +329,14 @@ class PlayerViewModel @OptIn(UnstableApi::class)
 
     fun setCurrentQueue(queue: List<Song>) {
         _currentQueue.value = queue
-        updateQueue(queue)
     }
 
     fun addQueue(newSong: Song) {
-        val updatedQueue = _currentQueue.value.toMutableList()
-        updatedQueue.add(newSong)
-        _currentQueue.value = updatedQueue
-        updateQueue(updatedQueue)
+        viewModelScope.launch {
+            val updatedQueueList = playerPreferences.getQueue.first().toMutableList()
+            updatedQueueList.add(newSong)
+            updateQueue(updatedQueueList)
+        }
     }
 
     fun shareSong(song: Song) {
@@ -389,6 +389,40 @@ class PlayerViewModel @OptIn(UnstableApi::class)
         }
     }
 
+
+    @OptIn(UnstableApi::class)
+    fun restoreLastSession() {
+        viewModelScope.launch {
+
+            val queue = playerPreferences.getLastQueue.first()
+            val song = playerPreferences.getLastPlayedSong.first()
+            val position = playerPreferences.getLastPosition.first()
+
+            Log.d("Restore", queue.toString())
+            Log.d("Restore", song.toString())
+            Log.d("Restore", position.toString())
+
+            if (queue.isNotEmpty() && song != null) {
+                _currentQueue.value = queue
+                _currentSong.value = song
+                _isPlaying.value = false
+                _progress.value = position / (song.duration.toFloat().coerceAtLeast(1f))
+
+                val index = queue.indexOfFirst { it.id == song.id }.coerceAtLeast(0)
+                val controller = playbackConnection.getController()
+
+                Log.d("Restore", controller.isConnected.toString())
+
+                val mediaItems = queue.map { it.toMediaItem() }
+                controller.setMediaItems(mediaItems, index, 0)
+                controller.prepare()
+                controller.seekTo(index, position)
+                controller.pause()
+            }
+
+            playerPreferences.clearLastSession()
+        }
+    }
 
 
 }

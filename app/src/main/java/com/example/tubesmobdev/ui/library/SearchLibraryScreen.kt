@@ -26,6 +26,7 @@ import androidx.navigation.NavController
 import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.ui.components.AddSongDrawer
 import com.example.tubesmobdev.ui.viewmodel.LibraryViewModel
+import com.example.tubesmobdev.ui.viewmodel.PlayerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,13 +34,14 @@ fun SearchLibraryScreen(
     navController: NavController,
     query: String,
     viewModel: LibraryViewModel = hiltViewModel(),
-    onSongClick: (Song) -> Unit,
+    onSongClick: (Song, List<Song>) -> Unit,
     onAddQueueClick: (Song) -> Unit,
     onSongDelete: (Song) -> Unit,
     onSongUpdate: (Song) -> Unit,
     onShowSnackbar: (String) -> Unit
 ) {
     val searchResults by viewModel.searchResults.collectAsState()
+    val allSongs by viewModel.songs.collectAsState()
 
     val context = LocalContext.current
 
@@ -52,7 +54,6 @@ fun SearchLibraryScreen(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(errorMessage) {
-
         errorMessage?.let {
             onShowSnackbar(it)
             viewModel.clearError()
@@ -101,7 +102,9 @@ fun SearchLibraryScreen(
         } else {
             SongRecyclerView(
                 songs = searchResults,
-                onItemClick = onSongClick,
+                onItemClick = {
+                    onSongClick(it, allSongs)
+                },
                 onDeleteClick = { songToDelete = it },
                 onEditClick = { songToEdit = it },
                 onAddQueueClick = onAddQueueClick

@@ -1,17 +1,24 @@
 // MainActivity.kt
 package com.example.tubesmobdev
 
+import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.OptIn
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModelProvider
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
+import com.example.tubesmobdev.service.MusicService
 import com.example.tubesmobdev.ui.navigation.AppNavigation
 import com.example.tubesmobdev.ui.theme.TubesMobdevTheme
 import com.example.tubesmobdev.ui.viewmodel.NavigationViewModel
+import com.google.common.util.concurrent.MoreExecutors
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

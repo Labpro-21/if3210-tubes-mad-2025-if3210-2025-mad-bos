@@ -27,13 +27,14 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     profileViewModel: ProfileViewModel = hiltViewModel(),
     connectionViewModel: ConnectionViewModel = hiltViewModel(),
-    onSongClick: (Song) -> Unit,
+    onSongClick: (Song, List<Song>) -> Unit,
     onHomeSongClick: (Song) -> Unit,
     customTopBar: @Composable (() -> Unit) = {},
     isCompact: Boolean
 ) {
     val newestSongs by viewModel.newestSongs.collectAsState()
     val recentlyPlayedSongs by viewModel.recentlyPlayedSongs.collectAsState()
+    val allSongs by viewModel.allSongs.collectAsState()
 
     val profile by profileViewModel.profile.collectAsState()
     val isLoadingProfile by profileViewModel.isLoading.collectAsState()
@@ -94,7 +95,9 @@ fun HomeScreen(
 
         SongRecyclerView(
             songs = recentlyPlayedSongs,
-            onItemClick = onSongClick,
+            onItemClick = {
+                onSongClick(it, allSongs)
+            },
             isHorizontal = false,
             modifier = Modifier.fillMaxWidth()
         )

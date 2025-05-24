@@ -155,10 +155,11 @@ object AppModule {
         return db.listeningRecordDao()
     }
 
+    @OptIn(androidx.media3.common.util.UnstableApi::class)
     @Provides
     @Singleton
-    fun providePlayerManager(@ApplicationContext context: Context): PlayerManager {
-        return PlayerManager(context)
+    fun providePlayerManager(@ApplicationContext context: Context, playbackConnection: PlaybackConnection): PlayerManager {
+        return PlayerManager(context, playbackConnection)
     }
 
     @OptIn(androidx.media3.common.util.UnstableApi::class)

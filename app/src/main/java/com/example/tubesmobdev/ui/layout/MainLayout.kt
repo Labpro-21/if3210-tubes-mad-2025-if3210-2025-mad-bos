@@ -51,7 +51,7 @@ import kotlinx.coroutines.CoroutineScope
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun MainLayout(outerNavController: NavController, startDestination: String = "home",  navigationViewModel: NavigationViewModel) {
+fun MainLayout(startDestination: String = "home",  navigationViewModel: NavigationViewModel) {
     val navController = rememberNavController()
     val playerViewModel: PlayerViewModel = hiltViewModel()
     val connectionViewModel: ConnectionViewModel = hiltViewModel()
@@ -82,6 +82,8 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val hasNext by playerViewModel.hasNext.collectAsState()
+    val hasPrev by playerViewModel.hasPrev.collectAsState()
 
     var wasOffline by remember { mutableStateOf(false) }
 
@@ -95,6 +97,7 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
     }
 
     LaunchedEffect(Unit) {
+        playerViewModel.restoreLastSession()
         navigationViewModel.navigateToFullPlayer.collect {
             Log.d("MainLayout", "Received signal to navigate to fullplayer")
             if (currentRoute != "fullplayer") {
@@ -222,14 +225,14 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                     navController = navController,
                                     isCompact = isCompact,
                                     onHomeSongClick = {
-                                        playerViewModel.clearCurrentQueue()
                                         playerViewModel.playSong(it)
                                         navController.navigate("fullplayer")
 
                                     },
-                                    onSongClick = {
+                                    onSongClick = { song, songs ->
                                         playerViewModel.clearCurrentQueue()
-                                        playerViewModel.playSong(it)
+                                        playerViewModel.setCurrentQueue(songs)
+                                        playerViewModel.playSong(song)
                                     }
                                 )
                             }
@@ -294,9 +297,10 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                 }
                                 LibraryScreen(
                                     navController,
-                                    onSongClick = {
+                                    onSongClick = { song, songs ->
                                         playerViewModel.clearCurrentQueue()
-                                        playerViewModel.playSong(it)
+                                        playerViewModel.setCurrentQueue(songs)
+                                        playerViewModel.playSong(song)
                                     },
                                     onSongDelete = { playerViewModel.stopIfPlaying(it) },
                                     onSongUpdate = {
@@ -402,8 +406,6 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                         onCycleRepeat = { playerViewModel.cycleRepeatMode() },
                                         isShuffle = isShuffle,
                                         onSeekTo = { playerViewModel.seekToPosition(it) },
-                                        onSwipeLeft = { playerViewModel.playNext() },
-                                        onSwipeRight = { playerViewModel.playPrevious() },
                                         onSongUpdate = {
                                             playerViewModel.updateCurrentSongIfMatches(
                                                 it
@@ -424,6 +426,8 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                         onShareClicked = {
                                             playerViewModel.shareSong(it)
                                         },
+                                        hasNext = hasNext,
+                                        hasPrev = hasPrev,
                                         customTopBar = {
                                             ScreenHeader(
                                                 isCompact = isCompact,
@@ -492,9 +496,9 @@ fun MainLayout(outerNavController: NavController, startDestination: String = "ho
                                 SearchLibraryScreen(
                                     navController,
                                     query = searchQuery,
-                                    onSongClick = {
+                                    onSongClick = { song, songs ->
                                         playerViewModel.clearCurrentQueue()
-                                        playerViewModel.playSong(it)
+                                        playerViewModel.playSong(song)
                                     },
                                     onSongDelete = { playerViewModel.stopIfPlaying(it) },
                                     onSongUpdate = {

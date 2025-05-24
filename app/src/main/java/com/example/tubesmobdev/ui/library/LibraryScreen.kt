@@ -40,7 +40,7 @@ import com.example.tubesmobdev.ui.viewmodel.LibraryViewModel
 fun LibraryScreen(
     navController: NavController,
     viewModel: LibraryViewModel = hiltViewModel(),
-    onSongClick: (Song) -> Unit,
+    onSongClick: (Song, List<Song>) -> Unit,
     onAddQueueClick: (Song) -> Unit,
     onSongDelete: (Song) -> Unit,
     onSongUpdate: (Song) -> Unit,
@@ -125,7 +125,13 @@ fun LibraryScreen(
             ) {
                 SongRecyclerView(
                     songs = songsToShow,
-                    onItemClick = onSongClick,
+                    onItemClick = {
+                        if (selectedTabIndex == 3){
+                            onSongClick(it, queueSongs)
+                        } else {
+                            onSongClick(it, allSongs)
+                        }
+                    },
                     onDeleteClick = { songToDelete = it },
                     onEditClick = { songToEdit = it },
                     onAddQueueClick = onAddQueueClick

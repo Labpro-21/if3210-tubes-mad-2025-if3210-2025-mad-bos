@@ -11,7 +11,6 @@ class RestartReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         Log.d("RestartReceiver", "Restarting TokenRefreshService")
 
-
         ServiceUtil.startService(context)
     }
 }

@@ -24,6 +24,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -151,12 +152,12 @@ fun MiniPlayerBar(
                     label = "SongTextTransition"
                 ) { currentSong ->
                     Column {
-                        Text(
+                        MarqueeText(
                             text = currentSong.title,
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            maxLines = 1,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
+                            startDelayMillis = 1500,
+                            endDelayMillis = 2500,
+                            modifier = Modifier.fillMaxWidth()
                         )
 
                         Text(

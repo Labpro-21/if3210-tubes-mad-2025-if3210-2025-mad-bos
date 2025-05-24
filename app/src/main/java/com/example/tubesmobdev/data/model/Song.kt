@@ -1,5 +1,8 @@
 package com.example.tubesmobdev.data.model
 
+import android.net.Uri
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -38,6 +41,20 @@ fun Song.toOnlineSong(): OnlineSong {
         country = ""
     )
     return onlineSong
+}
+
+fun Song.toMediaItem(): MediaItem {
+    return MediaItem.Builder()
+        .setMediaId(this.title)
+        .setUri(this.filePath)
+        .setMediaMetadata(
+            MediaMetadata.Builder()
+                .setTitle(this.title)
+                .setArtist(this.artist)
+                .setArtworkUri(Uri.parse(this.coverUrl))
+                .build()
+        )
+        .build()
 }
 
 fun formatDuration(durationMillis: Long): String {

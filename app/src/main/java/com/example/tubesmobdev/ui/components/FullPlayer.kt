@@ -90,8 +90,6 @@ fun FullPlayerScreen(
     isShuffle: Boolean,
     repeatMode: RepeatMode,
     onSeekTo: (Float) -> Unit,
-    onSwipeLeft: () -> Unit,
-    onSwipeRight: () -> Unit,
     onQRClicked: () -> Unit,
     isSheetOpen: Boolean,
     sheetState: SheetState,
@@ -100,6 +98,8 @@ fun FullPlayerScreen(
     onShareClicked: () -> Unit,
     onShowSnackbar: (String) -> Unit,
     customTopBar: @Composable (() -> Unit) = {},
+    hasNext: Boolean,
+    hasPrev: Boolean,
     isCompact: Boolean
 ) {
     var showAudioDialog by rememberSaveable { mutableStateOf(false) }
@@ -108,19 +108,7 @@ fun FullPlayerScreen(
     val dominantColor = rememberDominantColor(song.coverUrl ?: "").copy(alpha = 0.9f)
     val bgPainter = rememberAsyncImagePainter(song.coverUrl ?: "")
     val totalDurationMillis = song.duration.toInt()
-    val totalDurationSeconds = (totalDurationMillis / 1000L).toInt()
-    val currentSeconds = (progress * totalDurationSeconds).roundToInt()
-    fun formatTime(seconds: Int): String {
-        val m = seconds / 60
-        val s = seconds % 60
-        return "%d:%02d".format(m, s)
-    }
-    val coroutineScope = rememberCoroutineScope()
-    var offsetX by remember { mutableStateOf(0f) }
     val swipeOffset = remember { Animatable(0f) }
-    val swipeThreshold = 100f
-
-
 
     Box(
         modifier = Modifier
@@ -333,13 +321,13 @@ fun FullPlayerScreen(
                             tint = if (isShuffle) Color.Yellow else Color.White
                         )
                     }
-                    IconButton(onClick = onSkipPrevious) {
-                        Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", tint = Color.White)
+                    IconButton(onClick = onSkipPrevious, enabled = hasPrev) {
+                        Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", tint = if (hasPrev) Color.White else Color.Gray, modifier = Modifier.size(32.dp))
                     }
                     IconButton(onClick = onTogglePlayPause,    modifier = Modifier
                         .size(48.dp)
                         .background(
-                            color = Color.White.copy(alpha = 0.5f),
+                            color = Color.White,
                             shape = CircleShape
                         )) {
                         Icon(
@@ -349,8 +337,8 @@ fun FullPlayerScreen(
                             modifier = Modifier.size(32.dp)
                         )
                     }
-                    IconButton(onClick = onSkipNext) {
-                        Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = Color.White, modifier = Modifier.size(32.dp))
+                    IconButton(onClick = onSkipNext, enabled = hasNext) {
+                        Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = if (hasNext) Color.White else Color.Gray, modifier = Modifier.size(32.dp))
                     }
                     IconButton(onClick = onCycleRepeat) {
                         val repeatIcon = when (repeatMode) {

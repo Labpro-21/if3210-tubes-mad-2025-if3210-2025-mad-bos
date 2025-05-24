@@ -41,16 +41,17 @@
             android:exported="false"
             android:foregroundServiceType="dataSync"
         />
-        <service
-            android:name=".service.TokenRefreshAlarmService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync"
-            />
+<!--        <service-->
+<!--            android:name=".service.TokenRefreshAlarmService"-->
+<!--            android:exported="false"-->
+<!--            android:foregroundServiceType="dataSync"-->
+<!--            />-->
         <service
             android:name=".service.MusicService"
-            android:exported="true"
             android:foregroundServiceType="mediaPlayback"
-            android:permission="android.permission.BIND_MEDIA_SESSION_SERVICE">
+            android:exported="true"
+            android:enabled="true"
+            android:stopWithTask="false">
             <intent-filter>
                 <action android:name="androidx.media3.session.MediaSessionService" />
             </intent-filter>
@@ -76,8 +77,14 @@
                     android:pathPattern="/.*" />
             </intent-filter>
         </activity>
-        <receiver android:name=".receiver.AlarmReceiver" />
+<!--        <receiver android:name=".receiver.AlarmReceiver" />-->
         <receiver android:name=".receiver.RestartReceiver" />
+        <receiver android:name="androidx.media3.session.MediaButtonReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

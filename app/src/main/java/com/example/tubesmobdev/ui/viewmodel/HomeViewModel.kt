@@ -34,6 +34,9 @@ class HomeViewModel @Inject constructor(
     private val _recentlyPlayedSongs = MutableStateFlow<List<Song>>(emptyList())
     val recentlyPlayedSongs: StateFlow<List<Song>> get() = _recentlyPlayedSongs
 
+    private val _allSongs = MutableStateFlow<List<Song>>(emptyList())
+    val allSongs: StateFlow<List<Song>> get() = _allSongs
+
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> get() = _errorMessage
 
@@ -47,6 +50,7 @@ class HomeViewModel @Inject constructor(
     init {
         fetchNewestSongs()
         fetchRecentlyPlayedSongs()
+        fetchAllSongs()
     }
 
     private fun fetchNewestSongs() {
@@ -73,6 +77,20 @@ class HomeViewModel @Inject constructor(
                 _errorMessage.value = "Failed to fetch recently played songs: ${e.message}"
             }.collect {
                 _recentlyPlayedSongs.value = it
+            }
+        }
+    }
+
+    private fun fetchAllSongs() {
+        viewModelScope.launch {
+            combine(repository.getAllSongs(), connectivityStatus) { songs, status ->
+                if (status == ConnectivityStatus.Unavailable) {
+                    songs.filterNot { it.isOnline }
+                } else songs
+            }.catch { e ->
+                _errorMessage.value = "Failed to fetch recently played songs: ${e.message}"
+            }.collect {
+                _allSongs.value = it
             }
         }
     }

@@ -14,16 +14,15 @@ import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.CommandButton
-import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSession.ConnectionResult
 import androidx.media3.session.MediaSession.ConnectionResult.AcceptedResultBuilder
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
-import androidx.media3.ui.PlayerNotificationManager
 import com.example.tubesmobdev.MainActivity
 import com.example.tubesmobdev.R
+import com.example.tubesmobdev.data.local.preferences.PlayerPreferences
 import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.util.SongEventBus
 import com.google.common.reflect.TypeToken
@@ -38,33 +37,31 @@ import kotlinx.coroutines.launch
 @UnstableApi
 class MusicService : MediaSessionService() {
     private var mediaSession: MediaSession? = null
-    private var player: ExoPlayer? = null
-//    private var notificationManager: PlayerNotificationManager? = null
 
     private var currentQueue: List<Song> = emptyList()
-    private var currentIndex: Int = 0
     private val serviceScope = CoroutineScope(Dispatchers.Main)
 
+    private lateinit var playerPreferences: PlayerPreferences
 
     private val customCommandLike = SessionCommand(ACTION_TOGGLE_LIKE, Bundle.EMPTY)
     private val customCommandShuffle = SessionCommand(ACTION_TOGGLE_SHUFFLE, Bundle.EMPTY)
     private val customCommandRepeat = SessionCommand(ACTION_TOGGLE_REPEAT, Bundle.EMPTY)
+    private val customCommandSongQueue = SessionCommand(SONG_QUEUE, Bundle.EMPTY)
 
 
     companion object {
-//        private const val NOTIFICATION_ID = 69
-//        private const val CHANNEL_ID = "music_channel"
-
         const val ACTION_PLAY = "com.example.tubesmobdev.PLAY"
         const val ACTION_STOP = "com.example.tubesmobdev.STOP"
-        const val ACTION_TOGGLE_SHUFFLE = "com.example.tubesmobdev.SHUFFLE"
-        const val ACTION_TOGGLE_REPEAT = "com.example.tubesmobdev.REPEAT"
-        const val ACTION_TOGGLE_LIKE = "com.example.tubesmobdev.LIKE"
 
         const val EXTRA_QUEUE = "EXTRA_QUEUE"
         const val EXTRA_INDEX = "EXTRA_INDEX"
         const val EXTRA_SHUFFLE = "EXTRA_SHUFFLE"
         const val EXTRA_REPEAT = "EXTRA_REPEAT"
+
+        const val ACTION_TOGGLE_SHUFFLE = "com.example.tubesmobdev.SHUFFLE"
+        const val ACTION_TOGGLE_REPEAT = "com.example.tubesmobdev.REPEAT"
+        const val ACTION_TOGGLE_LIKE = "com.example.tubesmobdev.LIKE"
+        const val SONG_QUEUE = "com.example.tubesmobdev.SONG_QUEUE"
 
     }
 
@@ -80,6 +77,8 @@ class MusicService : MediaSessionService() {
             mediaSession: MediaSession,
             controller: MediaSession.ControllerInfo
         ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
+            Log.d("Restore", "playback resume")
+
             mediaSession.player.play()
             val mediaItems = buildList {
                 val count = mediaSession.player.mediaItemCount
@@ -104,7 +103,13 @@ class MusicService : MediaSessionService() {
             customCommand: SessionCommand,
             args: Bundle
         ): ListenableFuture<SessionResult> {
-
+             val player = mediaSession?.player
+             if (customCommand.customAction == SONG_QUEUE) {
+                val json = args.getString("queue")
+                val type = object : TypeToken<List<Song>>() {}.type
+                currentQueue = Gson().fromJson(json, type)
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            }
             val currentIndex = player?.currentMediaItemIndex ?: return Futures.immediateFuture(SessionResult(SessionResult.RESULT_ERROR_UNKNOWN))
             val song = currentQueue.getOrNull(currentIndex) ?: return Futures.immediateFuture(SessionResult(SessionResult.RESULT_ERROR_UNKNOWN))
             if (customCommand.customAction == ACTION_TOGGLE_LIKE) {
@@ -117,19 +122,19 @@ class MusicService : MediaSessionService() {
                 updateCustomButton(newSong)
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
             } else if (customCommand.customAction == ACTION_TOGGLE_SHUFFLE) {
-                val current = player?.shuffleModeEnabled ?: false
+                val current = player.shuffleModeEnabled
                 val toggled = !current
-                player?.shuffleModeEnabled = toggled
+                player.shuffleModeEnabled = toggled
                 emitToggleShuffle(toggled)
                 updateCustomButton(song)
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
             } else if (customCommand.customAction == ACTION_TOGGLE_REPEAT) {
-                player?.repeatMode = when (player?.repeatMode) {
+                player.repeatMode = when (player.repeatMode) {
                     REPEAT_MODE_OFF -> REPEAT_MODE_ALL
                     REPEAT_MODE_ALL -> REPEAT_MODE_ONE
                     else -> REPEAT_MODE_OFF
                 }
-                emitToggleRepeat(player?.repeatMode ?: REPEAT_MODE_OFF)
+                emitToggleRepeat(player.repeatMode)
 
                 updateCustomButton(song)
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
@@ -140,33 +145,37 @@ class MusicService : MediaSessionService() {
             session: MediaSession,
             controller: MediaSession.ControllerInfo
         ): ConnectionResult {
-            Log.d("CustomButton", "connect")
             return AcceptedResultBuilder(session)
                 .setAvailableSessionCommands(
                     ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon()
                         .add(customCommandShuffle)
                         .add(customCommandRepeat)
                         .add(customCommandLike)
+                        .add(customCommandSongQueue)
                         .build()
                 )
                 .build()
         }
+
+
     }
 
 
     override fun onCreate() {
         super.onCreate()
 
+        Log.d("Restore", "create")
 
-        player = ExoPlayer.Builder(this).build()
+        playerPreferences = PlayerPreferences(applicationContext)
 
-        player?.addListener(object : Player.Listener {
+        val player = ExoPlayer.Builder(this).build()
+
+        player.addListener(object : Player.Listener {
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 super.onMediaItemTransition(mediaItem, reason)
-                val index = player?.currentMediaItemIndex ?: return
+                val index = player.currentMediaItemIndex
                 if (index >= 0 && index < currentQueue.size) {
                     val song = currentQueue[index]
-                    Log.d("PlayerViewModel", "onmediatrans: $song", )
                     emitSongChange(song)
                     updateCustomButton(song)
 
@@ -177,17 +186,16 @@ class MusicService : MediaSessionService() {
                 super.onPlaybackStateChanged(playbackState)
                 if (playbackState == Player.STATE_ENDED) {
 
-                    val index = player?.currentMediaItemIndex ?: return
+                    val index = player.currentMediaItemIndex
                     val nextIndex = when {
-                        player?.repeatMode == REPEAT_MODE_ONE -> index
+                        player.repeatMode == REPEAT_MODE_ONE -> index
                         index < currentQueue.size - 1 -> index + 1
-                        player?.repeatMode == REPEAT_MODE_ALL -> 0
+                        player.repeatMode == REPEAT_MODE_ALL -> 0
                         else -> -1
                     }
 
                     if (nextIndex >= 0 && nextIndex < currentQueue.size) {
                         val nextSong = currentQueue[nextIndex]
-                        Log.d("PlayerViewModel", "onplaybackstate: $nextSong, $playbackState", )
 
                         emitSongChange(nextSong)
                     }
@@ -195,7 +203,7 @@ class MusicService : MediaSessionService() {
             }
         })
 
-        mediaSession = MediaSession.Builder(this, player!!)
+        mediaSession = MediaSession.Builder(this, player)
             .setSessionActivity(
                 PendingIntent.getActivity(
                     this,
@@ -207,73 +215,7 @@ class MusicService : MediaSessionService() {
             .setCallback(CustomCallback())
             .build()
 
-
-
-//        notificationManager = PlayerNotificationManager.Builder(
-//            this,
-//            NOTIFICATION_ID,
-//            CHANNEL_ID
-//        ).setMediaDescriptionAdapter(object : PlayerNotificationManager.MediaDescriptionAdapter {
-//            override fun getCurrentContentTitle(player: Player): CharSequence {
-//                return player.mediaMetadata.title ?: "Unknown Title"
-//            }
-//
-//            override fun createCurrentContentIntent(player: Player): PendingIntent? {
-//                val intent = Intent(this@MusicService, MainActivity::class.java).apply {
-//                    flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-//                    putExtra("NAVIGATE_TO_FULL_PLAYER", true)
-//                }
-//
-//                return PendingIntent.getActivity(
-//                    this@MusicService,
-//                    0,
-//                    intent,
-//                    PendingIntent.FLAG_MUTABLE
-//                )
-//            }
-//
-//            override fun getCurrentContentText(player: Player): CharSequence? {
-//                return player.mediaMetadata.artist ?: "Unknown Artist"
-//            }
-//
-//            override fun getCurrentLargeIcon(
-//                player: Player,
-//                callback: PlayerNotificationManager.BitmapCallback
-//            ): Bitmap? {
-//                val song = currentQueue.getOrNull(player.currentMediaItemIndex) ?: return null
-//                val coverPath = song.coverUrl ?: return null
-//
-//                return try {
-//                    val uri = Uri.parse(coverPath)
-//                    val inputStream = contentResolver.openInputStream(uri)
-//                    val bitmap = BitmapFactory.decodeStream(inputStream)
-//                    inputStream?.close()
-//                    bitmap
-//                } catch (e: Exception) {
-//                    null
-//                }
-//            }
-//        }).setNotificationListener(object : PlayerNotificationManager.NotificationListener {
-//            override fun onNotificationCancelled(notificationId: Int, dismissedByUser: Boolean) {
-//                stopSelf()
-//            }
-//        }).build()
-//
-//        notificationManager?.apply {
-//            setPlayer(player)
-//            setSmallIcon(R.drawable.logo_app)
-//            setMediaSessionToken(mediaSession!!.sessionCompatToken)
-//            setUseNextAction(true)
-//            setUsePreviousAction(true)
-//            setUsePlayPauseActions(true)
-//            setUseStopAction(true)
-//        }
-
-
-
-
     }
-
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
@@ -308,7 +250,7 @@ class MusicService : MediaSessionService() {
 
 
                 currentQueue = queue
-                currentIndex = index
+                val player = mediaSession?.player
 
                 player?.setMediaItems(mediaItems, index, 0)
                 player?.shuffleModeEnabled = shuffle
@@ -337,6 +279,7 @@ class MusicService : MediaSessionService() {
 
     private fun updateCustomButton(song: Song) {
         val buttons = mutableListOf<CommandButton>()
+        val player = mediaSession?.player
 
         val shuffleBtn = CommandButton.Builder()
             .setDisplayName("Shuffle")
@@ -375,6 +318,7 @@ class MusicService : MediaSessionService() {
         buttons.add(shuffleBtn)
 
         buttons.add(likeBtn)
+        Log.d("PlayerViewModel", "updated button")
 
         mediaSession?.setCustomLayout(buttons)
     }
@@ -409,11 +353,15 @@ class MusicService : MediaSessionService() {
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
+        Log.d("Restore", "Session ${mediaSession.toString()}")
+
         return mediaSession
     }
 
     override fun onDestroy() {
+        Log.d("Restore", "Destroyed")
         mediaSession?.run {
+            player.stop()
             player.release()
             release()
             mediaSession = null
@@ -422,17 +370,29 @@ class MusicService : MediaSessionService() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        super.onTaskRemoved(rootIntent)
-        Log.d("MusicService", "App removed from recent apps → Stop Service")
-        mediaSession?.run {
-            player.release()
-            release()
-            mediaSession = null
+        Log.d("Restore", "App removed from recent apps")
+
+        serviceScope.launch {
+            try {
+                if (currentQueue.isNotEmpty()) {
+                    playerPreferences.saveLastQueue(currentQueue)
+                }
+
+                val index = mediaSession?.player?.currentMediaItemIndex ?: -1
+                if (index in currentQueue.indices) {
+                    val currentSong = currentQueue[index]
+                    playerPreferences.saveLastPlayedSong(currentSong)
+                    val position = mediaSession?.player?.currentPosition ?: 0
+                    playerPreferences.saveLastPosition(position)
+                }
+            } catch (e: Exception) {
+                Log.w("Restore", "Gagal menyimpan state terakhir", e)
+            } finally {
+                mediaSession?.run {
+                    player.stop()
+                }
+                stopSelf()
+            }
         }
-
-        stopSelf()
     }
-
-
-
 }

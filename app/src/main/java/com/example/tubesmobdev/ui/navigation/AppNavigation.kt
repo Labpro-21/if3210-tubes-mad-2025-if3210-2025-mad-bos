@@ -59,7 +59,7 @@ fun AppNavigation(
             LoginScreen(navController = navController)
         }
         composable("main") {
-            MainLayout(navController, startDestination = initialDestination, navigationViewModel = navigationViewModel)
+            MainLayout(startDestination = initialDestination, navigationViewModel = navigationViewModel)
         }
     }
 }
