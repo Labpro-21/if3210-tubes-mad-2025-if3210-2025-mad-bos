@@ -53,7 +53,7 @@ fun EditLocationSheet(
     val locationPermission = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
     val countryCode = remember { mutableStateOf<String?>(null) }
     val selectionMode = remember { mutableStateOf(SelectionMode.AUTO) }
-
+    val selectCountryCode = remember { mutableStateOf<String?>(null) }
     val linkInput = remember { mutableStateOf("") }
     val linkCountryCode = remember { mutableStateOf<String?>(null) }
 
@@ -215,8 +215,9 @@ fun EditLocationSheet(
 
                     val locationDisplay = when (selectionMode.value) {
                         SelectionMode.LINK -> linkCountryCode.value ?: "Searching..."
-                        else -> when {
-                            countryCode.value != null -> countryCode.value!!
+                        SelectionMode.SELECT -> selectCountryCode.value ?: "No country selected"
+                        SelectionMode.AUTO -> when {
+                            countryCode.value != null ->countryCode.value!!
                             gpsResolutionStatus.value == LocationStatus.Failed -> "Failed to retrieve location"
                             else -> "Loading..."
                         }
@@ -278,6 +279,11 @@ fun EditLocationSheet(
                                     }
                                 }
                             }
+                        }
+                    }
+                    if (selectionMode.value == SelectionMode.SELECT) {
+                        CountrySelector { selectedIso ->
+                            selectCountryCode.value = selectedIso
                         }
                     }
                     Spacer(Modifier.height(24.dp))
