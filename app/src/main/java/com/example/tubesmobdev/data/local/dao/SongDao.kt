@@ -56,5 +56,36 @@ interface SongDao {
     @Query("SELECT * FROM songs WHERE id = :songId AND creatorId = :userId LIMIT 1")
     suspend fun getSongById(songId: Int, userId: Long): Song?
 
+    @Query("""
+    WITH favorite_artists AS (
+        SELECT artist
+        FROM listening_records
+        WHERE creatorId = :userId
+        GROUP BY artist
+        ORDER BY SUM(durationListened) DESC
+        LIMIT 5
+    ),
+    average_duration AS (
+        SELECT AVG(durationListened) AS avg_duration
+        FROM listening_records
+        WHERE creatorId = :userId
+    )
+    SELECT * FROM songs
+    WHERE artist IN (SELECT artist FROM favorite_artists)
+    ORDER BY abs(hex(printf('%s%s', title, :hourSeed))) % 100
+    LIMIT 20
+""")
+    suspend fun getRecommendedSongs(userId: Long, hourSeed: String): List<Song>
+
+    @Query("""
+    SELECT * FROM songs
+    WHERE id NOT IN (
+        SELECT songId FROM listening_records WHERE creatorId = :userId
+    )
+    ORDER BY abs(hex(printf('%s%s', title, :hourSeed))) % 100
+    LIMIT 20
+""")
+    suspend fun getRandomRecommendedSongs(userId: Long, hourSeed: String): List<Song>
+
 
 }

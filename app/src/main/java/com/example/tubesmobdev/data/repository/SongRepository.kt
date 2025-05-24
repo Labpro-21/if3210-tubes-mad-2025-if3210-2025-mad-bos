@@ -7,6 +7,7 @@ import com.example.tubesmobdev.data.local.preferences.AuthPreferences
 import com.example.tubesmobdev.data.local.preferences.IAuthPreferences
 import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.data.remote.api.SongApi
+import com.example.tubesmobdev.util.getCurrentHourSeed
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -188,4 +189,15 @@ class SongRepository @Inject constructor(
         return songDao.getSongById(songId, userId)
     }
 
+    suspend fun getRecommendedSongs(): List<Song> {
+        val userId = authPreferences.getUserId()
+        val hourSeed = getCurrentHourSeed() // e.g., "2025-05-25-15"
+        if (userId != null) {
+            val smartSongs = songDao.getRecommendedSongs(userId, hourSeed)
+            return if (smartSongs.isNotEmpty()) smartSongs
+            else songDao.getRandomRecommendedSongs(userId, hourSeed)
+        }else{
+            return emptyList()
+        }
+    }
 }

@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tubesmobdev.data.model.Song
+import com.example.tubesmobdev.data.model.toOnlineSong
 import com.example.tubesmobdev.data.remote.response.OnlineSong
 import com.example.tubesmobdev.data.remote.response.parseDuration
 import com.example.tubesmobdev.data.remote.response.toLocalSong
@@ -252,7 +253,9 @@ class OnlineSongViewModel @Inject constructor(
             try {
                 val result = if (code.lowercase() == "global") {
                     onlineSongRepository.getTopGlobalSongs()
-                } else {
+                } else if (code.lowercase() == "recomendation") {
+                    songRepository.getRecommendedSongs().map { it.toOnlineSong() }
+                }else {
                     onlineSongRepository.getTopSongsByCountry(code)
                 }
                 _songs.value = result

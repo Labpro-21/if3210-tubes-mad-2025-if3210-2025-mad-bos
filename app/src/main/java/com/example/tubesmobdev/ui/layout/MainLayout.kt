@@ -47,6 +47,7 @@ import com.example.tubesmobdev.ui.library.SearchLibraryScreen
 import com.example.tubesmobdev.ui.profile.ProfileScreen
 import com.example.tubesmobdev.ui.profile.SoundCapsuleSharePage
 import com.example.tubesmobdev.ui.profile.TimeListenedScreen
+import com.example.tubesmobdev.ui.topsongs.RecomendationSongScreen
 import com.example.tubesmobdev.ui.topsongs.TopSongsScreen
 import com.example.tubesmobdev.ui.viewmodel.ConnectionViewModel
 import com.example.tubesmobdev.ui.viewmodel.NavigationViewModel
@@ -244,6 +245,38 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                         playerViewModel.setCurrentQueue(songs)
                                         playerViewModel.playSong(song)
                                     }
+                                )
+                            }
+
+                            composable("top_songs/recomendation") { backStackEntry ->
+
+                                topBarContent = {
+                                    ScreenHeader(
+                                        title = "Song Recomendations",
+                                        isMainMenu = false,
+                                        onBack = { navController.popBackStack() },
+                                        dominantColor = if (connectivityStatus != ConnectivityStatus.Available) {
+                                            Color(0xFFB0B0B0)
+                                        } else {
+                                            Color(0xFFf16975)
+                                        }
+                                    )
+                                }
+
+                                RecomendationSongScreen(
+                                    chartCode = "recomendation",
+                                    onSongClick = { song, songs ->
+                                        playerViewModel.clearCurrentQueue()
+                                        playerViewModel.setCurrentQueue(songs)
+                                        playerViewModel.playSong(song)
+                                    },
+                                    viewModel = onlineSongViewModel,
+                                    onShowSnackbar = {
+//                                        snackbarMessage = it
+                                        Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                                    },
+                                    updateSongAfterDownload = { playerViewModel.updateCurrentSongAfterDownload() },
+                                    currentSong = currentSong
                                 )
                             }
 

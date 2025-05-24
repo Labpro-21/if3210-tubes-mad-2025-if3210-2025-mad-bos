@@ -14,3 +14,7 @@ fun extractMonthAndYear(input: String): Pair<String, String> {
     val year = yearMonth.format(DateTimeFormatter.ofPattern("yyyy", Locale.ENGLISH))
     return month to year
 }
+fun getCurrentHourSeed(): String {
+    val now = java.time.LocalDateTime.now()
+    return "${now.year}-${now.monthValue}-${now.dayOfMonth}-${now.hour}"
+}

@@ -45,6 +45,7 @@ import com.example.tubesmobdev.ui.components.ErrorStateProfile
 import com.example.tubesmobdev.ui.components.StatsColumn
 import com.example.tubesmobdev.ui.viewmodel.ConnectionViewModel
 import com.example.tubesmobdev.ui.viewmodel.ProfileViewModel
+import com.example.tubesmobdev.util.exportCsvFile
 import com.example.tubesmobdev.util.rememberDominantColor
 
 fun createImageUri(context: Context): Uri {
@@ -279,23 +280,3 @@ fun buildCsvFromCapsules(capsules: List<SoundCapsuleData>): String {
     return (listOf(header) + rows).joinToString("\n")
 }
 
-fun exportCsvFile(context: Context, content: String, filename: String) {
-    val resolver = context.contentResolver
-    val csvFileName = filename
-
-    val contentValues = ContentValues().apply {
-        put(MediaStore.MediaColumns.DISPLAY_NAME, csvFileName)
-        put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
-        put(MediaStore.MediaColumns.RELATIVE_PATH, "Download")
-    }
-
-    val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
-    if (uri != null) {
-        resolver.openOutputStream(uri).use { outputStream ->
-            outputStream?.write(content.toByteArray())
-        }
-        Toast.makeText(context, "Downloaded to Downloads/$csvFileName", Toast.LENGTH_SHORT).show()
-    } else {
-        Toast.makeText(context, "Failed to export CSV", Toast.LENGTH_SHORT).show()
-    }
-}
