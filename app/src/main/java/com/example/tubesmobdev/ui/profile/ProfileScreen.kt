@@ -249,8 +249,8 @@ fun ProfileScreen(
         EditLocationSheet(
             onDismiss = { isSheetOpen.value = false },
             onSave = {
-                Log.d("Wilson", "Selected country code: $it")
                 isSheetOpen.value = false
+                viewModel.updateLocation(it)
             }
         )
     }

@@ -186,4 +186,18 @@ class ProfileViewModel @Inject constructor(
             _isLoading.value = false
         }
     }
+
+    fun updateLocation(location: String) {
+        _profile.value = _profile.value?.copy(location = location)
+        viewModelScope.launch {
+            _isLoading.value = true
+            val result = withContext(Dispatchers.IO) {
+                profileRepository.updateLocation(location)
+            }
+            result.onFailure {
+                _errorMessage.value = it.message
+            }
+            _isLoading.value = false
+        }
+    }
 }

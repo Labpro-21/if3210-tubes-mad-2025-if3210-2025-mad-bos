@@ -302,8 +302,15 @@ fun EditLocationSheet(
                         Button(
                             onClick = {
                                 when (selectionMode.value) {
-                                    SelectionMode.LINK -> linkCountryCode.value?.takeIf { it != "Not found" }?.let { onSave(it) }
-                                    else -> countryCode.value?.let { onSave(it) }
+                                    SelectionMode.LINK -> {
+                                        linkCountryCode.value?.takeIf { it != "Not found" }?.let { onSave(it) }
+                                    }
+                                    SelectionMode.SELECT -> {
+                                        selectCountryCode.value?.let { onSave(it) }
+                                    }
+                                    SelectionMode.AUTO -> {
+                                        countryCode.value?.let { onSave(it) }
+                                    }
                                 }
                             },
                             enabled = when (selectionMode.value) {

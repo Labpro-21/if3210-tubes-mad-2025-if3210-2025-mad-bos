@@ -8,6 +8,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import android.net.Uri
 import android.content.Context
+import android.util.Log
 import java.io.File
 
 class ProfileRepository @Inject constructor(
@@ -17,6 +18,7 @@ class ProfileRepository @Inject constructor(
         return try {
             val response = profileApi.getProfile()
             if (response.isSuccessful) {
+                Log.d("Wilson","Hasilnya:${response.body()}")
                 val profile = response.body()
                 if (profile != null) {
                     Result.success(profile)
@@ -24,6 +26,7 @@ class ProfileRepository @Inject constructor(
                     Result.failure(Exception("Empty profile response"))
                 }
             } else {
+                Log.d("Wilson","Profile fetch failed with code: ${response.code()}")
                 Result.failure(Exception("Profile fetch failed with code: ${response.code()}"))
             }
         } catch (e: Exception) {
@@ -44,11 +47,35 @@ class ProfileRepository @Inject constructor(
                 tempFile.name,
                 RequestBody.create("image/*".toMediaTypeOrNull(), tempFile)
             )
-
-            val response = profileApi.updateProfilePhoto(requestFile)
+            val locationPart = RequestBody.create("text/plain".toMediaTypeOrNull(), "")
+            val response = profileApi.updateProfile(
+                profilePhoto = requestFile,
+                location = locationPart
+            )
 
             if (response.isSuccessful) {
                 response.body()?.let { Result.success(it) } ?: Result.failure(Exception("Empty body"))
+            } else {
+                Result.failure(Exception("Failed with code ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateLocation(location: String): Result<ProfileResponse> {
+        return try {
+            val locationPart = RequestBody.create(
+                "text/plain".toMediaTypeOrNull(),
+                location
+            )
+            val response = profileApi.updateProfile(
+                profilePhoto = null,
+                location = locationPart
+            )
+            if (response.isSuccessful) {
+                response.body()?.let { Result.success(it) }
+                    ?: Result.failure(Exception("Empty body"))
             } else {
                 Result.failure(Exception("Failed with code ${response.code()}"))
             }
