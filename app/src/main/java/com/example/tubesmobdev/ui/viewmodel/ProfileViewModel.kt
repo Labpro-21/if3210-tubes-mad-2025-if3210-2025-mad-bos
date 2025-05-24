@@ -11,6 +11,8 @@ import com.example.tubesmobdev.data.model.MonthlyStreakSong
 import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.data.model.StreakEntry
 import com.example.tubesmobdev.data.model.TopArtist
+import com.example.tubesmobdev.data.model.TopListItemData
+import com.example.tubesmobdev.data.model.TopListType
 import com.example.tubesmobdev.data.model.TopSong
 import com.example.tubesmobdev.data.remote.response.ProfileResponse
 import com.example.tubesmobdev.data.repository.IAuthRepository
@@ -78,6 +80,9 @@ class ProfileViewModel @Inject constructor(
     private val _monthlyStreakSongs = MutableStateFlow<List<MonthlyStreakSong>>(emptyList())
     val monthlyStreakSongs: StateFlow<List<MonthlyStreakSong>> = _monthlyStreakSongs.asStateFlow()
 
+    private val _monthlyTopList = MutableStateFlow<List<TopListItemData>>(emptyList())
+    val monthlyTopList: StateFlow<List<TopListItemData>> = _monthlyTopList.asStateFlow()
+
     init {
         fetchProfile()
         fetchSongCounts()
@@ -140,6 +145,14 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    suspend fun getSongById(songId: Int): Song? {
+        val userId = _profile.value?.id?.toLong() ?: return null
+        return withContext(Dispatchers.IO) {
+            songRepository.getSongById(songId, userId)
+        }
+    }
+
+
     private fun observeAllRecords() {
         viewModelScope.launch {
             listeningRecordRepository.getAllRecords()
@@ -163,6 +176,42 @@ class ProfileViewModel @Inject constructor(
             )
 
             _isLoading.value = false
+        }
+    }
+
+    fun fetchMonthlyTopList(monthYear: String, type: TopListType) {
+        viewModelScope.launch {
+            when (type) {
+                TopListType.Artist -> listeningRecordRepository
+                    .getMonthlyTopArtistsFor(monthYear)
+                    .collect { artists ->
+                        Log.d("TopList", "Top artists for $monthYear: $artists")
+                        _monthlyTopList.value = artists.map { ta ->
+                            TopListItemData(
+                                id       = ta.artist,
+                                title    = ta.artist,
+                                subtitle = ta.artist,
+                                coverUrl = ta.coverUrl,
+                                count    = ta.playCount
+                            )
+                        }
+                    }
+
+                TopListType.Song -> listeningRecordRepository
+                    .getMonthlyTopSongsFor(monthYear)
+                    .collect { songs ->
+                        Log.d("TopList", "Top songs for $monthYear: $songs")
+                        _monthlyTopList.value = songs.map { ts ->
+                            TopListItemData(
+                                id       = ts.songId.toString(),
+                                title    = ts.title,
+                                subtitle = ts.artist,
+                                coverUrl = ts.coverUrl,
+                                count    = ts.playCount
+                            )
+                        }
+                    }
+            }
         }
     }
 

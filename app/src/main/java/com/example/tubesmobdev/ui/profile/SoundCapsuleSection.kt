@@ -1,6 +1,7 @@
 package com.example.tubesmobdev.ui.profile
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,7 +41,9 @@ data class SoundCapsuleData(
 @Composable
 fun SoundCapsuleSection(
     capsules: List<SoundCapsuleData>,
-    onShareStreak: (SoundCapsuleData) -> Unit
+    onShareStreak: (SoundCapsuleData) -> Unit,
+    onArtistClick   : (String) -> Unit,
+    onSongClick     : (String) -> Unit
 ) {
     if (capsules.isEmpty()) {
         Box(
@@ -142,7 +145,8 @@ fun SoundCapsuleSection(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Card(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f)
+                            .clickable{ onArtistClick(data.month) },
                         shape = RoundedCornerShape(8.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
@@ -177,7 +181,8 @@ fun SoundCapsuleSection(
                         }
                     }
                     Card(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f)
+                            .clickable { onSongClick(data.month) },
                         shape = RoundedCornerShape(8.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {

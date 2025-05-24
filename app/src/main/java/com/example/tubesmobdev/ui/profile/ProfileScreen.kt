@@ -34,7 +34,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.tubesmobdev.data.model.TopListType
 import com.example.tubesmobdev.service.ConnectivityStatus
 import com.example.tubesmobdev.ui.components.EditLocationSheet
 import com.example.tubesmobdev.ui.components.ErrorStateProfile
@@ -58,7 +60,8 @@ fun createImageUri(context: Context): Uri {
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
-    connectionViewModel: ConnectionViewModel = hiltViewModel()
+    connectionViewModel: ConnectionViewModel = hiltViewModel(),
+    navController: NavController,
 ) {
     val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
     val tempCameraImageUri = remember { mutableStateOf<Uri?>(null) }
@@ -207,6 +210,14 @@ fun ProfileScreen(
                             capsules      = capsules,
                             onShareStreak = { data ->
                                 // misal: share data.month, data.minutesListened, dll.
+                            },
+                            onArtistClick = { monthYear ->
+                                viewModel.fetchMonthlyTopList(monthYear, TopListType.Artist)
+                                navController.navigate("topList/Artist/$monthYear")
+                            },
+                            onSongClick   = { monthYear ->
+                                viewModel.fetchMonthlyTopList(monthYear, TopListType.Song)
+                                navController.navigate("topList/Song/$monthYear")
                             }
                         )
                     }
