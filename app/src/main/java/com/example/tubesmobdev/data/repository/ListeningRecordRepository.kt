@@ -64,6 +64,17 @@ class ListeningRecordRepository @Inject constructor(
         }
     }
 
+    suspend fun getMonthlyTopArtistsFor(monthYear: String): Flow<List<TopArtist>> {
+        Log.d("debug", "getMonthlyTopArtistsFor: "+monthYear)
+        val userId = authPreferences.getUserId() ?: return flowOf(emptyList())
+        return dao.getMonthlyTopArtist(userId, monthYear)
+    }
+
+    suspend fun getMonthlyTopSongsFor(monthYear: String): Flow<List<TopSong>> {
+        val userId = authPreferences.getUserId() ?: return flowOf(emptyList())
+        return dao.getMonthlyTopSong(userId, monthYear)
+    }
+
     suspend fun getMonthlyTopStreak(): Flow<List<StreakEntry>> {
         val sql = """
             WITH

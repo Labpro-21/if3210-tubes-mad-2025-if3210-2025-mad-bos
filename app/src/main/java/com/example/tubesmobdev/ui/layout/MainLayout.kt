@@ -30,12 +30,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.tubesmobdev.data.model.TopListType
 import com.example.tubesmobdev.data.model.toOnlineSong
 import com.example.tubesmobdev.service.ConnectivityStatus
+import com.example.tubesmobdev.ui.common.TopListScreen
 import com.example.tubesmobdev.ui.components.*
 import com.example.tubesmobdev.ui.home.HomeScreen
 import com.example.tubesmobdev.ui.library.LibraryScreen
@@ -336,9 +340,9 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                             composable("profile") {
                                 topBarContent = {}
                                 if (isCompact){
-                                    ProfileScreen()
+                                    ProfileScreen(navController=navController)
                                 }else{
-                                    ProfileScreen()
+                                    ProfileScreen(navController=navController)
                                 }
                             }
                             composable("fullplayer") {
@@ -537,6 +541,34 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                             Toast.makeText(context, "Invalid QR format", Toast.LENGTH_SHORT).show()
                                         }
                                     }
+                                )
+                            }
+                            composable(
+                                "topList/{type}/{monthYear}",
+                                arguments = listOf(
+                                    navArgument("type") { type = NavType.StringType },
+                                    navArgument("monthYear") { type = NavType.StringType }
+                                )
+                            ) { backStackEntry ->
+                                topBarContent = {
+                                    ScreenHeader(
+                                        title = "Top Songs",
+                                        isMainMenu = false,
+                                        onBack = { navController.popBackStack() },
+                                    )
+                                }
+                                val typeString = backStackEntry.arguments?.getString("type")!!
+                                val month = backStackEntry.arguments?.getString("monthYear")!!
+                                val type = TopListType.valueOf(typeString)
+                                TopListScreen(
+                                    title       = "$type for $month",
+                                    bulanTahun  = month,
+                                    summaryText = "Your top $type in $month",
+                                    type        = type,
+                                    onItemClick =
+                                        {playerViewModel.clearCurrentQueue()
+                                            playerViewModel.playSong(it)},
+                                    onBack      = { navController.popBackStack() }
                                 )
                             }
                         }
