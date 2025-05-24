@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.tubesmobdev.service.ConnectivityStatus
 import com.example.tubesmobdev.util.ProfileUtil
@@ -26,7 +27,7 @@ fun TopSongSection(onChartClick: (String) -> Unit, location: String?, connection
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Column(modifier = Modifier.width(100.dp)) {
+        Column(modifier = Modifier.width(150.dp)) {
             if (connectionStatus == ConnectivityStatus.Available) {
                 TopSongCard(
                     title = "Top 50",
@@ -38,9 +39,11 @@ fun TopSongSection(onChartClick: (String) -> Unit, location: String?, connection
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Top Song Global",
+                    text = "Your daily update of the most played tracks right now - Global.",
                     style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                    modifier = Modifier.padding(top = 4.dp, start = 4.dp),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
             } else {
                 TopSongCard(
@@ -53,15 +56,17 @@ fun TopSongSection(onChartClick: (String) -> Unit, location: String?, connection
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Top Song Global",
+                    text = "Your daily update of the most played tracks right now - Global.",
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(top = 4.dp, start = 4.dp),
-                    color = Color.Gray
+                    color = Color.Gray,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
 
-        Column(modifier = Modifier.width(100.dp)) {
+        Column(modifier = Modifier.width(150.dp)) {
             if (
                 connectionStatus == ConnectivityStatus.Available &&
                 location != null &&
@@ -77,9 +82,11 @@ fun TopSongSection(onChartClick: (String) -> Unit, location: String?, connection
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Top Song Local",
+                    text = "Your daily update of the most played tracks right now - ${ProfileUtil.getCountryName(location)}.",
                     style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                    modifier = Modifier.padding(top = 4.dp, start = 4.dp),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
             } else {
                 TopSongCard(
@@ -92,10 +99,16 @@ fun TopSongSection(onChartClick: (String) -> Unit, location: String?, connection
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Top Song Local",
+                    text = "Your daily update of the most played tracks right now - ${location?.let {
+                        ProfileUtil.getCountryName(
+                            it
+                        )
+                    }}.",
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(top = 4.dp, start = 4.dp),
-                    color = Color.Gray
+                    color = Color.Gray,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }

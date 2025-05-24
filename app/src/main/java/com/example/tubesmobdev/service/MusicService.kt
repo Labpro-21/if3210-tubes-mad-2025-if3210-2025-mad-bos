@@ -208,8 +208,11 @@ class MusicService : MediaSessionService() {
                 PendingIntent.getActivity(
                     this,
                     0,
-                    Intent(this, MainActivity::class.java),
-                    PendingIntent.FLAG_IMMUTABLE
+                    Intent(this, MainActivity::class.java).apply {
+                        putExtra("NAVIGATE_TO_FULL_PLAYER", true)
+                        flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    },
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
             )
             .setCallback(CustomCallback())

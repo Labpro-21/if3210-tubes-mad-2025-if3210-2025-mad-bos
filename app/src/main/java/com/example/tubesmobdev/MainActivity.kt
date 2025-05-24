@@ -41,12 +41,6 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         handleIntent(intent)
-        val navigateToFullPlayer = intent?.getBooleanExtra("NAVIGATE_TO_FULL_PLAYER", false) == true
-        Log.d("MainLayout", navigateToFullPlayer.toString())
-
-        if (navigateToFullPlayer) {
-            navigationViewModel.triggerNavigateToFullPlayer()
-        }
     }
 
     private fun handleIntent(intent: Intent?) {

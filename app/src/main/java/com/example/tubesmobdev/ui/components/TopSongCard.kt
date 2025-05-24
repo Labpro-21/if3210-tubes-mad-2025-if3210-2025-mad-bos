@@ -25,9 +25,9 @@ fun TopSongCard(
 ) {
     Box(
         modifier = modifier
-            .height(100.dp)
+            .height(150.dp)
             .aspectRatio(1f)
-            .background(brush = gradient, shape = RoundedCornerShape(12.dp))
+            .background(brush = gradient, shape = RoundedCornerShape(10.dp))
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
@@ -40,16 +40,16 @@ fun TopSongCard(
                 text = title,
                 style = MaterialTheme.typography.titleLarge.copy(
                     color = Color.White,
-                    fontSize = 20.sp,
+                    fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = Color.White,
-                    fontSize = 12.sp
+                    fontSize = 16.sp
                 )
             )
         }

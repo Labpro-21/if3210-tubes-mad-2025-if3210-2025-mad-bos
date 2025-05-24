@@ -28,7 +28,7 @@ fun HomeScreen(
     profileViewModel: ProfileViewModel = hiltViewModel(),
     connectionViewModel: ConnectionViewModel = hiltViewModel(),
     onSongClick: (Song, List<Song>) -> Unit,
-    onHomeSongClick: (Song) -> Unit,
+    onHomeSongClick: (Song, List<Song>) -> Unit,
     customTopBar: @Composable (() -> Unit) = {},
     isCompact: Boolean
 ) {
@@ -54,6 +54,17 @@ fun HomeScreen(
         if (!isCompact){
             customTopBar()
         }
+
+        Text(
+            text = "Charts",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Start,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 12.dp, top = 16.dp, bottom = 16.dp)
+        )
+
         if (!isLoadingProfile) {
             TopSongSection   (
                 onChartClick = { chartCode ->
@@ -76,7 +87,7 @@ fun HomeScreen(
 
         SongRecyclerView(
             songs = newestSongs,
-            onItemClick = onHomeSongClick,
+            onItemClick = { onHomeSongClick(it, allSongs) },
             isHorizontal = true,
             modifier = Modifier.fillMaxWidth()
         )

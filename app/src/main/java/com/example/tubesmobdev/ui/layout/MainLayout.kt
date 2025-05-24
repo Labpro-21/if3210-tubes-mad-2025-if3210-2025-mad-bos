@@ -219,13 +219,15 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                             startDestination = startDestination
                         ) {
                             composable("home") {
-                                topBarContent = { ScreenHeader("Top Songs") }
+//                                topBarContent = { ScreenHeader("Charts") }
                                 HomeScreen(
                                     customTopBar = {ScreenHeader("New Songs", isCompact = isCompact)  },
                                     navController = navController,
                                     isCompact = isCompact,
-                                    onHomeSongClick = {
-                                        playerViewModel.playSong(it)
+                                    onHomeSongClick = {song, songs ->
+                                        playerViewModel.clearCurrentQueue()
+                                        playerViewModel.setCurrentQueue(songs)
+                                        playerViewModel.playSong(song)
                                         navController.navigate("fullplayer")
 
                                     },
