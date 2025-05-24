@@ -1,6 +1,7 @@
 package com.example.tubesmobdev.ui.library.adapter
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,7 +19,9 @@ class SongAdapter(
     private val onItemClick: (Song) -> Unit,
     private val onDeleteClick: ((Song) -> Unit)? = null,
     private val onEditClick: ((Song) -> Unit)? = null,
-    private val onAddQueueClick: ((Song) -> Unit)? = null ,
+    private val onAddQueueClick: ((Song) -> Unit)? = null,
+    private val onDeleteQueueClick: ((Int) -> Unit)? = null,
+    private val onDeleteQueueAllClick: (() -> Unit)? = null,
 ): RecyclerView.Adapter<SongAdapter.SongViewHolder>() {
     class SongViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val image: ImageView = itemView.findViewById(R.id.songImage)
@@ -47,7 +50,8 @@ class SongAdapter(
         holder.itemView.setOnClickListener {
             onItemClick(songs[position])
         }
-        if ((onEditClick != null || onDeleteClick != null) && !song.isOnline) {
+
+        if ((onEditClick != null || onDeleteClick != null || onAddQueueClick != null || onDeleteQueueClick != null) && !song.isOnline) {
             holder.menuIcon.visibility = View.VISIBLE
             holder.menuIcon.setOnClickListener { view ->
                 val popup = PopupMenu(view.context, view)
@@ -61,6 +65,11 @@ class SongAdapter(
                 }
                 if (onAddQueueClick != null){
                     menu.add("Add to queue")
+                }
+
+                if (onDeleteQueueClick != null){
+                    menu.add("Remove from queue")
+                    menu.add("Clear all queue")
                 }
 
                 popup.setOnMenuItemClickListener { item ->
@@ -77,12 +86,18 @@ class SongAdapter(
                             onAddQueueClick?.invoke(song)
                             true
                         }
+                        "Remove from queue" -> {
+                            onDeleteQueueClick?.invoke(song.id)
+                            true
+                        }
+                        "Clear all queue" -> {
+                            onDeleteQueueAllClick?.invoke()
+                            true
+                        }
                         else -> false
                     }
                 }
                 popup.show()
-
-
             }
         } else {
             holder.menuIcon.visibility = View.GONE

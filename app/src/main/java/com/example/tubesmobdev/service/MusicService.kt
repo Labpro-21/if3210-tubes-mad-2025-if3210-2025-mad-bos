@@ -374,6 +374,9 @@ class MusicService : MediaSessionService() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         Log.d("Restore", "App removed from recent apps")
+        if (rootIntent != null) {
+            Log.d("Restore", rootIntent.action.toString())
+        }
 
         serviceScope.launch {
             try {

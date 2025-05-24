@@ -44,7 +44,6 @@ import kotlinx.coroutines.flow.first
 @HiltViewModel
 class PlayerViewModel @OptIn(UnstableApi::class)
 @Inject constructor(
-    @ApplicationContext private val context: Context,
     private val app: Application,
     private val songRepository: SongRepository,
     private val listeningRecordRepository: ListeningRecordRepository,
@@ -78,7 +77,6 @@ class PlayerViewModel @OptIn(UnstableApi::class)
 
     private val _hasPrev = MutableStateFlow(false)
     val hasPrev: StateFlow<Boolean> = _hasPrev
-    private var _hasRestored = false
 
 
     init {
@@ -256,6 +254,16 @@ class PlayerViewModel @OptIn(UnstableApi::class)
         }
     }
 
+     fun updateCurrentSongAfterDownload() {
+        viewModelScope.launch {
+            val song = _currentSong.value
+            if (song != null) {
+                val newSong = song.serverId?.let { songRepository.findSongByServerId(it) }
+                _currentSong.value = newSong
+            }
+        }
+    }
+
     fun clearCurrentQueue() {
         _currentQueue.value = emptyList()
     }
@@ -317,7 +325,6 @@ class PlayerViewModel @OptIn(UnstableApi::class)
     }
 
     private fun updateQueue(queue: List<Song>) {
-        _currentQueue.value = queue
         viewModelScope.launch {
             playerRepository.saveQueue(queue)
         }
@@ -325,14 +332,30 @@ class PlayerViewModel @OptIn(UnstableApi::class)
 
     fun setCurrentQueue(queue: List<Song>) {
         _currentQueue.value = queue
-        updateQueue(queue)
     }
 
     fun addQueue(newSong: Song) {
-        val updatedQueue = _currentQueue.value.toMutableList()
-        updatedQueue.add(newSong)
-        _currentQueue.value = updatedQueue
-        updateQueue(updatedQueue)
+        viewModelScope.launch {
+            val updatedQueue = playerRepository.getQueue().first().toMutableList()
+            updatedQueue.add(newSong)
+            _currentQueue.value = updatedQueue
+            updateQueue(updatedQueue)
+        }
+    }
+
+    fun removeSongFromQueue(songId: Int){
+        viewModelScope.launch {
+            val updatedQueue = playerRepository.getQueue().first().toMutableList()
+            val newQueue = updatedQueue.filter { it.id != songId }
+            _currentQueue.value = newQueue
+            updateQueue(newQueue)
+        }
+    }
+
+    fun clearQueue() {
+        viewModelScope.launch {
+            playerRepository.clearQueue()
+        }
     }
 
     fun shareSong(song: Song) {

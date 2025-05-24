@@ -134,7 +134,7 @@ class ProfileViewModel @Inject constructor(
                         val song = withContext(Dispatchers.IO) {
                             songRepository.getSongById(entry.songId, userId)
                         } ?: return@mapNotNull null
-                        Log.d("debug", "observeListeningStats: "+ song)
+                        Log.d("debug", "observeListeningStats: $song")
                         MonthlyStreakSong(
                             monthYear = entry.monthYear,
                             song = song

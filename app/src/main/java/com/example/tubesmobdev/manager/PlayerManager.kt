@@ -35,17 +35,6 @@ class PlayerManager @OptIn(UnstableApi::class)
         val finalQueue = if (indexInQueue != -1) queue else listOf(song)
         val finalIndex = if (indexInQueue != -1) indexInQueue else 0
 
-//        val intent = Intent(context, MusicService::class.java)
-
-//        val intent = Intent(context, MusicService::class.java).apply  {
-//            action = MusicService.ACTION_PLAY
-//            putExtra(MusicService.EXTRA_QUEUE, Gson().toJson(finalQueue))
-//            putExtra(MusicService.EXTRA_INDEX, finalIndex)
-//            putExtra(MusicService.EXTRA_SHUFFLE, isShuffle)
-//            putExtra(MusicService.EXTRA_REPEAT, repeatMode.name)
-//        }
-//        ContextCompat.startForegroundService(context, intent)
-
         val mediaItems = finalQueue.map { it.toMediaItem() }
         val controller = playbackConnection.getController()
         val jsonQueue = Gson().toJson(finalQueue)
@@ -63,7 +52,6 @@ class PlayerManager @OptIn(UnstableApi::class)
         controller.prepare()
         controller.sendCustomCommand(SessionCommand(MusicService.SONG_QUEUE, Bundle.EMPTY), args)
         controller.play()
-
     }
 
     @OptIn(UnstableApi::class)

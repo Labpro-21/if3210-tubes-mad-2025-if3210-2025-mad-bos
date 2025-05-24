@@ -203,6 +203,8 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
 //                                        snackbarMessage = it
                                         Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
                                     },
+                                    updateSongAfterDonwload = { playerViewModel.updateCurrentSongAfterDownload() }
+
                                 )
                             }
                         }
@@ -277,6 +279,8 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
 //                                        snackbarMessage = it
                                         Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
                                     },
+                                    updateSongAfterDownload = { playerViewModel.updateCurrentSongAfterDownload() },
+                                    currentSong = currentSong
                                 )
                             }
 
@@ -335,6 +339,8 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                                 Icon(Icons.Default.Add, contentDescription = "Add")
                                             }
                                         })},
+                                    onDeleteQueueClick = { playerViewModel.removeSongFromQueue(it) },
+                                    onDeleteQueueAllClick = { playerViewModel.clearQueue() }
                                 )
                             }
                             composable("profile") {
@@ -375,7 +381,7 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                                     } else {
                                                         IconButton(
                                                             onClick = {
-                                                                if (!(downloadingSongs[song.serverId] == true)){
+                                                                if (downloadingSongs[song.serverId] != true){
                                                                     onlineSongViewModel.downloadAndInsertSong(context, song.toOnlineSong()) { result ->
                                                                         val message = if (result.isSuccess) {
                                                                             "Lagu berhasil diunduh"
@@ -446,7 +452,7 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                                     currentSong?.let { song ->
                                                         if (!song.isOnline) {
                                                             IconButton(onClick = { isSheetOpen = true }) {
-                                                                Icon(Icons.Default.Edit, contentDescription = "Edit")
+                                                                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color.White)
                                                             }
                                                         } else {
                                                             if (downloadingSongs[song.serverId] == true) {
@@ -465,7 +471,7 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                                             } else {
                                                                 IconButton(
                                                                     onClick = {
-                                                                        if (!(downloadingSongs[song.serverId] == true)){
+                                                                        if (downloadingSongs[song.serverId] != true){
                                                                             onlineSongViewModel.downloadAndInsertSong(context, song.toOnlineSong()) { result ->
                                                                                 val message = if (result.isSuccess) {
                                                                                     "Lagu berhasil diunduh"
@@ -473,6 +479,7 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                                                                     result.exceptionOrNull()?.message ?: "Gagal mengunduh lagu"
                                                                                 }
                                                                                 snackbarMessage = message
+                                                                                playerViewModel.updateCurrentSongAfterDownload()
                                                                             }
                                                                         }
                                                                     }
@@ -578,9 +585,11 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                 Column(
                                     modifier = Modifier
                                         .align(Alignment.BottomCenter)
-                                        .clickable {  if (isCompact) {
-                                            navController.navigate("fullplayer")
-                                        } }
+                                        .clickable {
+                                            if (isCompact) {
+                                                navController.navigate("fullplayer")
+                                            }
+                                        }
                                 ) {
                                     MiniPlayerBar(
                                         song = it,
@@ -595,6 +604,7 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
 //                                        snackbarMessage = it
                                             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
                                         },
+                                        updateSongAfterDonwload = { playerViewModel.updateCurrentSongAfterDownload() }
                                     )
                                 }
                             }

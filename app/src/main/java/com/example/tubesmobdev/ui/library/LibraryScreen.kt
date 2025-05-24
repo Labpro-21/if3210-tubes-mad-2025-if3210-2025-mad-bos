@@ -1,5 +1,6 @@
 package com.example.tubesmobdev.ui.library
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,7 +13,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +42,8 @@ fun LibraryScreen(
     viewModel: LibraryViewModel = hiltViewModel(),
     onSongClick: (Song, List<Song>) -> Unit,
     onAddQueueClick: (Song) -> Unit,
+    onDeleteQueueClick: (Int) -> Unit,
+    onDeleteQueueAllClick: () -> Unit,
     onSongDelete: (Song) -> Unit,
     onSongUpdate: (Song) -> Unit,
     isSheetOpen: Boolean,
@@ -123,19 +125,25 @@ fun LibraryScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = 80.dp)
             ) {
-                SongRecyclerView(
-                    songs = songsToShow,
-                    onItemClick = {
-                        if (selectedTabIndex == 3){
-                            onSongClick(it, queueSongs)
-                        } else {
-                            onSongClick(it, allSongs)
-                        }
-                    },
-                    onDeleteClick = { songToDelete = it },
-                    onEditClick = { songToEdit = it },
-                    onAddQueueClick = onAddQueueClick
-                )
+                if (selectedTabIndex == 3){
+                    SongRecyclerView(
+                        songs = songsToShow,
+                        onItemClick = { onSongClick(it, queueSongs) },
+                        onDeleteClick = { songToDelete = it },
+                        onEditClick = { songToEdit = it },
+                        onDeleteQueueClick = onDeleteQueueClick,
+                        onDeleteQueueAllClick = onDeleteQueueAllClick
+                    )
+                } else {
+                    SongRecyclerView(
+                        songs = songsToShow,
+                        onItemClick = { onSongClick(it, allSongs) },
+                        onDeleteClick = { songToDelete = it },
+                        onEditClick = { songToEdit = it },
+                        onAddQueueClick = onAddQueueClick,
+                    )
+                }
+
             }
         }
         if (isSheetOpen || songToEdit != null) {

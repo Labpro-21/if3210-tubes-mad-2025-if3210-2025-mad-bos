@@ -48,7 +48,6 @@ import com.example.tubesmobdev.R
 import androidx.compose.ui.res.painterResource
 import com.example.tubesmobdev.data.model.toOnlineSong
 import com.example.tubesmobdev.ui.viewmodel.OnlineSongViewModel
-import kotlinx.coroutines.flow.StateFlow
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -61,7 +60,8 @@ fun MiniPlayerBar(
     onSwipeLeft: () -> Unit,
     onSwipeRight: () -> Unit,
     onlineSongViewModel: OnlineSongViewModel,
-    onShowSnackbar: (String) -> Unit
+    onShowSnackbar: (String) -> Unit,
+    updateSongAfterDonwload: () -> Unit
 ) {
     val dominantColor = rememberDominantColor(song.coverUrl ?: "").copy(alpha = 0.9f)
     val swipeThreshold = 200f
@@ -174,34 +174,34 @@ fun MiniPlayerBar(
                 if (isDownloading) {
                     Box(
                         modifier = Modifier
-                            .size(24.dp)
+                            .size(50.dp)
                             .padding(horizontal = 12.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(
                             color = Color.White,
                             strokeWidth = 2.dp,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 } else {
                     IconButton(
                         onClick = {
-                            if (!isDownloading){
-                                onlineSongViewModel.downloadAndInsertSong(context, song.toOnlineSong()) { result ->
-                                    val message = if (result.isSuccess) {
-                                        "Lagu berhasil diunduh"
-                                    } else {
-                                        result.exceptionOrNull()?.message ?: "Gagal mengunduh lagu"
-                                    }
-                                    onShowSnackbar(message)
+                            onlineSongViewModel.downloadAndInsertSong(context, song.toOnlineSong()) { result ->
+                                val message = if (result.isSuccess) {
+                                    "Lagu berhasil diunduh"
+                                } else {
+                                    result.exceptionOrNull()?.message ?: "Gagal mengunduh lagu"
                                 }
+                                onShowSnackbar(message)
+                                updateSongAfterDonwload()
                             }
                         }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Download,
                             contentDescription = "Download",
+
                         )
                     }
                 }

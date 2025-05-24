@@ -113,9 +113,11 @@ class SongRepository @Inject constructor(
     }
 
     suspend fun updateLikedStatus(song: Song) {
-        if (song.isOnline) {
+        val userId = authPreferences.getUserId()
+
+        if (song.isOnline && userId != null) {
             val serverId = song.serverId ?: return
-            val existing = songDao.findSongByServerId(serverId)
+            val existing = songDao.findSongByServerId(serverId, userId)
             if (existing != null) {
                 updateSong(existing.copy(isLiked = song.isLiked))
             } else {
@@ -134,9 +136,10 @@ class SongRepository @Inject constructor(
 
 
     suspend fun updateLastPlayed(song: Song, timestamp: Long) {
-        if (song.isOnline) {
+        val userId = authPreferences.getUserId()
+        if (song.isOnline && userId != null) {
             val serverId = song.serverId ?: return
-            val existing = songDao.findSongByServerId(serverId)
+            val existing = songDao.findSongByServerId(serverId, userId)
             if (existing != null) {
                 updateSong(existing.copy(lastPlayed = timestamp))
             } else {
@@ -149,7 +152,6 @@ class SongRepository @Inject constructor(
             }
         } else {
             songDao.updateLastPlayed(song.id,timestamp)
-
         }
     }
 
@@ -166,7 +168,21 @@ class SongRepository @Inject constructor(
     }
 
     suspend fun findSongByServerId(serverId: Int): Song?{
-        return songDao.findSongByServerId(serverId)
+        val userId = authPreferences.getUserId()
+        return if (userId != null) {
+            songDao.findSongByServerId(serverId, userId)
+        } else {
+            null
+        }
+    }
+
+    suspend fun findSongById(songId: Int): Song?{
+        val userId = authPreferences.getUserId()
+        return if (userId != null) {
+            songDao.getSongById(songId, userId)
+        } else {
+            null
+        }
     }
     suspend fun getSongById(songId: Int, userId: Long): Song? {
         return songDao.getSongById(songId, userId)

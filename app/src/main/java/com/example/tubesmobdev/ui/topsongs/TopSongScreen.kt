@@ -37,6 +37,8 @@ fun TopSongsScreen(
     viewModel: OnlineSongViewModel = hiltViewModel(),
     connectionViewModel: ConnectionViewModel = hiltViewModel(),
     onShowSnackbar: (String) -> Unit,
+    updateSongAfterDownload: () -> Unit,
+    currentSong: Song?
 ) {
     val context = LocalContext.current
     val onlineSongs by viewModel.songs.collectAsState()
@@ -193,7 +195,7 @@ fun TopSongsScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Spacer(modifier = Modifier.weight(1f)) // kosongkan bagian kiri
+                            Spacer(modifier = Modifier.weight(1f))
                             IconButton(
                                 onClick = {
                                     if (songs.isNotEmpty()) {
@@ -252,10 +254,15 @@ fun TopSongsScreen(
                         onDownloadClick = {
                             viewModel.downloadAndInsertSong(context, song) { result -> val message = if (result.isSuccess) {
                                 "Lagu berhasil diunduh"
-                            } else {
-                                result.exceptionOrNull()?.message ?: "Gagal mengunduh lagu"
-                            }
+                                } else {
+                                    result.exceptionOrNull()?.message ?: "Gagal mengunduh lagu"
+                                }
                                 onShowSnackbar(message)
+                                if (currentSong != null) {
+                                    if (currentSong.serverId == song.id){
+                                        updateSongAfterDownload()
+                                    }
+                                }
                             }
 
                         },

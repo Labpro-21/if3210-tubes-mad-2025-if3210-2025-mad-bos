@@ -1,12 +1,8 @@
 package com.example.tubesmobdev.ui.library
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -20,7 +16,9 @@ fun SongRecyclerView(
     onItemClick: (Song) -> Unit,
     onDeleteClick: ((Song) -> Unit)? = null,
     onEditClick: ((Song) -> Unit)? = null,
-    onAddQueueClick :(Song) -> Unit,
+    onAddQueueClick:((Song) -> Unit)? = null,
+    onDeleteQueueClick: ((Int) -> Unit)? = null,
+    onDeleteQueueAllClick: (() -> Unit)? = null,
 ) {
     AndroidView(
         modifier = Modifier
@@ -28,7 +26,7 @@ fun SongRecyclerView(
         factory = { context ->
             RecyclerView(context).apply {
                 layoutManager = LinearLayoutManager(context)
-                adapter = SongAdapter(songs, onItemClick, onDeleteClick, onEditClick, onAddQueueClick)
+                adapter = SongAdapter(songs, onItemClick, onDeleteClick, onEditClick, onAddQueueClick, onDeleteQueueClick, onDeleteQueueAllClick)
                 setHasFixedSize(true)
             }
         },

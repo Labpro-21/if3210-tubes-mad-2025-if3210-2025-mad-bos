@@ -3,6 +3,7 @@ package com.example.tubesmobdev.data.repository
 import com.example.tubesmobdev.data.local.preferences.IPlayerPreferences
 import com.example.tubesmobdev.data.model.Song
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,4 +23,6 @@ class PlayerPreferencesRepository @Inject constructor(
     override suspend fun clearQueue() {
         playerPreferences.clearQueue()
     }
+
+
 }
