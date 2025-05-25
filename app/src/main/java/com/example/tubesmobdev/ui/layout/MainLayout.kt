@@ -373,6 +373,13 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                             IconButton(onClick = { isSheetOpen = true }) {
                                                 Icon(Icons.Default.Add, contentDescription = "Add")
                                             }
+                                            IconButton(onClick = { navController.navigate("qrScan") }) {
+                                                Icon(
+                                                    imageVector = Icons.Default.QrCodeScanner,
+                                                    contentDescription = "Scan QR",
+                                                    tint = Color.White
+                                                )
+                                            }
                                         })},
                                     onDeleteQueueClick = { playerViewModel.removeSongFromQueue(it) },
                                     onDeleteQueueAllClick = { playerViewModel.clearQueue() }
