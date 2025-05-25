@@ -509,11 +509,15 @@ class MusicService : MediaSessionService() {
             "${song.id}-${now}"
         }
 
+        if (song.creatorId == null) {
+            Log.e("MusicService", "creatorId is null for song ${song.title}")
+            return
+        }
+
         activeSession = ListeningSession(
             songId = song.id,
             title = song.title,
             artist = song.artist,
-            creatorId = song.creatorId,
             sessionId = sessionId,
             startTimestamp = existing?.startTimestamp ?: now,
             lastKnownTimestamp = now,
@@ -553,10 +557,10 @@ class MusicService : MediaSessionService() {
                     songId = session.songId,
                     title = session.title,
                     artist = session.artist,
-                    creatorId = session.creatorId,
                     date = today,
                     durationListened = duration,
-                    coverUrl = session.coverUrl
+                    coverUrl = session.coverUrl,
+                    creatorId = null
                 )
                 listeningRecordRepository.insertRecord(record)
             }
@@ -592,10 +596,10 @@ class MusicService : MediaSessionService() {
                         songId = session.songId,
                         title = session.title,
                         artist = session.artist,
-                        creatorId = session.creatorId,
                         date = today,
                         durationListened = duration,
-                        coverUrl = session.coverUrl
+                        coverUrl = session.coverUrl,
+                        creatorId = null
                     )
                     listeningRecordRepository.insertRecord(record)
                 }
