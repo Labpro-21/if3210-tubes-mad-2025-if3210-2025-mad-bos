@@ -330,34 +330,16 @@ class MusicService : MediaSessionService() {
 
     private fun emitSongStarted(song: Song) {
         serviceScope.launch {
-            var updateSong = song.copy()
-            val index = mediaSession?.player?.currentMediaItemIndex
-
-            if (song.isOnline && index != null && song.id == 0){
-                updateSong = songRepo.findSongByServerId(song.serverId!!) ?: song.copy()
-                val updatedQueue = currentQueue.toMutableList()
-                updatedQueue[index] = updateSong
-                currentQueue = updatedQueue
-            }
-            startListeningSession(updateSong)
-            SongEventBus.emitSongStarted(updateSong)
+            startListeningSession(song)
+            SongEventBus.emitSongStarted(song)
             Log.d("MusicService", "Emitted song started via EventBus")
         }
     }
 
     private fun emitSongPaused(song: Song) {
         serviceScope.launch {
-            var updateSong = song.copy()
-            val index = mediaSession?.player?.currentMediaItemIndex
-
-            if (song.isOnline && index != null && song.id == 0){
-                updateSong = songRepo.findSongByServerId(song.serverId!!) ?: song.copy()
-                val updatedQueue = currentQueue.toMutableList()
-                updatedQueue[index] = updateSong
-                currentQueue = updatedQueue
-            }
             stopListeningSession()
-            SongEventBus.emitSongPaused(updateSong)
+            SongEventBus.emitSongPaused(song)
             Log.d("MusicService", "Emitted song paused via EventBus")
         }
     }
