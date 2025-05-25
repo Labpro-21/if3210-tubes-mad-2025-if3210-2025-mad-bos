@@ -206,30 +206,55 @@ class MusicService : MediaSessionService() {
 
                     serviceScope.launch {
                         //memastikan lagu terbaru dan ada
+                        Log.d("checkapalah", "next:1")
+
                         val newSong = if (song.isOnline) {
                             songRepo.findSongByServerId(song.serverId!!)
                         } else {
                             songRepo.findSongById(song.id)
                         }
+                        Log.d("checkapalah", "next:2")
+
 
                         val updatedList = currentQueue.toMutableList()
+                        Log.d("checkapalah", "next:3")
+
 
                         if (newSong != null) {
-                            updatedList[index] = newSong
-                            currentQueue = updatedList
-                            player.replaceMediaItem(index, newSong.toMediaItem())
-                        } else {
-                            player.removeMediaItem(index)
-                            updatedList.removeAt(index)
-                            currentQueue = updatedList
+                            if (index in updatedList.indices) {
+                                updatedList[index] = newSong
+                                currentQueue = updatedList
+                                player.replaceMediaItem(index, newSong.toMediaItem())
+                                Log.d("checkapalah", "next:4")
 
-                            if (player.hasNextMediaItem()) {
-                                player.seekToNext()
                             } else {
-                                player.seekToPrevious()
+                                Log.d("checkapalah", "next:5")
+
+                                return@launch
+                            }
+                        } else {
+                            if (index in updatedList.indices) {
+                                player.removeMediaItem(index)
+                                updatedList.removeAt(index)
+                                currentQueue = updatedList
+                                Log.d("checkapalah", "next:6")
+
+
+                                if (player.hasNextMediaItem()) {
+                                    player.seekToNext()
+                                    Log.d("checkapalah", "next: ${player.nextMediaItemIndex} ${index} ${player.mediaItemCount}")
+
+                                } else {
+                                    player.seekToPrevious()
+                                    Log.d("checkapalah", "prev")
+
+                                }
                             }
                             return@launch
                         }
+
+                        Log.d("checkapalah", "next:7")
+
 
                         clearListeningSession()
                         emitSongChange(newSong)
