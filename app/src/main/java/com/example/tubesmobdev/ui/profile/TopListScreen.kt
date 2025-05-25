@@ -98,9 +98,9 @@ fun TopListScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            if (type == TopListType.Song) {
+                            if (type == TopListType.Song && data.id != null) {
                                 coroutineScope.launch {
-                                    val song = viewModel.getSongById(data.id.toInt())
+                                    val song = viewModel.getSongById(data.id.toInt() )
                                     if (song != null) {
                                         onItemClick(song)
                                     } else {
@@ -119,7 +119,7 @@ fun TopListScreen(
                         data    = data,
                         type = type,
                         onClick = {
-                            if (type == TopListType.Song) {
+                            if (type == TopListType.Song && data.id != null) {
                                 coroutineScope.launch {
                                     val song = viewModel.getSongById(data.id.toInt())
                                     if (song != null) {

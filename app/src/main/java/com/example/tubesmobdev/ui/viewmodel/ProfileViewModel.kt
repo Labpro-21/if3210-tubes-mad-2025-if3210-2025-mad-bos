@@ -273,7 +273,7 @@ class ProfileViewModel @Inject constructor(
                         Log.d("TopList", "Top songs for $monthYear: $songs")
                         _monthlyTopList.value = songs.map { ts ->
                             TopListItemData(
-                                id       = ts.songId.toString(),
+                                id       = ts.songId?.toString(),
                                 title    = ts.title,
                                 subtitle = ts.artist,
                                 coverUrl = ts.coverUrl,

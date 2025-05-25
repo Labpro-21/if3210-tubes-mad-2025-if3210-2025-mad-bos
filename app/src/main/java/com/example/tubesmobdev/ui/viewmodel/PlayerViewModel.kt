@@ -145,7 +145,6 @@ class PlayerViewModel @OptIn(UnstableApi::class)
         viewModelScope.launch {
             val controller = playbackConnection.getController()
             while (controller.isConnected) {
-//                Log.d("Restore", controller.duration.coerceAtLeast(1L).toString())
                 _isPlaying.value = controller.isPlaying
                 val duration = controller.duration.coerceAtLeast(1L)
                 val position = controller.currentPosition

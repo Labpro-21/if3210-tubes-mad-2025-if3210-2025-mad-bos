@@ -96,35 +96,15 @@ abstract class ListeningRecordDao {
         """
     SELECT
       strftime('%Y-%m', lr.date) AS monthYear,
-      (
-        SELECT s2.title
-        FROM listening_records lr2
-        JOIN songs s2 ON s2.id = lr2.songId
-        WHERE
-          lr2.creatorId = :userId
-          AND strftime('%Y-%m', lr2.date) = strftime('%Y-%m', lr.date)
-        GROUP BY lr2.songId
-        ORDER BY SUM(lr2.durationListened) DESC
-        LIMIT 1
-      ) AS title,
-      (
-        SELECT s3.coverUrl
-        FROM listening_records lr3
-        JOIN songs s3 ON s3.id = lr3.songId
-        WHERE
-          lr3.creatorId = :userId
-          AND strftime('%Y-%m', lr3.date) = strftime('%Y-%m', lr.date)
-        GROUP BY lr3.songId
-        ORDER BY SUM(lr3.durationListened) DESC
-        LIMIT 1
-      ) AS coverUrl,
-      lr.songId                            AS songId,
-      COUNT(*)                             AS playCount
+      lr.title AS title,
+      lr.artist AS artist,
+      lr.coverUrl AS coverUrl,
+      COUNT(*) AS playCount
     FROM listening_records lr
     WHERE
       lr.creatorId = :userId
       AND date(lr.date) >= date('now', '-1 year')
-    GROUP BY strftime('%Y-%m', lr.date)
+    GROUP BY strftime('%Y-%m', lr.date), lr.title, lr.artist
     ORDER BY monthYear DESC
     """
     )
@@ -151,34 +131,23 @@ abstract class ListeningRecordDao {
         monthYear: String
     ): Flow<List<TopArtist>>
 
-    @Query("""
+    @Query(
+        """
     SELECT
-      strftime('%Y-%m', lr.date)           AS monthYear,
-      lr.songId                             AS songId,
-      (SELECT s2.title
-         FROM songs s2
-         WHERE s2.id = lr.songId
-         LIMIT 1)                           AS title,
-      (SELECT s3.coverUrl
-         FROM songs s3
-         WHERE s3.id = lr.songId
-         LIMIT 1)                           AS coverUrl,
-      (SELECT s4.artist
-         FROM songs s4
-         WHERE s4.id = lr.songId
-         LIMIT 1)                           AS artist,
-      COUNT(*)                             AS playCount
+      strftime('%Y-%m', lr.date) AS monthYear,
+      lr.title AS title,
+      lr.artist AS artist,
+      lr.coverUrl AS coverUrl,
+      COUNT(*) AS playCount
     FROM listening_records lr
     WHERE
       lr.creatorId = :userId
       AND strftime('%Y-%m', lr.date) = :monthYear
-    GROUP BY lr.songId
+    GROUP BY lr.title, lr.artist
     ORDER BY playCount DESC
-  """)
-    abstract fun getMonthlyTopSong(
-        userId: Long,
-        monthYear: String
-    ): Flow<List<TopSong>>
+    """
+    )
+    abstract fun getMonthlyTopSong(userId: Long, monthYear: String): Flow<List<TopSong>>
     
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     abstract suspend fun insert(record: ListeningRecord): Long
