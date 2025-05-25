@@ -1,38 +1,48 @@
 package com.example.tubesmobdev.data.repository
 
+import android.content.Context
+import android.net.Uri
+import com.example.tubesmobdev.data.local.preferences.IProfilePreferences
 import com.example.tubesmobdev.data.remote.api.ProfileApi
 import com.example.tubesmobdev.data.remote.response.ProfileResponse
-import javax.inject.Inject
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
-import android.net.Uri
-import android.content.Context
-import android.util.Log
 import java.io.File
+import javax.inject.Inject
 
 class ProfileRepository @Inject constructor(
-    private val profileApi: ProfileApi
+    private val profileApi: ProfileApi,
+    private val profilePreferences: IProfilePreferences
 ) {
     suspend fun getProfile(): Result<ProfileResponse> {
         return try {
             val response = profileApi.getProfile()
             if (response.isSuccessful) {
-                Log.d("Wilson","Hasilnya:${response.body()}")
                 val profile = response.body()
                 if (profile != null) {
+                    profilePreferences.saveProfile(profile)
                     Result.success(profile)
                 } else {
                     Result.failure(Exception("Empty profile response"))
                 }
             } else {
-                Log.d("Wilson","Profile fetch failed with code: ${response.code()}")
-                Result.failure(Exception("Profile fetch failed with code: ${response.code()}"))
+                fallbackToCachedProfile("Fetch failed with code ${response.code()}")
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            fallbackToCachedProfile(e.message ?: "Unknown error")
         }
     }
+
+    private suspend fun fallbackToCachedProfile(reason: String): Result<ProfileResponse> {
+        val cached = profilePreferences.getCachedProfile()
+        return if (cached != null) {
+            Result.success(cached)
+        } else {
+            Result.failure(Exception("No cached profile available. Reason: $reason"))
+        }
+    }
+
     suspend fun updateProfilePhoto(context: Context, uri: Uri): Result<ProfileResponse> {
         return try {
             val inputStream = context.contentResolver.openInputStream(uri)
@@ -42,19 +52,24 @@ class ProfileRepository @Inject constructor(
                     input.copyTo(output)
                 }
             }
+
             val requestFile = MultipartBody.Part.createFormData(
                 "profilePhoto",
                 tempFile.name,
                 RequestBody.create("image/*".toMediaTypeOrNull(), tempFile)
             )
             val locationPart = RequestBody.create("text/plain".toMediaTypeOrNull(), "")
+
             val response = profileApi.updateProfile(
                 profilePhoto = requestFile,
                 location = locationPart
             )
 
             if (response.isSuccessful) {
-                response.body()?.let { Result.success(it) } ?: Result.failure(Exception("Empty body"))
+                response.body()?.let {
+                    profilePreferences.saveProfile(it)
+                    Result.success(it)
+                } ?: Result.failure(Exception("Empty body"))
             } else {
                 Result.failure(Exception("Failed with code ${response.code()}"))
             }
@@ -74,8 +89,10 @@ class ProfileRepository @Inject constructor(
                 location = locationPart
             )
             if (response.isSuccessful) {
-                response.body()?.let { Result.success(it) }
-                    ?: Result.failure(Exception("Empty body"))
+                response.body()?.let {
+                    profilePreferences.saveProfile(it)
+                    Result.success(it)
+                } ?: Result.failure(Exception("Empty body"))
             } else {
                 Result.failure(Exception("Failed with code ${response.code()}"))
             }
