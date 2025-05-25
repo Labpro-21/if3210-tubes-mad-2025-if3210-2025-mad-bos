@@ -20,8 +20,14 @@ class ListeningRecordRepository @Inject constructor(
 ) {
     suspend fun insertRecord(record: ListeningRecord): Result<Unit> {
         return try {
-            Log.d("debug", "insertRecord: "+ record.title)
-            dao.insertRecord(record)
+            val userId = authPreferences.getUserId()
+            if (userId == null) {
+                return Result.failure(Exception("User ID is null"))
+            }
+
+            val finalRecord = record.copy(creatorId = userId)
+            Log.d("debug", "insertRecord: ${finalRecord.title} with creatorId: $userId")
+            dao.insertRecord(finalRecord)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
