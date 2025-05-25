@@ -154,12 +154,13 @@ fun SoundCapsuleSection(
                                 Text("Top artist", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
                                 Text(data.topArtist!!.artist, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 Spacer(Modifier.height(16.dp))
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = "Artist icon",
+                                Image(
+                                    painter = rememberAsyncImagePainter(data.topArtist.coverUrl),
+                                    contentDescription = "Artist image",
                                     modifier = Modifier
                                         .size(64.dp)
-                                        .clip(CircleShape)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
                                 )
                             }
                             Icon(
