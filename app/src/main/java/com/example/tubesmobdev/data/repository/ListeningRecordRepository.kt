@@ -130,7 +130,7 @@ class ListeningRecordRepository @Inject constructor(
                   COUNT(*)  AS days
                 FROM grouped
                 GROUP BY songId, monthYear, grp
-                HAVING days >= 3
+                HAVING days >= 2
               ),
               top_per_month AS (
                 SELECT
