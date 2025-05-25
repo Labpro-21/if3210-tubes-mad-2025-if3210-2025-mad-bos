@@ -29,6 +29,7 @@ import com.example.tubesmobdev.data.model.ListeningRecord
 import com.example.tubesmobdev.data.model.ListeningSession
 import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.data.repository.ListeningRecordRepository
+import com.example.tubesmobdev.data.repository.SongRepository
 import com.example.tubesmobdev.util.SongEventBus
 import com.google.common.reflect.TypeToken
 import com.google.common.util.concurrent.Futures
@@ -59,6 +60,9 @@ class MusicService : MediaSessionService() {
 
     @Inject
     lateinit var playerPreferences: PlayerPreferences
+
+    @Inject
+    lateinit var songRepo: SongRepository
 
     private val customCommandLike = SessionCommand(ACTION_TOGGLE_LIKE, Bundle.EMPTY)
     private val customCommandShuffle = SessionCommand(ACTION_TOGGLE_SHUFFLE, Bundle.EMPTY)
@@ -326,16 +330,34 @@ class MusicService : MediaSessionService() {
 
     private fun emitSongStarted(song: Song) {
         serviceScope.launch {
-            startListeningSession(song)
-            SongEventBus.emitSongStarted(song)
+            var updateSong = song.copy()
+            val index = mediaSession?.player?.currentMediaItemIndex
+
+            if (song.isOnline && index != null && song.id == 0){
+                updateSong = songRepo.findSongByServerId(song.serverId!!) ?: song.copy()
+                val updatedQueue = currentQueue.toMutableList()
+                updatedQueue[index] = updateSong
+                currentQueue = updatedQueue
+            }
+            startListeningSession(updateSong)
+            SongEventBus.emitSongStarted(updateSong)
             Log.d("MusicService", "Emitted song started via EventBus")
         }
     }
 
     private fun emitSongPaused(song: Song) {
         serviceScope.launch {
+            var updateSong = song.copy()
+            val index = mediaSession?.player?.currentMediaItemIndex
+
+            if (song.isOnline && index != null && song.id == 0){
+                updateSong = songRepo.findSongByServerId(song.serverId!!) ?: song.copy()
+                val updatedQueue = currentQueue.toMutableList()
+                updatedQueue[index] = updateSong
+                currentQueue = updatedQueue
+            }
             stopListeningSession()
-            SongEventBus.emitSongPaused(song)
+            SongEventBus.emitSongPaused(updateSong)
             Log.d("MusicService", "Emitted song paused via EventBus")
         }
     }
