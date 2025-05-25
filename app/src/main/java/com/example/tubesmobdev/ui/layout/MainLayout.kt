@@ -616,6 +616,8 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                                     }
                                                     val onlineSong = onlineSongViewModel.getOnlineSongById(songId.toString())
                                                     val song = onlineSongViewModel.convertToLocalSong(onlineSong)
+                                                    playerViewModel.clearCurrentQueue()
+                                                    playerViewModel.setCurrentQueue(listOf(song))
                                                     playerViewModel.playSong(song)
                                                     navController.navigate("fullplayer")
                                                     Toast.makeText(context, "Playing song: ${song.title}", Toast.LENGTH_SHORT).show()

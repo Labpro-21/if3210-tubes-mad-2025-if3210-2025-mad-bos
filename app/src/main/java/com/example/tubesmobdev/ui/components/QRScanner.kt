@@ -21,6 +21,7 @@ import com.google.accompanist.permissions.*
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 
+@androidx.annotation.OptIn(ExperimentalGetImage::class)
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun QRScannerScreen(

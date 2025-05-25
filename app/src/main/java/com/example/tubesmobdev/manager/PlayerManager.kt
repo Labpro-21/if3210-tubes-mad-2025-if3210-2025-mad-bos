@@ -31,6 +31,7 @@ class PlayerManager @OptIn(UnstableApi::class)
         isShuffle: Boolean,
         repeatMode: RepeatMode,
     ) {
+         Log.d("SongPlayed", song.toString())
         val indexInQueue = queue.indexOfFirst { it.id == song.id }
         val finalQueue = if (indexInQueue != -1) queue else listOf(song)
         val finalIndex = if (indexInQueue != -1) indexInQueue else 0
@@ -42,6 +43,7 @@ class PlayerManager @OptIn(UnstableApi::class)
             putString("queue", jsonQueue)
         }
 
+        controller.sendCustomCommand(SessionCommand(MusicService.SONG_QUEUE, Bundle.EMPTY), args)
         controller.setMediaItems(mediaItems, finalIndex, 0)
         controller.shuffleModeEnabled = isShuffle
         controller.repeatMode = when (repeatMode) {
@@ -50,7 +52,6 @@ class PlayerManager @OptIn(UnstableApi::class)
             else -> REPEAT_MODE_OFF
         }
         controller.prepare()
-        controller.sendCustomCommand(SessionCommand(MusicService.SONG_QUEUE, Bundle.EMPTY), args)
         controller.play()
     }
 

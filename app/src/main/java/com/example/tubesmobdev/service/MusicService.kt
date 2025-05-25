@@ -207,6 +207,8 @@ class MusicService : MediaSessionService() {
                 val index = player.currentMediaItemIndex
                 val snapshot = _currentQueue.value.toMutableList()
                 val oldSong = snapshot.getOrNull(index) ?: return
+                Log.d("SongPlayedService", oldSong.toString())
+
 
                 serviceScope.launch {
                     val newSong = if (oldSong.isOnline) {
