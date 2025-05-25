@@ -105,6 +105,8 @@ class MusicService : MediaSessionService() {
             customCommand: SessionCommand,
             args: Bundle
         ): ListenableFuture<SessionResult> {
+            Log.d("eventbaru", "play pause ${customCommand.commandCode}")
+
              val player = mediaSession?.player
              if (customCommand.customAction == SONG_QUEUE) {
                 val json = args.getString("queue")
@@ -150,6 +152,7 @@ class MusicService : MediaSessionService() {
                 player.stop()
                 stopSelf()
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            } else if (customCommand.commandCode == 1){
             }
             return super.onCustomCommand(session, controller, customCommand, args)
         }
@@ -169,11 +172,7 @@ class MusicService : MediaSessionService() {
                 )
                 .build()
         }
-
-
-
     }
-
 
     override fun onCreate() {
         super.onCreate()
@@ -196,22 +195,61 @@ class MusicService : MediaSessionService() {
                 }
             }
 
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                super.onPlaybackStateChanged(playbackState)
-                if (playbackState == Player.STATE_ENDED) {
+//            override fun onPlaybackStateChanged(playbackState: Int) {
+//                super.onPlaybackStateChanged(playbackState)
+//                if (playbackState == Player.STATE_ENDED) {
+//
+//                    val index = player.currentMediaItemIndex
+//                    val nextIndex = when {
+//                        player.repeatMode == REPEAT_MODE_ONE -> index
+//                        index < currentQueue.size - 1 -> index + 1
+//                        player.repeatMode == REPEAT_MODE_ALL -> 0
+//                        else -> -1
+//                    }
+//
+//                    if (nextIndex >= 0 && nextIndex < currentQueue.size) {
+//                        val nextSong = currentQueue[nextIndex]
+//
+//                        emitSongChange(nextSong)
+//                    }
+//                }
+//            }
 
-                    val index = player.currentMediaItemIndex
-                    val nextIndex = when {
-                        player.repeatMode == REPEAT_MODE_ONE -> index
-                        index < currentQueue.size - 1 -> index + 1
-                        player.repeatMode == REPEAT_MODE_ALL -> 0
-                        else -> -1
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                val index = player.currentMediaItemIndex
+                var cusong: Song? = null
+                if (index >= 0 && index < currentQueue.size) {
+                    cusong = currentQueue[index]
+                }
+                if (cusong != null){
+                    if (isPlaying) {
+                        Log.d("PlayerListener", "Playback started")
+                        emitSongStarted(cusong)
+                    } else {
+                        Log.d("PlayerListener", "Playback paused or stopped")
+                        emitSongPaused(cusong)
                     }
+                }
+            }
 
-                    if (nextIndex >= 0 && nextIndex < currentQueue.size) {
-                        val nextSong = currentQueue[nextIndex]
+            override fun onPositionDiscontinuity(
+                oldPosition: Player.PositionInfo,
+                newPosition: Player.PositionInfo,
+                reason: Int
+            ) {
+                val index = player.currentMediaItemIndex
+                var csong: Song? = null
+                if (index >= 0 && index < currentQueue.size) {
+                    csong = currentQueue[index]
+                }
+                if (csong != null){
+                    if (reason == Player.DISCONTINUITY_REASON_SEEK) {
+                        Log.d(
+                            "PlayerListener",
+                            "User seeked from ${oldPosition.positionMs} to ${newPosition.positionMs}"
+                        )
 
-                        emitSongChange(nextSong)
+                        emitSongSeeked(csong, oldPosition.positionMs, newPosition.positionMs)
                     }
                 }
             }
@@ -351,6 +389,27 @@ class MusicService : MediaSessionService() {
         serviceScope.launch {
             SongEventBus.emitSong(song)
             Log.d("MusicService", "Emitted song change via EventBus: ${song.title}")
+        }
+    }
+
+    private fun emitSongStarted(song: Song) {
+        serviceScope.launch {
+            SongEventBus.emitSongStarted(song)
+            Log.d("MusicService", "Emitted song started via EventBus")
+        }
+    }
+
+    private fun emitSongPaused(song: Song) {
+        serviceScope.launch {
+            SongEventBus.emitSongPaused(song)
+            Log.d("MusicService", "Emitted song paused via EventBus")
+        }
+    }
+
+    private fun emitSongSeeked(song: Song, from: Long, to: Long) {
+        serviceScope.launch {
+            SongEventBus.emitSongSeeked(song, from, to)
+            Log.d("MusicService", "Emitted song seeked via EventBus")
         }
     }
 

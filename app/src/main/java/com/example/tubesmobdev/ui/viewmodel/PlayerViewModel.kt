@@ -39,7 +39,6 @@ import com.example.tubesmobdev.data.local.preferences.PlayerPreferences
 import com.example.tubesmobdev.data.model.toMediaItem
 import com.example.tubesmobdev.service.generateQRCodeUrl
 import com.google.gson.Gson
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 
 @HiltViewModel
@@ -134,6 +133,15 @@ class PlayerViewModel @OptIn(UnstableApi::class)
 //                    is SongEvent.StopApp -> {
 //
 //                    }
+                    is SongEvent.SongPaused -> {
+                        Log.d("PlayerViewModel", "Song paused: ${event.song}")
+                    }
+                    is SongEvent.SongSeeked -> {
+                        Log.d("PlayerViewModel", "Song seeked: ${event.song}, from: ${event.from}, to: ${event.to}")
+                    }
+                    is SongEvent.SongStarted -> {
+                        Log.d("PlayerViewModel", "Song started: ${event.song}")
+                    }
                 }
             }
         }
