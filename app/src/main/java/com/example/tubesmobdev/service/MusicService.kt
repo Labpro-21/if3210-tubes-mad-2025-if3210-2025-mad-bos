@@ -52,6 +52,8 @@ class MusicService : MediaSessionService() {
 
     private var activeSession: ListeningSession? = null
 
+    private var currentlyPlayed: Boolean = false
+
     private var currentQueue: List<Song> = emptyList()
     private val serviceScope = CoroutineScope(Dispatchers.Main)
 
@@ -209,12 +211,8 @@ class MusicService : MediaSessionService() {
                 if (index >= 0 && index < currentQueue.size) {
                     val song = currentQueue[index]
 
-                    if (player.isPlaying) {
-                        stopListeningSession()
-                    } else {
-                        clearListeningSession()
-                    }
-
+                    stopListeningSession()
+                    clearListeningSession()
                     emitSongChange(song)
                     updateCustomButton(song)
 
@@ -226,8 +224,10 @@ class MusicService : MediaSessionService() {
                 val song = currentQueue.getOrNull(index)
                 if (song != null) {
                     if (isPlaying) {
+                        Log.d("Change123", "started ${song}")
                         emitSongStarted(song)
                     } else {
+                        Log.d("Change123", "paused ${song}")
                         emitSongPaused(song)
                     }
                 }
@@ -266,7 +266,6 @@ class MusicService : MediaSessionService() {
         }
 
     }
-
 
     private fun updateCustomButton(song: Song) {
         val buttons = mutableListOf<CommandButton>()
@@ -323,6 +322,7 @@ class MusicService : MediaSessionService() {
 
     private fun emitSongChange(song: Song) {
         serviceScope.launch {
+            currentlyPlayed = true
             SongEventBus.emitSong(song)
             Log.d("MusicService", "Emitted song change via EventBus: ${song.title}")
         }
@@ -330,6 +330,7 @@ class MusicService : MediaSessionService() {
 
     private fun emitSongStarted(song: Song) {
         serviceScope.launch {
+            currentlyPlayed = true
             startListeningSession(song)
             SongEventBus.emitSongStarted(song)
             Log.d("MusicService", "Emitted song started via EventBus")
@@ -439,6 +440,9 @@ class MusicService : MediaSessionService() {
 
     private fun startListeningSession(song: Song) {
         val existing = activeSession
+        currentlyPlayed = true
+
+        android.util.Log.d("debug", "startListeningSession: "+existing)
 
         if (existing != null && existing.songId == song.id) {
             serviceScope.launch {
@@ -450,7 +454,11 @@ class MusicService : MediaSessionService() {
         }
 
         val now = System.currentTimeMillis()
-        val sessionId = existing?.sessionId ?: "${song.id}-${now}"
+        val sessionId = if (existing != null && existing.songId == song.id) {
+            existing.sessionId
+        } else {
+            "${song.id}-${now}"
+        }
 
         activeSession = ListeningSession(
             songId = song.id,
@@ -459,7 +467,8 @@ class MusicService : MediaSessionService() {
             creatorId = song.creatorId,
             sessionId = sessionId,
             startTimestamp = existing?.startTimestamp ?: now,
-            lastKnownTimestamp = now
+            lastKnownTimestamp = now,
+            coverUrl = song.coverUrl,
         )
 
         serviceScope.launch {
@@ -470,6 +479,8 @@ class MusicService : MediaSessionService() {
 
     private fun stopListeningSession() {
         val session = activeSession ?: return
+
+        android.util.Log.d("debug", "ststopListeningSessionop: "+session)
 
         val now = System.currentTimeMillis()
         val duration = (now - session.lastKnownTimestamp).coerceAtLeast(0L)
@@ -495,7 +506,8 @@ class MusicService : MediaSessionService() {
                     artist = session.artist,
                     creatorId = session.creatorId,
                     date = today,
-                    durationListened = duration
+                    durationListened = duration,
+                    coverUrl = session.coverUrl
                 )
                 listeningRecordRepository.insertRecord(record)
             }
@@ -506,7 +518,11 @@ class MusicService : MediaSessionService() {
     }
 
     private fun clearListeningSession(){
+        android.util.Log.d("debug", "clearListeningSession: ")
         activeSession = null
+        serviceScope.launch {
+            playerPreferences.clearListeningSession()
+        }
     }
 
     private suspend fun restoreUnfinishedListeningSession() {
@@ -529,7 +545,8 @@ class MusicService : MediaSessionService() {
                         artist = session.artist,
                         creatorId = session.creatorId,
                         date = today,
-                        durationListened = duration
+                        durationListened = duration,
+                        coverUrl = session.coverUrl
                     )
                     listeningRecordRepository.insertRecord(record)
                 }

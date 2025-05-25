@@ -11,6 +11,7 @@ data class ListeningRecord(
     val title: String,
     val artist: String,
     val creatorId: Long?,
+    val coverUrl: String?,
     val date: String,
     val durationListened: Long
 )

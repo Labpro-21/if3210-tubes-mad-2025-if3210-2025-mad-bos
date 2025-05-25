@@ -5,7 +5,7 @@
 
 Aplikasi Purrytify adalah platform streaming musik yang memudahkan pengguna untuk menambah dan menikmati lagu secara interaktif. Dengan fitur unggulan seperti penambahan lagu ke dalam koleksi pribadi, streaming berkualitas tinggi, serta kontrol pemutaran seperti mode "next" dan daftar putar yang dapat dikustomisasi, aplikasi ini didesain untuk memberikan pengalaman mendengarkan musik yang seru dan praktis. Antarmuka yang intuitif serta desain modern mendukung kemudahan navigasi dan penggunaan setiap harinya.
 
-## Table of Contents
+# Table of Contents
 - [Library yang Digunakan](#library-yang-digunakan)
 - [Screenshot Aplikasi](#screenshot-aplikasi)
 - [Pembagian Kerja Anggota Kelompok](#pembagian-kerja-anggota-kelompok)
@@ -15,7 +15,7 @@ Aplikasi Purrytify adalah platform streaming musik yang memudahkan pengguna untu
 
 ---
 
-## Library yang Digunakan
+# Library yang Digunakan
 
 - androidx-core-ktx: 1.12.0
 - androidx-core-splashscreen: 1.0.1
@@ -65,48 +65,56 @@ Aplikasi Purrytify adalah platform streaming musik yang memudahkan pengguna untu
 
 ---
 
-## Screenshot Aplikasi
-**Login**  
-![Login](Screenshots/Login.jpg)
+# Screenshot Aplikasi
+## Login
+![Login](Screenshots/MainPage/Login.jpg)
 
-**Home**  
-![Home](Screenshots/Home.jpg)
+## Home
+![Home](Screenshots/MainPage/Home.jpg)
 
-**Lbrary**  
-![Library](Screenshots/Library.jpg)
+## Library
+![Library](Screenshots/MainPage/Library.jpg)
 
-# Profile  
+## Profile  
 ![Profile](Screenshots/Profile/Profile_Page.jpg)
+![Profile](Screenshots/Profile/Profile_Photo.jpg)
 ![Profile](Screenshots/Profile/Location_GPS.jpg)
 ![Profile](Screenshots/Profile/Location_Link.jpg)
 ![Profile](Screenshots/Profile/Location_Selection.jpg)
 
-**Add Song**  
+## Add Song
 ![AddSong](Screenshots/AddSong.jpg)
 
-**FullPlayer**  
-![FullPlayer](Screenshots/FullPlayer.jpg)
+## Full Player  
+![FullPlayer](Screenshots/Player/FullPlayer.jpg)
+![FullPlayer](Screenshots/Player/FullPlayer_Share.jpg)
+![FullPlayer](Screenshots/Player/Notification.jpg)
 
-**Edit Song**  
+## Top Songs and Recommendation
+![Recommendations](Screenshots/Recommendations/Top_Country.jpg)
+![Recommendations](Screenshots/Recommendations/Top_Global.jpg)
+![Recommendations](Screenshots/Recommendations/Top_Recommendation.jpg)
+
+## Edit Song
 ![Edit](Screenshots/Edit.jpg)
 
-**LikedSong**  
+## Like Song 
 ![Liked](Screenshots/Liked.jpg)
 
-**Queue**  
+## Queue
 ![Queue](Screenshots/Queue.jpg)
 
-**No Network**  
+## Offline
 ![Offline](Screenshots/Offline.jpg)
 
-**Online again**  
+## Back Online
 ![Online](Screenshots/Online.jpg)
 
 --- 
 
-## Pembagian Kerja Anggota Kelompok
+# Pembagian Kerja Anggota Kelompok
 
-
+## Milestone 1
 | No | Bagian/Fitur            | Anggota (PIC) | 
 |----|-------------------------|---------------|
 | 1  | Header dan Navbar       | 13522117      | 
@@ -126,10 +134,29 @@ Aplikasi Purrytify adalah platform streaming musik yang memudahkan pengguna untu
 | 15 | Pencarian               | 13522117     | 
 | 16 | Accessibility Testing   | 13522019    | 
 
+## Milestone 2
+| No | Bagian/Fitur                                              | Anggota (PIC)  |
+| -- | --------------------------------------------------------- | ---------------|
+| 1  | Online Songs                                              | 13522117       |
+| 2  | Download Online Songs                                     | 13522117       |
+| 3  | Sound Capsule (Analytics) & Export                        | 13522077       |
+| 4  | Notification Controls                                     | 13522117       |
+| 5  | Audio Routing and Output Device                           | 13522077       |
+| 6  | Share Songs via URL                                       | 13522019       |
+| 7  | Share Songs via QR                                        | 13522019       |
+| 8  | Halaman Responsive                                        | Seluruh Anggota|
+| 9  | Edit Profile                                              | 13522019       |
+| 10 | Rekomendasi Lagu                                          | 13522077       |
+| 11 | Share Sound Capsule                                       | 13522077       |
+| 12 | Add Server Songs to Recently Played/Liked & Sound Capsule | 13522117       |
+| 13 | Caching                                                   | 13522077       |
+| 14 | OWASP                                                     | 13522019       |
+| 15 | Accessibility Testing                                     | 13522019       |
+
 
 ---
 
-## Jumlah Jam Persiapan dan Pengerjaan
+# Jumlah Jam Persiapan dan Pengerjaan
 
 
 | Nama           | Persiapan | Pengerjaan | Total Jam |
@@ -140,7 +167,7 @@ Aplikasi Purrytify adalah platform streaming musik yang memudahkan pengguna untu
 
 ---
 
-## Penanganan dan Analisis OWASP
+# Penanganan dan Analisis OWASP
 
 **OWASP Top 10 Mobile** adalah daftar sepuluh kerentanan keamanan yang paling umum ditemukan pada aplikasi mobile. Daftar ini diterbitkan oleh Open Web Application Security Project (OWASP), organisasi nirlaba yang berfokus pada peningkatan keamanan perangkat lunak. Tujuan utama dari OWASP Top 10 Mobile adalah untuk meningkatkan kesadaran pengembang akan ancaman keamanan dan mendorong penerapan langkah-langkah mitigasi guna mengurangi risiko pada aplikasi mobile.
 
@@ -152,12 +179,12 @@ Dalam eksperimen pengujian ini, kami melakukan analisis keamanan terhadap aplika
 
 ---
 
-### M4: Insufficient Input/Output Validation
+## M4: Insufficient Input/Output Validation
 
 **Deskripsi:**  
-M4 terjadi ketika aplikasi tidak melakukan validasi dan sanitasi input pengguna maupun output data dengan benar. Hal ini dapat membuka celah bagi serangan seperti SQL injection, Cross-Site Scripting (XSS), dan manipulasi data lainnya. Secara umum, validasi dilakukan pada bagian server, namun dalam implementasi kali ini, kami sebiasa mungkin mengimplementasikan pada sisi client.
+M4 terjadi ketika aplikasi tidak melakukan validasi dan sanitasi input pengguna maupun output data dengan benar. Hal ini dapat membuka celah bagi serangan seperti SQL injection, Cross-Site Scripting (XSS), dan manipulasi data lainnya. Secara umum, validasi dilakukan pada bagian server, namun dalam implementasi kali ini, kami sebisa mungkin mengimplementasikan pada sisi client.
 
-**Langkah Penanganan:**  
+### Implementasi Milestone 1
 - **Validasi Input:**  
   - Menggunakan validasi format (misalnya, regex untuk email) pada semua input pengguna dan memastikan data tidak kosong dan memenuhi standar yang telah ditetapkan (contoh: memeriksa apakah input berupa email atau password sudah terisi dengan benar).
   ![Validasi input](Assets/OWASP_4/OWASP4.2.png)
@@ -172,10 +199,19 @@ M4 terjadi ketika aplikasi tidak melakukan validasi dan sanitasi input pengguna 
 **Deskripsi:**  
 M8 berhubungan dengan kesalahan konfigurasi sistem, baik pada server, aplikasi, maupun library yang digunakan. Konfigurasi yang tidak optimal atau masih menggunakan pengaturan default dapat membuat aplikasi rentan terhadap serangan.
 
-**Langkah Penanganan:**  
+### Implementasi Milestone 1
 - **Perbaikan Konfigurasi:**  
 Konfigurasi buildTypes di dalam file build.gradle ini sesuai dengan M8 karena mengatur proses build aplikasi Android pada versi rilis (release), yang penting untuk memastikan aplikasi yang diproduksi siap untuk distribusi. Pengaturan isDebuggable = false mencegah proses debug pada aplikasi rilis, menjaga keamanan aplikasi. Sementara itu, isMinifyEnabled = true mengaktifkan minifikasi menggunakan ProGuard atau R8, yang mengurangi ukuran file aplikasi dan mengobfuskasi kode agar lebih sulit dibongkar.
   ![Handle Built](Assets/OWASP_8/OWASP_8.1.png)
+
+### Implementasi Milestone 2
+- **Deklarasi perizinan sesuai kebutuhan:**  
+  Memastikan bahwa hanya izin (permission) yang benar-benar dibutuhkan saja yang dideklarasikan dalam AndroidManifest.xml. Dengan membatasi perizinan secara tepat, aplikasi mengurangi permukaan serangan dan melindungi privasi pengguna dari akses yang tidak sah.
+  ![Handle Permission](Assets/OWASP_8/OWASP_8.2.png)
+- **Memastikan penggunaan dan menangani kasus perizinan tertolak**  
+  Memastikan bahwa menyediakan kasus dimana perizinan ditolak pengguna , sehingga aplikasi yang dibuat tidak mengalami random crash atau force close
+
+  ![Handle Fallback](Assets/OWASP_8/OWASP_8.3.png)
 ---
 
 ### M9: Insecure Data Storage

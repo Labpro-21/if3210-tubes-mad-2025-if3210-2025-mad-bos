@@ -6,6 +6,7 @@ data class ListeningSession(
     val title: String,
     val artist: String,
     val creatorId: Long?,
+    val coverUrl: String?,
     val startTimestamp: Long,
     val lastKnownTimestamp: Long = startTimestamp,
     val accumulatedDuration: Long = 0L
