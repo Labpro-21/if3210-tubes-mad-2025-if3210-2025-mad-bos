@@ -16,7 +16,11 @@ import coil.compose.AsyncImage
 import com.example.tubesmobdev.data.model.SoundCapsuleStreakShareData
 import com.example.tubesmobdev.util.rememberDominantColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import coil.request.ImageRequest
+import com.example.tubesmobdev.R
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun SoundCapsuleShareStreakContent(
@@ -40,7 +44,7 @@ fun SoundCapsuleShareStreakContent(
             .clip(RoundedCornerShape(12.dp))
             .background(dominantColor)
             .padding(24.dp)
-            .width(300.dp)
+            .fillMaxWidth()
             .wrapContentHeight(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -49,6 +53,8 @@ fun SoundCapsuleShareStreakContent(
             color = Color(0xFF3B3B3B)
         ) {
             Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {Column(
                 modifier = Modifier.padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -91,22 +97,41 @@ fun SoundCapsuleShareStreakContent(
                     modifier = Modifier.align(Alignment.Start)
                 )
 
-                Spacer(Modifier.height(24.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                Spacer(Modifier.height(8.dp))
+                }
+                Surface(
+                    color = Color(0xFF1F1F1F),
+                    shape = RoundedCornerShape(bottomEnd = 12.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = "Purritify",
-                        color = Color.LightGray,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        text = data.streakRange,
-                        color = Color.LightGray,
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.logo_app),
+                                contentDescription = "App Logo",
+                                tint = Color.Unspecified,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Purritify",
+                                color = Color.LightGray,
+                                style = MaterialTheme.typography.bodyMedium.copy(fontSize = MaterialTheme.typography.bodyLarge.fontSize)
+                            )
+                        }
+
+                        Text(
+                            text = LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM dd, yyyy")),
+                            color = Color.LightGray,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = MaterialTheme.typography.bodyLarge.fontSize)
+                        )
+                    }
                 }
             }
         }
