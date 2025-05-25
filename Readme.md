@@ -192,6 +192,12 @@ M4 terjadi ketika aplikasi tidak melakukan validasi dan sanitasi input pengguna 
   - Menerapkan parameter binding atau prepared statements pada query database untuk mencegah SQL injection. Implementasi di Client-Side mencakup implementasi saat melaksanakan Room Query seperti gambar dibawah
   ![Parameterized Queries](Assets/OWASP_4/OWASP4.1.png)
 
+### Implementasi Milestone 2
+- **Validasi Output:**  
+  Menggunakan validasi format output agar tidak ada data yang tersimpan dalam database dengan format yang salah. Dalam kasus dibawah, dilakukan validasi agar penyimpanan pada server akan aman , dimana dalam kondisi ini diasumsikan harus selalu bernilai 2 alfabet kapital
+  ![Validasi output](Assets/OWASP_4/OWASP4.3.png)
+  ![Validasi output](Assets/OWASP_4/OWASP4.4.png)
+  ![Validasi output](Assets/OWASP_4/OWASP4.5.png)
 ---
 
 ### M8: Security Misconfiguration

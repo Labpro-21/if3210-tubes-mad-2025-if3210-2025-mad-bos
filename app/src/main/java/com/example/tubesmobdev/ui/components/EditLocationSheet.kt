@@ -41,7 +41,9 @@ enum class LocationStatus {
 enum class SelectionMode {
     AUTO, SELECT, LINK
 }
-
+fun validateCountryCode(code: String?): String? {
+    return code?.takeIf { it.matches(Regex("^[A-Z]{2}$")) }
+}
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun EditLocationSheet(
@@ -142,7 +144,8 @@ fun EditLocationSheet(
             try {
                 val geocoder = Geocoder(context, Locale.getDefault())
                 val addresses = geocoder.getFromLocationName(linkInput.value, 1)
-                linkCountryCode.value = addresses?.firstOrNull()?.countryCode ?: "Not found"
+                val rawCode = addresses?.firstOrNull()?.countryCode
+                linkCountryCode.value = validateCountryCode(rawCode) ?: "Not found"
             } catch (e: Exception) {
                 linkCountryCode.value = "Not found"
             }
@@ -327,8 +330,9 @@ fun EditLocationSheet(
                                 }
                             },
                             enabled = when (selectionMode.value) {
-                                SelectionMode.LINK -> linkCountryCode.value != null && linkCountryCode.value != "Not found"
-                                else -> countryCode.value != null
+                                SelectionMode.LINK -> validateCountryCode(linkCountryCode.value) != null
+                                SelectionMode.SELECT -> validateCountryCode(selectCountryCode.value) != null
+                                SelectionMode.AUTO -> validateCountryCode(countryCode.value) != null
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                             modifier = Modifier.weight(1f)
