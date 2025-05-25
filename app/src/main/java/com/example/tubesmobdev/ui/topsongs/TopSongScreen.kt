@@ -52,7 +52,6 @@ fun TopSongsScreen(
 
     val downloadedSongIds by viewModel.downloadedSongIds.collectAsState()
 
-
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
@@ -77,11 +76,10 @@ fun TopSongsScreen(
         viewModel.fetchSongs(chartCode)
     }
 
-
     val songs = onlineSongs.sortedBy { it.rank }
 
     val backgroundGradient = Brush.verticalGradient(
-        colors = if (connectivityStatus == ConnectivityStatus.Available) {
+        colors = if (connectivityStatus == ConnectivityStatus.Available || (connectivityStatus == ConnectivityStatus.Unavailable && onlineSongs.isNotEmpty())) {
             if (chartCode == "global")
                 listOf(Color(0xFF1d7d75), Color(0xFF1d4c6a), Color(0xFF1e3264), Color(0xFF121212))
             else if (chartCode == "recomendation"){
@@ -95,7 +93,7 @@ fun TopSongsScreen(
 
     Log.d("Gradien", chartCode)
     val cardGradient = Brush.verticalGradient(
-        colors = if (connectivityStatus == ConnectivityStatus.Available) {
+        colors = if (connectivityStatus == ConnectivityStatus.Available || (connectivityStatus == ConnectivityStatus.Unavailable && onlineSongs.isNotEmpty())) {
             if (chartCode == "global")
                 listOf(Color(0xFF1d7d75), Color(0xFF1d4c6a), Color(0xFF1e3264))
             else if (chartCode == "recomendation"){
@@ -131,11 +129,11 @@ fun TopSongsScreen(
                                 modifier = Modifier.padding(16.dp)
                             ) {
                                 Text(
-                                    text = if (connectivityStatus == ConnectivityStatus.Available) {
+                                    text = if (connectivityStatus == ConnectivityStatus.Available || (connectivityStatus == ConnectivityStatus.Unavailable && onlineSongs.isNotEmpty())) {
                                         if (chartCode == "global") "Top 50" else "Top 10"
-                                    } else {
+                                    } else  {
                                         "No Internet"
-                                    },
+                                    } ,
                                     color = Color.White,
                                     style = MaterialTheme.typography.titleLarge.copy(
                                         fontSize = titleFontSize,
@@ -144,7 +142,7 @@ fun TopSongsScreen(
                                     textAlign = TextAlign.Center
                                 )
 
-                                if (connectivityStatus == ConnectivityStatus.Available) {
+                                if (connectivityStatus == ConnectivityStatus.Available || (connectivityStatus == ConnectivityStatus.Unavailable && onlineSongs.isNotEmpty())) {
                                     Spacer(modifier = Modifier.height(20.dp))
                                     HorizontalDivider(
                                         modifier = Modifier
@@ -165,7 +163,7 @@ fun TopSongsScreen(
                         }
                     }
 
-                    if (connectivityStatus == ConnectivityStatus.Available) {
+                    if (connectivityStatus == ConnectivityStatus.Available || (connectivityStatus == ConnectivityStatus.Unavailable && onlineSongs.isNotEmpty())) {
                         Text(
                             text = "Your daily update of the most played tracks right now – ${chartCode.uppercase()}.",
                             style = MaterialTheme.typography.bodyMedium,
