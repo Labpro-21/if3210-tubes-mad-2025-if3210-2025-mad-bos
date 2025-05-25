@@ -44,8 +44,7 @@ Aplikasi Purrytify adalah platform streaming musik yang memudahkan pengguna untu
 - androidx-lifecycle-runtime-ktx: 2.8.7
 - androidx-activity-compose: 1.8.2
 - androidx-compose-bom: 2025.03.00
-- androidx-ui: (latest)
-- androidx-ui-graphics: (latest)
+- androidx-ui: (latest)z
 - androidx-ui-tooling: (latest)
 - androidx-ui-tooling-preview: (latest)
 - androidx-ui-test-manifest: (latest)
@@ -194,7 +193,7 @@ M4 terjadi ketika aplikasi tidak melakukan validasi dan sanitasi input pengguna 
 
 ### Implementasi Milestone 2
 - **Validasi Output:**  
-  Menggunakan validasi format output agar tidak ada data yang tersimpan dalam database dengan format yang salah. Dalam kasus dibawah, dilakukan validasi agar penyimpanan pada server akan aman , dimana dalam kondisi ini diasumsikan harus selalu bernilai 2 alfabet kapital
+  Menggunakan validasi format output agar tidak ada data yang tersimpan dalam database dengan format yang salah. Dalam kasus dibawah, dilakukan validasi agar penyimpanan pada server akan aman , dimana dalam kondisi ini diasumsikan harus selalu bernilai 2 alfabet kapital.
   ![Validasi output](Assets/OWASP_4/OWASP4.3.png)
   ![Validasi output](Assets/OWASP_4/OWASP4.4.png)
   ![Validasi output](Assets/OWASP_4/OWASP4.5.png)
@@ -225,7 +224,7 @@ Konfigurasi buildTypes di dalam file build.gradle ini sesuai dengan M8 karena me
 **Deskripsi:**  
 M9 menyangkut penyimpanan data yang tidak aman, di mana data sensitif dapat diakses atau dicuri oleh pihak tidak berwenang. Ini sangat penting pada aplikasi mobile, di mana penyimpanan lokal atau penggunaan cloud harus dilakukan dengan tingkat keamanan tinggi.
 
-**Langkah Penanganan:**  
+### Implementasi Milestone 1
 - **Enkripsi Data:**  
 ***Implementasi Kelas Enkripsi***
 
@@ -234,7 +233,7 @@ M9 menyangkut penyimpanan data yang tidak aman, di mana data sensitif dapat diak
       ![Implementasi Kelas Enkripsi](Assets/OWASP_9/OWASP_9.1.png)
       
     - ***Implementasi Enkripsi pada penyimpanan token***  
-      
+      ![alt text](image.png)
       ![Implementasi Enkripsi pada penyimpanan token](Assets/OWASP_9/OWASP_9.2.png)
       
     - ***Implementasi Dekripsi saat mengambil refresh token***
@@ -252,14 +251,16 @@ Aplikasi kami aman karena menggunakan <span style="color: red;font-weight: bold;
       
       ![Implementasi Kelas Enkripsi](Assets/OWASP_9/OWASP_9.5.png)
 
+### Implementasi Milestone 2
+- **Enkripsi Data (Versi 2):**  
+Disini dilakukan enkripsi tambahan pada preferences, untuk proses caching
+      ![Implementasi Kelas Enkripsi](Assets/OWASP_9/OWASP_9.6.png)
 ---
 
 Dokumentasi ini mencerminkan upaya kami untuk mengatasi dan memitigasi risiko dari tiga kerentanan utama tersebut. Dengan menerapkan langkah-langkah di atas, kami berusaha mewujudkan aplikasi mobile yang aman, andal, dan sesuai dengan standar keamanan dari OWASP.
 
 
 ## Aksesibilitas Testing
-
-Hasil testing dapat dilihat pada link berikut : https://drive.google.com/file/d/14YwVKkxjG2GD0K88KJaBYnUVgNcGpOG_/view?usp=sharing
  
 Perubahan yang dilakukan:
 - Memberikan content description yang berbeda untuk foto album serta judul lagu pada full player.
@@ -273,6 +274,10 @@ Perubahan yang tidak / tidak dapat dilakukan:
 - Content Description yang sama pada recycleview dimana keduanya muncul pada 1 halaman yang sama, namun dianggap minor karena jika dikonversi pada text, keduanya sebenarnya memiliki definisi yang sama serta fungsi yang sama , yakni untuk memutar lagu
 - Kontras warna pada beberapa background album dengan background aplikasi. Hal ini dianggap minor karena tidak semua album , melainkan hanya album tertentu yang tidak memiliki kontras yang baik dengan background aplikasi.
 
-NB : Karena merasa UI lebih penting, kami akhirnya memilih untuk memperkecil icon
+NB : Karena merasa UI lebih penting, kami akhirnya memilih untuk tidak memperbesar icon
+
+Masalah pada milestone 2:
+1. Kontras warna antara teks dan background terlalu rendah sehingga memicu error tes aksesibilitas , namun pada implementasi kali ini tidak dilakukan perbaikan , karena hal ini tergantung denagn lagu serta background yang dibuat.
+2. Multiple item with the same description , dimana seperti untuk lagu  yang di download kebanyakan lagu akan memiliki tag yang sama.
 ---
 
