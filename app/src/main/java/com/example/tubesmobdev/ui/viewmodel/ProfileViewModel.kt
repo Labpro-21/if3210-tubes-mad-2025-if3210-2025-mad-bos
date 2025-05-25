@@ -121,7 +121,7 @@ class ProfileViewModel @Inject constructor(
         monthlyStreakSongs,
         allRecords
     ) { songs, artists, streaks, streakSongs, records ->
-        songs.map { entry ->
+        val result = songs.map { entry ->
             val minutes = records.filter { it.date.startsWith(entry.monthYear) }
                 .sumOf { it.durationListened } / 60000
 
@@ -139,6 +139,8 @@ class ProfileViewModel @Inject constructor(
                 streakSong = streakSong
             )
         }
+        android.util.Log.d("CapsulesDebug", "Generated capsules: $result")
+        result
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun fetchDailyListeningData(month: String) {

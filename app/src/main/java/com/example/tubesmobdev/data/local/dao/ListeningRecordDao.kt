@@ -104,7 +104,7 @@ abstract class ListeningRecordDao {
     WHERE
       lr.creatorId = :userId
       AND date(lr.date) >= date('now', '-1 year')
-    GROUP BY strftime('%Y-%m', lr.date), lr.title, lr.artist
+    GROUP BY strftime('%Y-%m', lr.date)
     ORDER BY monthYear DESC
     """
     )
