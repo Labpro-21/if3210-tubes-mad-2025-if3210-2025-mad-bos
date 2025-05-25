@@ -202,10 +202,15 @@ class MusicService : MediaSessionService() {
                 super.onMediaItemTransition(mediaItem, reason)
                 val index = player.currentMediaItemIndex
                 if (index >= 0 && index < currentQueue.size) {
+
+                    Log.d("checkapalah", "next:44 ${index} ${currentQueue.size}")
                     val song = currentQueue[index]
+                    val updatedList = currentQueue.toMutableList()
 
                     serviceScope.launch {
                         //memastikan lagu terbaru dan ada
+                        Log.d("checkapalah", "next:45 ${index} ${currentQueue.size}")
+
                         Log.d("checkapalah", "next:1")
 
                         val newSong = if (song.isOnline) {
@@ -213,19 +218,20 @@ class MusicService : MediaSessionService() {
                         } else {
                             songRepo.findSongById(song.id)
                         }
-                        Log.d("checkapalah", "next:2")
+                        Log.d("checkapalah", "next:2 ${newSong}")
 
 
-                        val updatedList = currentQueue.toMutableList()
                         Log.d("checkapalah", "next:3")
 
 
                         if (newSong != null) {
+                            Log.d("checkapalah", "next:42 ${index} ${currentQueue.size} ${updatedList.size}")
+
                             if (index in updatedList.indices) {
                                 updatedList[index] = newSong
                                 currentQueue = updatedList
                                 player.replaceMediaItem(index, newSong.toMediaItem())
-                                Log.d("checkapalah", "next:4")
+                                Log.d("checkapalah", "next:4 ${newSong.toMediaItem()}")
 
                             } else {
                                 Log.d("checkapalah", "next:5")
