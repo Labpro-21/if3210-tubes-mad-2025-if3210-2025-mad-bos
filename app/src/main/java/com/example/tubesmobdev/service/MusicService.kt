@@ -74,14 +74,6 @@ class MusicService : MediaSessionService() {
 
 
     companion object {
-//        const val ACTION_PLAY = "com.example.tubesmobdev.PLAY"
-//        const val ACTION_STOP = "com.example.tubesmobdev.STOP"
-//
-//        const val EXTRA_QUEUE = "EXTRA_QUEUE"
-//        const val EXTRA_INDEX = "EXTRA_INDEX"
-//        const val EXTRA_SHUFFLE = "EXTRA_SHUFFLE"
-//        const val EXTRA_REPEAT = "EXTRA_REPEAT"
-
         const val ACTION_TOGGLE_SHUFFLE = "com.example.tubesmobdev.SHUFFLE"
         const val ACTION_TOGGLE_REPEAT = "com.example.tubesmobdev.REPEAT"
         const val ACTION_TOGGLE_LIKE = "com.example.tubesmobdev.LIKE"
@@ -220,7 +212,6 @@ class MusicService : MediaSessionService() {
                             currentQueue = updatedList
                         }
 
-                        stopListeningSession()
                         clearListeningSession()
                         emitSongChange(newSong)
                         updateCustomButton(newSong)
