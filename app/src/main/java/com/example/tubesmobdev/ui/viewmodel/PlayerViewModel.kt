@@ -324,12 +324,22 @@ class PlayerViewModel @OptIn(UnstableApi::class)
         }
     }
 
+    @OptIn(UnstableApi::class)
     fun updateCurrentSongIfMatches(updatedSong: Song) {
-        val current = _currentSong.value
-        if (current != null && current.id == updatedSong.id) {
-            val updatedWithOnlineStatus = updatedSong.copy()
-            updatedWithOnlineStatus.isOnline = current.isOnline
-            _currentSong.value = updatedWithOnlineStatus
+        viewModelScope.launch {
+            val current = _currentSong.value
+            if (current != null && current.id == updatedSong.id) {
+                val updatedSongReal = songRepository.findSongById(updatedSong.id)
+                if (updatedSongReal != null) {
+                    _currentSong.value = updatedSongReal
+                    val controller = playbackConnection.getController()
+                    val currentIndex = controller.currentMediaItemIndex
+                    val newMediaItem = updatedSongReal.toMediaItem()
+                    if (currentIndex in 0 until controller.mediaItemCount) {
+                        controller.replaceMediaItem(currentIndex, newMediaItem)
+                    }
+                }
+            }
         }
     }
 

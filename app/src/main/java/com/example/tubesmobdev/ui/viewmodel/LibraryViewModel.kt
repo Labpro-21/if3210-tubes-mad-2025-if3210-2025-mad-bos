@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -150,12 +151,19 @@ class LibraryViewModel @Inject constructor(
             } else {
                 repository.deleteSong(song)
             }
+            val queue = playerRepository.getQueue().first().toMutableList()
+            val newQueue = queue.filter { it.id != song.id }
+            playerRepository.saveQueue(newQueue)
         }
     }
 
     fun updateSong(song: Song) {
         viewModelScope.launch {
             repository.updateSong(song)
+            val queue = playerRepository.getQueue().first().toMutableList()
+            val index = queue.indexOfFirst { it.id == song.id }
+            queue[index] = song
+            playerRepository.saveQueue(queue)
         }
     }
 

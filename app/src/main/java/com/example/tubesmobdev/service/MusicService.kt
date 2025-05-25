@@ -28,6 +28,7 @@ import com.example.tubesmobdev.data.local.preferences.PlayerPreferences
 import com.example.tubesmobdev.data.model.ListeningRecord
 import com.example.tubesmobdev.data.model.ListeningSession
 import com.example.tubesmobdev.data.model.Song
+import com.example.tubesmobdev.data.model.toMediaItem
 import com.example.tubesmobdev.data.repository.ListeningRecordRepository
 import com.example.tubesmobdev.data.repository.SongRepository
 import com.example.tubesmobdev.util.SongEventBus
@@ -212,12 +213,30 @@ class MusicService : MediaSessionService() {
                     val song = currentQueue[index]
 
                     serviceScope.launch {
-                        var newSong = song.copy()
-                        if (song.isOnline){
-                            newSong = songRepo.findSongByServerId(song.serverId!!) ?: song.copy()
-                            val updatedList = currentQueue.toMutableList()
+                        //memastikan lagu terbaru dan ada
+                        val newSong = if (song.isOnline) {
+                            songRepo.findSongByServerId(song.serverId!!)
+                        } else {
+                            songRepo.findSongById(song.id)
+                        }
+
+                        val updatedList = currentQueue.toMutableList()
+
+                        if (newSong != null) {
                             updatedList[index] = newSong
                             currentQueue = updatedList
+                            player.replaceMediaItem(index, newSong.toMediaItem())
+                        } else {
+                            player.removeMediaItem(index)
+                            updatedList.removeAt(index)
+                            currentQueue = updatedList
+
+                            if (player.hasNextMediaItem()) {
+                                player.seekToNext()
+                            } else {
+                                player.seekToPrevious()
+                            }
+                            return@launch
                         }
 
                         stopListeningSession()
