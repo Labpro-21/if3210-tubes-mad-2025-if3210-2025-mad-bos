@@ -39,6 +39,8 @@ import com.google.gson.Gson
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -55,7 +57,8 @@ class MusicService : MediaSessionService() {
 
     private var currentlyPlayed: Boolean = false
 
-    private var currentQueue: List<Song> = emptyList()
+    private val _currentQueue = MutableStateFlow<List<Song>>(emptyList())
+    val currentQueue: StateFlow<List<Song>> = _currentQueue
     private val serviceScope = CoroutineScope(Dispatchers.Main)
 
     @Inject
@@ -127,18 +130,18 @@ class MusicService : MediaSessionService() {
              if (customCommand.customAction == SONG_QUEUE) {
                 val json = args.getString("queue")
                 val type = object : TypeToken<List<Song>>() {}.type
-                currentQueue = Gson().fromJson(json, type)
+                _currentQueue.value = Gson().fromJson(json, type)
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
             }
             val currentIndex = player?.currentMediaItemIndex ?: return Futures.immediateFuture(SessionResult(SessionResult.RESULT_ERROR_UNKNOWN))
-            val song = currentQueue.getOrNull(currentIndex) ?: return Futures.immediateFuture(SessionResult(SessionResult.RESULT_ERROR_UNKNOWN))
+            val song = _currentQueue.value.getOrNull(currentIndex) ?: return Futures.immediateFuture(SessionResult(SessionResult.RESULT_ERROR_UNKNOWN))
             if (customCommand.customAction == ACTION_TOGGLE_LIKE) {
                 val newLiked = !song.isLiked
                 emitToggleLike(song.id, newLiked)
-                val updatedQueue = currentQueue.toMutableList()
+                val updatedQueue = _currentQueue.value.toMutableList()
                 val newSong = song.copy(isLiked = newLiked)
                 updatedQueue[currentIndex] = newSong
-                currentQueue = updatedQueue
+                _currentQueue.value = updatedQueue
                 updateCustomButton(newSong)
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
             } else if (customCommand.customAction == ACTION_TOGGLE_SHUFFLE) {
@@ -200,83 +203,47 @@ class MusicService : MediaSessionService() {
         player.addListener(object : Player.Listener {
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 super.onMediaItemTransition(mediaItem, reason)
+
                 val index = player.currentMediaItemIndex
-                if (index >= 0 && index < currentQueue.size) {
+                val snapshot = _currentQueue.value.toMutableList()
+                val oldSong = snapshot.getOrNull(index) ?: return
 
-                    Log.d("checkapalah", "next:44 ${index} ${currentQueue.size}")
-                    val song = currentQueue[index]
-                    val updatedList = currentQueue.toMutableList()
+                serviceScope.launch {
+                    val newSong = if (oldSong.isOnline) {
+                        songRepo.findSongByServerId(oldSong.serverId!!)
+                    } else {
+                        songRepo.findSongById(oldSong.id)
+                    }
 
-                    serviceScope.launch {
-                        //memastikan lagu terbaru dan ada
-                        Log.d("checkapalah", "next:45 ${index} ${currentQueue.size}")
-
-                        Log.d("checkapalah", "next:1")
-
-                        val newSong = if (song.isOnline) {
-                            songRepo.findSongByServerId(song.serverId!!)
-                        } else {
-                            songRepo.findSongById(song.id)
+                    if (newSong != null) {
+                        if (index in snapshot.indices) {
+                            snapshot[index] = newSong
+                            _currentQueue.value = snapshot
+                            player.replaceMediaItem(index, newSong.toMediaItem())
+                            clearListeningSession()
+                            emitSongChange(newSong)
+                            updateCustomButton(newSong)
                         }
-                        Log.d("checkapalah", "next:2 ${newSong}")
+                    } else {
+                        if (index in snapshot.indices) {
+                            player.removeMediaItem(index)
+                            snapshot.removeAt(index)
+                            _currentQueue.value = snapshot
 
-
-                        Log.d("checkapalah", "next:3")
-
-
-                        if (newSong != null) {
-                            Log.d("checkapalah", "next:42 ${index} ${currentQueue.size} ${updatedList.size}")
-
-                            if (index in updatedList.indices) {
-                                updatedList[index] = newSong
-                                currentQueue = updatedList
-                                player.replaceMediaItem(index, newSong.toMediaItem())
-                                Log.d("checkapalah", "next:4 ${newSong.toMediaItem()}")
-
+                            if (player.hasNextMediaItem()) {
+                                player.seekToNext()
                             } else {
-                                Log.d("checkapalah", "next:5")
-
-                                return@launch
+                                player.seekToPrevious()
                             }
-                        } else {
-                            if (index in updatedList.indices) {
-                                player.removeMediaItem(index)
-                                updatedList.removeAt(index)
-                                currentQueue = updatedList
-                                Log.d("checkapalah", "next:6")
-
-
-                                if (player.hasNextMediaItem()) {
-                                    player.seekToNext()
-                                    Log.d("checkapalah", "next: ${player.nextMediaItemIndex} ${index} ${player.mediaItemCount}")
-
-                                } else {
-                                    player.seekToPrevious()
-                                    Log.d("checkapalah", "prev")
-
-                                }
-                            }
-                            return@launch
                         }
-
-                        Log.d("checkapalah", "next:7")
-
-
-                        clearListeningSession()
-                        Log.d("checkapalah", "next:8")
-
-                        emitSongChange(newSong)
-                        Log.d("checkapalah", "next:9")
-
-                        updateCustomButton(newSong)
-                        Log.d("checkapalah", "next:10")
                     }
                 }
             }
 
+
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 val index = player.currentMediaItemIndex
-                val song = currentQueue.getOrNull(index)
+                val song = _currentQueue.value.getOrNull(index)
                 if (song != null) {
                     if (isPlaying) {
                         Log.d("Change123", "started ${song}")
@@ -294,7 +261,7 @@ class MusicService : MediaSessionService() {
                 reason: Int
             ) {
                 val index = player.currentMediaItemIndex
-                val song = currentQueue.getOrNull(index) ?: return
+                val song = _currentQueue.value.getOrNull(index) ?: return
                 if (reason == Player.DISCONTINUITY_REASON_SEEK) {
                     emitSongSeeked(song, oldPosition.positionMs, newPosition.positionMs)
                 }
@@ -452,12 +419,12 @@ class MusicService : MediaSessionService() {
         serviceScope.launch {
             try {
                 stopListeningSession()
-                if (currentQueue.isNotEmpty()) {
-                    playerPreferences.saveLastQueue(currentQueue)
+                if (_currentQueue.value.isNotEmpty()) {
+                    playerPreferences.saveLastQueue(_currentQueue.value)
                 }
                 val index = mediaSession?.player?.currentMediaItemIndex ?: -1
-                if (index in currentQueue.indices) {
-                    val currentSong = currentQueue[index]
+                if (index in _currentQueue.value.indices) {
+                    val currentSong = _currentQueue.value[index]
                     playerPreferences.saveLastPlayedSong(currentSong)
                     val position = mediaSession?.player?.currentPosition ?: 0
                     playerPreferences.saveLastPosition(position)
@@ -476,13 +443,13 @@ class MusicService : MediaSessionService() {
     private fun savePlayerState() {
         serviceScope.launch {
             try {
-                if (currentQueue.isNotEmpty()) {
-                    playerPreferences.saveLastQueue(currentQueue)
+                if (_currentQueue.value.isNotEmpty()) {
+                    playerPreferences.saveLastQueue(_currentQueue.value)
                 }
 
                 val index = mediaSession?.player?.currentMediaItemIndex ?: -1
-                if (index in currentQueue.indices) {
-                    val currentSong = currentQueue[index]
+                if (index in _currentQueue.value.indices) {
+                    val currentSong = _currentQueue.value[index]
                     playerPreferences.saveLastPlayedSong(currentSong)
                     val position = mediaSession?.player?.currentPosition ?: 0
                     playerPreferences.saveLastPosition(position)
