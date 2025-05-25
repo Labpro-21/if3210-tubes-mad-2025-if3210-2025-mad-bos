@@ -498,7 +498,7 @@ class MusicService : MediaSessionService() {
         }
 
         val now = System.currentTimeMillis()
-        val sessionId = if (existing != null && existing.songId == song.id) {
+        val sessionId = if (existing != null && existing.songId == song.id && song.id != 0) {
             existing.sessionId
         } else {
             "${song.id}-${now}"

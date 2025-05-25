@@ -5,17 +5,20 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.tubesmobdev.R
 import com.example.tubesmobdev.data.model.SoundCapsuleShareData
 import com.example.tubesmobdev.util.formatMonthYear
 import java.time.LocalDate
@@ -66,11 +69,28 @@ fun SoundCapsuleShareContent(data: SoundCapsuleShareData, modifier: Modifier = M
             }
 
             Column(modifier = Modifier.padding(16.dp)) {
+                // Header bar with logo and date
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Purritify", color = Color.LightGray, style = MaterialTheme.typography.bodySmall)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.logo_app),
+                            contentDescription = "App Logo",
+                            tint = Color.Unspecified,
+                            modifier = Modifier
+                                .size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp)) // ⬅️ Spasi kecil antar icon dan teks
+                        Text(
+                            text = "Purritify",
+                            color = Color.LightGray,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+
                     Text(
                         text = LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM dd, yyyy")),
                         color = Color.LightGray,
@@ -78,16 +98,16 @@ fun SoundCapsuleShareContent(data: SoundCapsuleShareData, modifier: Modifier = M
                     )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
+// Title
                 Text(
                     text = "My ${formatMonthYear(data.month)} Sound Capsule",
-                    style = MaterialTheme.typography.titleMedium.copy(
+                    style = MaterialTheme.typography.headlineMedium.copy( // ⬅️ Gunakan headline agar lebih besar
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                 )
-
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Row(modifier = Modifier.fillMaxWidth()) {

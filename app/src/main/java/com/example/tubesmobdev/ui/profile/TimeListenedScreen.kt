@@ -32,7 +32,7 @@ fun TimeListenedScreen(
     val formattedMonth = formatMonthYear(month)
 
     val dailyData by viewModel.dailyListeningMinutes.collectAsState()
-    val totalMinutes = dailyData.sumOf { it.second }
+    val totalMinutes = dailyData.sumOf { it.third } / 60000
     val average = if (dailyData.isNotEmpty()) totalMinutes / dailyData.size else 0
 
     Column(
@@ -69,7 +69,7 @@ fun TimeListenedScreen(
 }
 
 @Composable
-fun DailyChart(data: List<Pair<Int, Int>>) {
+fun DailyChart(data: List<Triple<Int, Int, Long>> ) {
     val max = data.maxOfOrNull { it.second } ?: 1
 
     Box(
