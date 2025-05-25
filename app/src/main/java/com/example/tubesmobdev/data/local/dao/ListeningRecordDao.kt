@@ -112,27 +112,24 @@ abstract class ListeningRecordDao {
 
     @Query("""
     SELECT
-      strftime('%Y-%m', lr.date)           AS monthYear,
-      lr.artist                             AS artist,
-      (SELECT s.coverUrl
-         FROM songs s
-         WHERE s.artist = lr.artist
-         LIMIT 1)                           AS coverUrl,
-      COUNT(*)                             AS playCount
-    FROM listening_records lr
+      strftime('%Y-%m', date)     AS monthYear,
+      artist                      AS artist,
+      coverUrl                    AS coverUrl,
+      COUNT(*)                    AS playCount
+    FROM listening_records
     WHERE
-      lr.creatorId = :userId
-      AND strftime('%Y-%m', lr.date) = :monthYear
-    GROUP BY lr.artist
+      creatorId = :userId
+      AND strftime('%Y-%m', date) = :monthYear
+    GROUP BY artist
     ORDER BY playCount DESC
-  """)
+""")
     abstract fun getMonthlyTopArtist(
         userId: Long,
         monthYear: String
     ): Flow<List<TopArtist>>
 
     @Query(
-        """
+        """ 
     SELECT
       strftime('%Y-%m', lr.date) AS monthYear,
       lr.title AS title,

@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.tubesmobdev.data.model.SoundCapsuleStreakShareData
 import com.example.tubesmobdev.util.rememberDominantColor
+import androidx.compose.ui.platform.LocalContext
+import coil.request.ImageRequest
 
 @Composable
 fun SoundCapsuleShareStreakContent(
@@ -25,6 +27,7 @@ fun SoundCapsuleShareStreakContent(
     val artist = data.streakSong?.artist.orEmpty()
     val title = data.streakSong?.title.orEmpty()
     val dominantColor = rememberDominantColor(coverUrl).copy(alpha = 0.9f)
+    val context = LocalContext.current
 
     val streakDays = data.streakSong?.let { data.streakRange }?.split("-")?.let {
         val days = it.firstOrNull()?.takeLast(2)?.toIntOrNull()
@@ -59,14 +62,17 @@ fun SoundCapsuleShareStreakContent(
                 Spacer(Modifier.height(12.dp))
 
                 AsyncImage(
-                    model = coverUrl,
+                    model = ImageRequest.Builder(context)
+                        .data(coverUrl)
+                        .allowHardware(false) // ⬅️ FIX agar tidak error saat drawToBitmap
+                        .crossfade(true)
+                        .build(),
                     contentDescription = "Cover",
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp)
                         .clip(MaterialTheme.shapes.medium),
                     contentScale = ContentScale.Crop
-
                 )
 
                 Spacer(Modifier.height(12.dp))
