@@ -75,8 +75,11 @@ Aplikasi Purrytify adalah platform streaming musik yang memudahkan pengguna untu
 **Lbrary**  
 ![Library](Screenshots/Library.jpg)
 
-**Profile**  
-![Profile](Screenshots/Profile.jpg)
+# Profile  
+![Profile](Screenshots/Profile/Profile_Page.jpg)
+![Profile](Screenshots/Profile/Location_GPS.jpg)
+![Profile](Screenshots/Profile/Location_Link.jpg)
+![Profile](Screenshots/Profile/Location_Selection.jpg)
 
 **Add Song**  
 ![AddSong](Screenshots/AddSong.jpg)
