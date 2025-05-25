@@ -78,7 +78,6 @@ class PlayerViewModel @OptIn(UnstableApi::class)
     init {
         observePlaybackState()
         observeSongEvents()
-
     }
 
 

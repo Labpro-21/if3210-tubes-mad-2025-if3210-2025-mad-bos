@@ -68,13 +68,13 @@ class MusicService : MediaSessionService() {
 
 
     companion object {
-        const val ACTION_PLAY = "com.example.tubesmobdev.PLAY"
-        const val ACTION_STOP = "com.example.tubesmobdev.STOP"
-
-        const val EXTRA_QUEUE = "EXTRA_QUEUE"
-        const val EXTRA_INDEX = "EXTRA_INDEX"
-        const val EXTRA_SHUFFLE = "EXTRA_SHUFFLE"
-        const val EXTRA_REPEAT = "EXTRA_REPEAT"
+//        const val ACTION_PLAY = "com.example.tubesmobdev.PLAY"
+//        const val ACTION_STOP = "com.example.tubesmobdev.STOP"
+//
+//        const val EXTRA_QUEUE = "EXTRA_QUEUE"
+//        const val EXTRA_INDEX = "EXTRA_INDEX"
+//        const val EXTRA_SHUFFLE = "EXTRA_SHUFFLE"
+//        const val EXTRA_REPEAT = "EXTRA_REPEAT"
 
         const val ACTION_TOGGLE_SHUFFLE = "com.example.tubesmobdev.SHUFFLE"
         const val ACTION_TOGGLE_REPEAT = "com.example.tubesmobdev.REPEAT"
@@ -160,6 +160,7 @@ class MusicService : MediaSessionService() {
                 updateCustomButton(song)
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
             } else if (customCommand.customAction == ACTION_DISMISS) {
+                stopListeningSession()
                 savePlayerState()
                 player.stop()
                 stopSelf()
@@ -262,70 +263,10 @@ class MusicService : MediaSessionService() {
 
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        super.onStartCommand(intent, flags, startId)
-        if (!isConnectedToInternet()) {
-            Log.w("MusicService", "No internet connection!")
-            stopSelf()
-            return START_NOT_STICKY
-        }
-        when (intent?.action) {
-            ACTION_PLAY -> {
-                val queueJson = intent.getStringExtra(EXTRA_QUEUE)
-                val index = intent.getIntExtra(EXTRA_INDEX, 0)
-                val shuffle = intent.getBooleanExtra(EXTRA_SHUFFLE, false)
-                val repeat = intent.getStringExtra(EXTRA_REPEAT) ?: "NONE"
-
-
-                val queueType = object : TypeToken<List<Song>>() {}.type
-                val queue: List<Song> = Gson().fromJson(queueJson, queueType)
-                val mediaItems = queue.map {
-                    MediaItem.Builder()
-                        .setMediaId(it.title)
-                        .setUri(it.filePath)
-                        .setMediaMetadata(
-                            MediaMetadata.Builder()
-                                .setTitle(it.title)
-                                .setArtist(it.artist)
-                                .setArtworkUri(Uri.parse(it.coverUrl))
-                                .build()
-                        )
-                        .build()
-                }
-
-
-                currentQueue = queue
-                val player = mediaSession?.player
-
-                player?.setMediaItems(mediaItems, index, 0)
-                player?.shuffleModeEnabled = shuffle
-                player?.repeatMode = when (repeat) {
-                    "REPEAT_ONE" -> REPEAT_MODE_ONE
-                    "REPEAT_ALL" -> REPEAT_MODE_ALL
-                    else -> REPEAT_MODE_OFF
-                }
-                player?.prepare()
-                player?.play()
-
-                if (queue.isNotEmpty() && index >= 0 && index < queue.size) {
-                    Log.d("PlayerViewModel", "actionplay: $queue, $index", )
-
-                    emitSongChange(queue[index])
-                }
-            }
-
-            ACTION_STOP -> {
-                stopListeningSession()
-                stopSelf()
-            }
-
-        }
-        return START_STICKY
-    }
 
     private fun updateCustomButton(song: Song) {
         val buttons = mutableListOf<CommandButton>()
-        val player = mediaSession?.player
+//        val player = mediaSession?.player
 
 //        val shuffleBtn = CommandButton.Builder()
 //            .setDisplayName("Shuffle")
