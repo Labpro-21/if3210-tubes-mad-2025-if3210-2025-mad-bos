@@ -24,9 +24,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import retrofit2.HttpException
 import java.io.BufferedInputStream
-import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import javax.inject.Inject
@@ -87,7 +85,7 @@ class OnlineSongViewModel @Inject constructor(
         }
     }
 
-    fun isDownloading(songId: Int): Boolean {
+    private fun isDownloading(songId: Int): Boolean {
         return _downloadingSongs.value[songId] == true
     }
 

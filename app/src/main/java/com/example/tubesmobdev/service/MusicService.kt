@@ -47,6 +47,7 @@ class MusicService : MediaSessionService() {
     private val customCommandShuffle = SessionCommand(ACTION_TOGGLE_SHUFFLE, Bundle.EMPTY)
     private val customCommandRepeat = SessionCommand(ACTION_TOGGLE_REPEAT, Bundle.EMPTY)
     private val customCommandSongQueue = SessionCommand(SONG_QUEUE, Bundle.EMPTY)
+    private val customCommandDismiss = SessionCommand(ACTION_DISMISS, Bundle.EMPTY)
 
 
     companion object {
@@ -62,6 +63,7 @@ class MusicService : MediaSessionService() {
         const val ACTION_TOGGLE_REPEAT = "com.example.tubesmobdev.REPEAT"
         const val ACTION_TOGGLE_LIKE = "com.example.tubesmobdev.LIKE"
         const val SONG_QUEUE = "com.example.tubesmobdev.SONG_QUEUE"
+        const val ACTION_DISMISS = "com.example.tubesmobdev.DISMISS"
 
     }
 
@@ -138,6 +140,16 @@ class MusicService : MediaSessionService() {
 
                 updateCustomButton(song)
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+            } else if (customCommand.customAction == ACTION_DISMISS) {
+                val exitIntent = Intent(applicationContext, MainActivity::class.java).apply {
+                    putExtra("EXIT_AND_REMOVE", true)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                }
+                applicationContext.startActivity(exitIntent)
+                savePlayerState()
+                player.stop()
+                stopSelf()
+                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
             }
             return super.onCustomCommand(session, controller, customCommand, args)
         }
@@ -152,10 +164,12 @@ class MusicService : MediaSessionService() {
                         .add(customCommandRepeat)
                         .add(customCommandLike)
                         .add(customCommandSongQueue)
+                        .add(customCommandDismiss)
                         .build()
                 )
                 .build()
         }
+
 
 
     }
@@ -284,15 +298,21 @@ class MusicService : MediaSessionService() {
         val buttons = mutableListOf<CommandButton>()
         val player = mediaSession?.player
 
-        val shuffleBtn = CommandButton.Builder()
-            .setDisplayName("Shuffle")
-            .setSessionCommand(customCommandShuffle)
-            .setIconResId(
-                if (player?.shuffleModeEnabled == true)
-                    R.drawable.ic_shuffle
-                else
-                    R.drawable.ic_shuffle_off
-            )
+//        val shuffleBtn = CommandButton.Builder()
+//            .setDisplayName("Shuffle")
+//            .setSessionCommand(customCommandShuffle)
+//            .setIconResId(
+//                if (player?.shuffleModeEnabled == true)
+//                    R.drawable.ic_shuffle
+//                else
+//                    R.drawable.ic_shuffle_off
+//            )
+//            .build()
+
+        val closeBtn = CommandButton.Builder()
+            .setDisplayName("Close")
+            .setSessionCommand(customCommandDismiss)
+            .setIconResId(R.drawable.ic_close)
             .build()
 
         val likeBtn = CommandButton.Builder()
@@ -318,8 +338,8 @@ class MusicService : MediaSessionService() {
 //                    .build()
 //            )
 
-        buttons.add(shuffleBtn)
-
+//        buttons.add(shuffleBtn)
+        buttons.add(closeBtn)
         buttons.add(likeBtn)
         Log.d("PlayerViewModel", "updated button")
 
@@ -347,6 +367,13 @@ class MusicService : MediaSessionService() {
             Log.d("MusicService", "Emitted song like via EventBus ")
         }
     }
+//
+//    private fun emitStopApp() {
+//        serviceScope.launch {
+//            SongEventBus.emitStopApp()
+//            Log.d("MusicService", "Emitted song like via EventBus ")
+//        }
+//    }
 
     private fun emitToggleShuffle(isShuffle: Boolean) {
         serviceScope.launch {
@@ -374,16 +401,12 @@ class MusicService : MediaSessionService() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         Log.d("Restore", "App removed from recent apps")
-        if (rootIntent != null) {
-            Log.d("Restore", rootIntent.action.toString())
-        }
 
         serviceScope.launch {
             try {
                 if (currentQueue.isNotEmpty()) {
                     playerPreferences.saveLastQueue(currentQueue)
                 }
-
                 val index = mediaSession?.player?.currentMediaItemIndex ?: -1
                 if (index in currentQueue.indices) {
                     val currentSong = currentQueue[index]
@@ -401,4 +424,25 @@ class MusicService : MediaSessionService() {
             }
         }
     }
+
+    private fun savePlayerState() {
+        serviceScope.launch {
+            try {
+                if (currentQueue.isNotEmpty()) {
+                    playerPreferences.saveLastQueue(currentQueue)
+                }
+
+                val index = mediaSession?.player?.currentMediaItemIndex ?: -1
+                if (index in currentQueue.indices) {
+                    val currentSong = currentQueue[index]
+                    playerPreferences.saveLastPlayedSong(currentSong)
+                    val position = mediaSession?.player?.currentPosition ?: 0
+                    playerPreferences.saveLastPosition(position)
+                }
+            } catch (e: Exception) {
+                Log.w("MusicService", "Gagal menyimpan state terakhir", e)
+            }
+        }
+    }
+
 }

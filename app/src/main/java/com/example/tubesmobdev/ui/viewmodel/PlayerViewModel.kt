@@ -38,6 +38,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tubesmobdev.data.local.preferences.PlayerPreferences
 import com.example.tubesmobdev.data.model.toMediaItem
 import com.example.tubesmobdev.service.generateQRCodeUrl
+import com.google.gson.Gson
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 
@@ -129,6 +130,10 @@ class PlayerViewModel @OptIn(UnstableApi::class)
                             else -> RepeatMode.NONE
                         }
                     }
+
+//                    is SongEvent.StopApp -> {
+//
+//                    }
                 }
             }
         }
@@ -428,9 +433,14 @@ class PlayerViewModel @OptIn(UnstableApi::class)
                 val index = queue.indexOfFirst { it.id == song.id }.coerceAtLeast(0)
                 val controller = playbackConnection.getController()
 
+                val jsonQueue = Gson().toJson(queue)
+                val args = Bundle().apply {
+                    putString("queue", jsonQueue)
+                }
                 val mediaItems = queue.map { it.toMediaItem() }
                 controller.setMediaItems(mediaItems, index, 0)
                 controller.prepare()
+                controller.sendCustomCommand(SessionCommand(MusicService.SONG_QUEUE, Bundle.EMPTY), args)
                 controller.seekTo(index, position)
                 controller.pause()
             }

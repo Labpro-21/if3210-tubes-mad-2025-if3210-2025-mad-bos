@@ -10,6 +10,7 @@ sealed class SongEvent {
     data class SongLiked(val songId: Int, val isLiked: Boolean) : SongEvent()
     data class ShuffleToggled(val isShuffle: Boolean) : SongEvent()
     data class RepeatToggled(val repeatMode: Int) : SongEvent()
+//    data object StopApp : SongEvent()
 }
 
 object SongEventBus {
@@ -31,4 +32,8 @@ object SongEventBus {
     suspend fun emitRepeatToggled(repeatMode: Int) {
         _events.emit(SongEvent.RepeatToggled(repeatMode))
     }
+
+//    suspend fun emitStopApp() {
+//        _events.emit(SongEvent.StopApp)
+//    }
 }
