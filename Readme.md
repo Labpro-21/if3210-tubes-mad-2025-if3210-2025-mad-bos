@@ -54,13 +54,15 @@ Aplikasi Purrytify adalah platform streaming musik yang memudahkan pengguna untu
 - retrofit: 2.11.0
 - tink-android: 1.17.0
 - androidx-material3-window-size-class1-android: 1.3.2
+- androidx-camera-view: 1.3.0-alpha07
+- com-google-mlkit-barcode-scanning: 17.2.0
+- accompanist-permissions: 0.31.1-alpha
 
 - **Kotlin** – Bahasa pemrograman utama untuk Android.
 - **Jetpack Compose** – Untuk UI modern dengan deklaratif.
 - **Hilt** – Dependency injection.
 - **Room** – Untuk manajemen database.
 - **Retrofit** – Untuk komunikasi API.
-- (Tambahkan library lainnya sesuai kebutuhan)
 
 ---
 
@@ -109,6 +111,11 @@ Aplikasi Purrytify adalah platform streaming musik yang memudahkan pengguna untu
 ## Back Online
 ![Online](Screenshots/Online.jpg)
 
+## Sound Capsule
+![Sound](Screenshots/SoundCapsule/Sound_1.jpg)
+![Sound](Screenshots/SoundCapsule/Sound_2.jpg)
+![Sound](Screenshots/SoundCapsule/Sound_3.jpg)
+![Sound](Screenshots/SoundCapsule/Sound_4.jpg)
 --- 
 
 # Pembagian Kerja Anggota Kelompok
@@ -158,11 +165,11 @@ Aplikasi Purrytify adalah platform streaming musik yang memudahkan pengguna untu
 # Jumlah Jam Persiapan dan Pengerjaan
 
 
-| Nama           | Persiapan | Pengerjaan | Total Jam |
-|----------------|-----------|------------|-----------|
-| 13522019     | 40 Jam     | 32 Jam     | 72 Jam    |
-| 13522077      |  40 Jam     | 32 Jam     | 72 Jam    |
-| 13522117      | 40 Jam     | 48 Jam     | 88 Jam    |
+| Nama          | Persiapan | Pengerjaan | Total Jam |
+|---------------|-----------|------------|-----------|
+| 13522019      | 40 Jam     | 100 Jam     | 140 Jam    |
+| 13522077      |  40 Jam     | 100 Jam     | 140 Jam    |
+| 13522117      | 40 Jam     | 100 Jam     | 140 Jam    |
 
 ---
 
