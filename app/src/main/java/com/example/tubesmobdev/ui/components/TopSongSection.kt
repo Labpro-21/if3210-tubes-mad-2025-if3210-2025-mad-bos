@@ -18,95 +18,105 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.tubesmobdev.service.ConnectivityStatus
 import com.example.tubesmobdev.util.ProfileUtil
+import androidx.compose.foundation.lazy.LazyRow
 
 @Composable
-fun TopSongSection(onChartClick: (String) -> Unit, location: String?, connectionStatus: ConnectivityStatus?) {
-    Row(
+fun TopSongSection(
+    onChartClick: (String) -> Unit,
+    location: String?,
+    connectionStatus: ConnectivityStatus?
+) {
+    val countryName = location?.let { ProfileUtil.getCountryName(it) } ?: ""
+
+    LazyRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Column(modifier = Modifier.width(150.dp)) {
-            if (connectionStatus == ConnectivityStatus.Available) {
-                TopSongCard(
-                    title = "Top 50",
-                    subtitle = "GLOBAL",
-                    gradient = Brush.verticalGradient(
-                        colors = listOf(Color(0xFF1d7d75), Color(0xFF1d4c6a), Color(0xFF1e3264))
-                    ),
-                    onClick = { onChartClick("global") }
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "Your daily update of the most played tracks right now - Global.",
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(top = 4.dp, start = 4.dp),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            } else {
-                TopSongCard(
-                    title = "No Internet",
-                    subtitle = "",
-                    gradient = Brush.verticalGradient(
-                        colors = listOf(Color(0xFFB0B0B0), Color(0xFF8C8C8C))
-                    ),
-                    onClick = {}
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "Your daily update of the most played tracks right now - Global.",
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(top = 4.dp, start = 4.dp),
-                    color = Color.Gray,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
+        item {
+            Column(modifier = Modifier.width(150.dp)) {
+                if (connectionStatus == ConnectivityStatus.Available) {
+                    TopSongCard(
+                        title = "Top 50",
+                        subtitle = "GLOBAL",
+                        gradient = Brush.verticalGradient(
+                            colors = listOf(Color(0xFF1d7d75), Color(0xFF1d4c6a), Color(0xFF1e3264))
+                        ),
+                        onClick = { onChartClick("global") }
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Your daily update of the most played tracks right now - Global.",
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(top = 4.dp, start = 4.dp),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                } else {
+                    TopSongCard(
+                        title = "No Internet",
+                        subtitle = "",
+                        gradient = Brush.verticalGradient(
+                            colors = listOf(Color(0xFFB0B0B0), Color(0xFF8C8C8C))
+                        ),
+                        onClick = {}
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Your daily update of the most played tracks right now - Global.",
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(top = 4.dp, start = 4.dp),
+                        color = Color.Gray,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
 
-        Column(modifier = Modifier.width(150.dp)) {
-            if (
-                connectionStatus == ConnectivityStatus.Available &&
-                location != null &&
-                ProfileUtil.getCountryName(location) != "Negara tidak tersedia"
-            ) {
+        if (
+            connectionStatus == ConnectivityStatus.Available &&
+            location != null &&
+            countryName != "Negara tidak tersedia"
+        ) {
+            item {
+                Column(modifier = Modifier.width(150.dp)) {
+                    TopSongCard(
+                        title = "Top 10",
+                        subtitle = countryName.uppercase(),
+                        gradient = Brush.verticalGradient(
+                            colors = listOf(Color(0xFFf16975), Color(0xFFec1e32))
+                        ),
+                        onClick = { onChartClick(location) }
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Your daily update of the most played tracks right now - $countryName.",
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(top = 4.dp, start = 4.dp),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+
+        item {
+            Column(modifier = Modifier.width(150.dp)) {
                 TopSongCard(
-                    title = "Top 10",
-                    subtitle = ProfileUtil.getCountryName(location).uppercase(),
+                    title = "Your Mix",
+                    subtitle = "Updated daily for you",
                     gradient = Brush.verticalGradient(
                         colors = listOf(Color(0xFFf16975), Color(0xFFec1e32))
                     ),
-                    onClick = { onChartClick(location) }
+                    onClick = { onChartClick("recomendation") }
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Your daily update of the most played tracks right now - ${ProfileUtil.getCountryName(location)}.",
+                    text = "Fresh picks just for you. Dive into your daily mix of the most played tracks.",
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(top = 4.dp, start = 4.dp),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            } else {
-                TopSongCard(
-                    title = "No Internet",
-                    subtitle = "",
-                    gradient = Brush.verticalGradient(
-                        colors = listOf(Color(0xFFB0B0B0), Color(0xFF8C8C8C))
-                    ),
-                    onClick = {}
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "Your daily update of the most played tracks right now - ${location?.let {
-                        ProfileUtil.getCountryName(
-                            it
-                        )
-                    }}.",
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(top = 4.dp, start = 4.dp),
-                    color = Color.Gray,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )

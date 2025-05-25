@@ -268,7 +268,7 @@ fun FullPlayerScreen(
                                 )
                             }
                         }
-                        if (song.isOnline) {
+                        if (song.serverId != null) {
                             IconButton(onClick = { isShareSheetOpen = true }) {
                                 Icon(
                                     imageVector = Icons.Default.Share,

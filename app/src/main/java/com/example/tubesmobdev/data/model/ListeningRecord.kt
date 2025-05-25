@@ -13,3 +13,8 @@ data class ListeningRecord(
     val date: String,
     val durationListened: Long
 )
+
+data class DailyListeningEntry(
+    val day: String,
+    val minutes: Int
+)

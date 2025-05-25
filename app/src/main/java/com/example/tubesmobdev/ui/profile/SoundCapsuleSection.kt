@@ -18,32 +18,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import com.example.tubesmobdev.data.model.Song
-import com.example.tubesmobdev.data.model.TopArtist
-import com.example.tubesmobdev.data.model.TopSong
-import com.example.tubesmobdev.data.model.StreakEntry
-
-/**
- * Data per bulan untuk ditampilkan di Sound Capsule.
- */
-data class SoundCapsuleData(
-    val month: String,
-    val minutesListened: Long,
-    val topArtist: TopArtist?,
-    val topSong: TopSong?,
-    val streakEntry: StreakEntry?,
-    val streakSong: Song?,
-    val streakRange: String
-)
+import com.example.tubesmobdev.data.model.SoundCapsuleData
+import com.example.tubesmobdev.util.extractMonthAndYear
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SoundCapsuleSection(
+    navController: NavController,
     capsules: List<SoundCapsuleData>,
-    onShareStreak: (SoundCapsuleData) -> Unit,
     onArtistClick   : (String) -> Unit,
-    onSongClick     : (String) -> Unit
+    onSongClick     : (String) -> Unit,
+    onTimeListenedClick: (SoundCapsuleData) -> Unit
 ) {
     if (capsules.isEmpty()) {
         Box(
@@ -63,28 +51,32 @@ fun SoundCapsuleSection(
 
     Column(modifier = Modifier.fillMaxWidth().padding(bottom = 80.dp)) {
         capsules.forEach { data ->
-            // Reuse UI style from second code block per bulan
             Column(modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)) {
-                // Title
-                Text(
-                    text = "Your Sound Capsule",
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
                 // Header row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = data.month,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Gray,
-                        modifier = Modifier.weight(1f)
-                    )
-                    IconButton(onClick = { onShareStreak(data) }) {
+                    val (monthText, yearText) = extractMonthAndYear(data.month)
+                    Row(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = monthText,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = yearText,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
+                            color = Color.Gray
+                        )
+                    }
+
+                    IconButton(onClick = {
+                        navController.navigate("shareSoundCapsule/${data.month}")
+                    }) {
                         Icon(
                             imageVector = Icons.Default.Share,
                             contentDescription = "Share Capsule",
@@ -101,7 +93,7 @@ fun SoundCapsuleSection(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Card(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).clickable { onTimeListenedClick(data) },
                         shape = RoundedCornerShape(8.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
@@ -224,7 +216,8 @@ fun SoundCapsuleSection(
                 // Streak Card
                 if (data.streakSong != null) {
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
@@ -240,10 +233,7 @@ fun SoundCapsuleSection(
                             )
                             Spacer(Modifier.height(12.dp))
                             Column(
-                                modifier = Modifier.padding(
-                                    horizontal = 12.dp,
-                                    vertical = 8.dp
-                                )
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                             ) {
                                 Text(
                                     text = "You had a ${data.streakEntry!!.days}-day streak",
@@ -255,12 +245,29 @@ fun SoundCapsuleSection(
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = Color.Gray
                                 )
-                                Spacer(Modifier.height(8.dp))
-                                Text(
-                                    text = data.streakRange,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray
-                                )
+                                Spacer(Modifier.height(24.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = data.streakRange,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.Gray,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    IconButton(onClick =
+                                        {navController.navigate("shareCapsuleStreak/${data.month}")}
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Share,
+                                            contentDescription = "Share Capsule",
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

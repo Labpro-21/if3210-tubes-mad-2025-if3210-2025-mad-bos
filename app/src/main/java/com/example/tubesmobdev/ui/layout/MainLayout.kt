@@ -45,6 +45,9 @@ import com.example.tubesmobdev.ui.home.HomeScreen
 import com.example.tubesmobdev.ui.library.LibraryScreen
 import com.example.tubesmobdev.ui.library.SearchLibraryScreen
 import com.example.tubesmobdev.ui.profile.ProfileScreen
+import com.example.tubesmobdev.ui.profile.SoundCapsuleSharePage
+import com.example.tubesmobdev.ui.profile.TimeListenedScreen
+import com.example.tubesmobdev.ui.topsongs.RecomendationSongScreen
 import com.example.tubesmobdev.ui.topsongs.TopSongsScreen
 import com.example.tubesmobdev.ui.viewmodel.ConnectionViewModel
 import com.example.tubesmobdev.ui.viewmodel.NavigationViewModel
@@ -245,6 +248,38 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                 )
                             }
 
+                            composable("top_songs/recomendation") { backStackEntry ->
+
+                                topBarContent = {
+                                    ScreenHeader(
+                                        title = "Song Recomendations",
+                                        isMainMenu = false,
+                                        onBack = { navController.popBackStack() },
+                                        dominantColor = if (connectivityStatus != ConnectivityStatus.Available) {
+                                            Color(0xFFB0B0B0)
+                                        } else {
+                                            Color(0xFFf16975)
+                                        }
+                                    )
+                                }
+
+                                RecomendationSongScreen(
+                                    chartCode = "recomendation",
+                                    onSongClick = { song, songs ->
+                                        playerViewModel.clearCurrentQueue()
+                                        playerViewModel.setCurrentQueue(songs)
+                                        playerViewModel.playSong(song)
+                                    },
+                                    viewModel = onlineSongViewModel,
+                                    onShowSnackbar = {
+//                                        snackbarMessage = it
+                                        Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                                    },
+                                    updateSongAfterDownload = { playerViewModel.updateCurrentSongAfterDownload() },
+                                    currentSong = currentSong
+                                )
+                            }
+
                             composable("top_songs/{chartCode}") { backStackEntry ->
                                 val chartCode = backStackEntry.arguments?.getString("chartCode") ?: "global"
 
@@ -337,6 +372,13 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                             }
                                             IconButton(onClick = { isSheetOpen = true }) {
                                                 Icon(Icons.Default.Add, contentDescription = "Add")
+                                            }
+                                            IconButton(onClick = { navController.navigate("qrScan") }) {
+                                                Icon(
+                                                    imageVector = Icons.Default.QrCodeScanner,
+                                                    contentDescription = "Scan QR",
+                                                    tint = Color.White
+                                                )
                                             }
                                         })},
                                     onDeleteQueueClick = { playerViewModel.removeSongFromQueue(it) },
@@ -557,26 +599,44 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                     navArgument("monthYear") { type = NavType.StringType }
                                 )
                             ) { backStackEntry ->
-                                topBarContent = {
-                                    ScreenHeader(
-                                        title = "Top Songs",
-                                        isMainMenu = false,
-                                        onBack = { navController.popBackStack() },
-                                    )
-                                }
                                 val typeString = backStackEntry.arguments?.getString("type")!!
                                 val month = backStackEntry.arguments?.getString("monthYear")!!
                                 val type = TopListType.valueOf(typeString)
+                                topBarContent = {
+                                    ScreenHeader(
+                                        title = "Top $type"+"s",
+                                        isMainMenu = false,
+                                        onBack = { navController.popBackStack() },
+                                        useTitle = true
+                                    )
+                                }
                                 TopListScreen(
-                                    title       = "$type for $month",
                                     bulanTahun  = month,
-                                    summaryText = "Your top $type in $month",
                                     type        = type,
                                     onItemClick =
                                         {playerViewModel.clearCurrentQueue()
                                             playerViewModel.playSong(it)},
-                                    onBack      = { navController.popBackStack() }
                                 )
+                            }
+                            composable("timeListened/{month}") { backStackEntry ->
+                                topBarContent = {
+                                    ScreenHeader(
+                                        title = "Time Listened",
+                                        isMainMenu = false,
+                                        onBack = { navController.popBackStack() },
+                                        useTitle = true
+                                    )
+                                }
+                                val month = backStackEntry.arguments?.getString("month") ?: return@composable
+                                TimeListenedScreen(month = month, onBack = { navController.popBackStack() })
+                            }
+                            composable("shareSoundCapsule/{month}") { backStack ->
+                                val month = backStack.arguments?.getString("month") ?: return@composable
+                                SoundCapsuleSharePage(month=month, onBack = {navController.popBackStack()})
+                            }
+                            composable("shareCapsuleStreak/{month}") { backStack ->
+                                val month = backStack.arguments?.getString("month") ?: return@composable
+                                SoundCapsuleSharePage(month=month, onBack = {navController.popBackStack()}, isStreak = true)
                             }
                         }
 

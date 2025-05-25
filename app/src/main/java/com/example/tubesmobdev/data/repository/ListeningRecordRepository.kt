@@ -75,6 +75,14 @@ class ListeningRecordRepository @Inject constructor(
         return dao.getMonthlyTopSong(userId, monthYear)
     }
 
+    suspend fun getDailyListeningMinutes(month: String): List<Pair<Int, Int>> {
+        val userId = authPreferences.getUserId()
+        if (userId == null) return emptyList() // ✅ handle null userId
+
+        val entries = dao.getDailyListeningMinutes(userId, month)
+        return entries.map { it.day.toInt() to it.minutes }
+    }
+
     suspend fun getMonthlyTopStreak(): Flow<List<StreakEntry>> {
         val sql = """
             WITH
@@ -117,7 +125,7 @@ class ListeningRecordRepository @Inject constructor(
                   COUNT(*)  AS days
                 FROM grouped
                 GROUP BY songId, monthYear, grp
-                HAVING days >= 1
+                HAVING days >= 3
               ),
               top_per_month AS (
                 SELECT

@@ -173,7 +173,7 @@ fun EditLocationSheet(
                             Spacer(Modifier.width(16.dp))
                         }
                     }
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(14.dp))
                     if (selectionMode.value == SelectionMode.LINK) {
                         OutlinedTextField(
                             value = linkInput.value,
@@ -181,10 +181,10 @@ fun EditLocationSheet(
                                 linkInput.value = it
                                 linkCountryCode.value = null
                             },
-                            label = { Text("Enter location or Google Maps link") },
+                            label = { Text("Enter location") },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(96.dp),
+                                .height(72.dp),
                             singleLine = false,
                             maxLines = 3,
                             textStyle = LocalTextStyle.current.copy(fontSize = MaterialTheme.typography.bodyLarge.fontSize),
@@ -208,7 +208,7 @@ fun EditLocationSheet(
                             },
                             style = MaterialTheme.typography.bodyMedium
                         )
-                        Spacer(Modifier.height(24.dp))
+                        Spacer(Modifier.height(14.dp))
                     }
                     Text("Detected Country Code:", color = Color.White)
                     Spacer(Modifier.height(8.dp))
