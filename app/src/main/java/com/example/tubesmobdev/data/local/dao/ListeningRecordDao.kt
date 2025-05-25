@@ -81,6 +81,7 @@ abstract class ListeningRecordDao {
     @Query("""
     SELECT 
         strftime('%d', date) AS day,
+        sum(durationListened) as seconds,
         SUM(durationListened) / 60000 AS minutes
     FROM listening_records
     WHERE creatorId = :userId AND strftime('%Y-%m', date) = :monthYear

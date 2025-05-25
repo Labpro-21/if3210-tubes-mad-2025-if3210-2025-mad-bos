@@ -90,8 +90,8 @@ class ProfileViewModel @Inject constructor(
     private val _monthlyTopList = MutableStateFlow<List<TopListItemData>>(emptyList())
     val monthlyTopList: StateFlow<List<TopListItemData>> = _monthlyTopList.asStateFlow()
 
-    private val _dailyListeningMinutes = MutableStateFlow<List<Pair<Int, Int>>>(emptyList())
-    val dailyListeningMinutes: StateFlow<List<Pair<Int, Int>>> = _dailyListeningMinutes
+    private val _dailyListeningMinutes = MutableStateFlow<List<Triple<Int, Int, Long>>>(emptyList())
+    val dailyListeningMinutes: StateFlow<List<Triple<Int, Int, Long>>> = _dailyListeningMinutes
 
     init {
         fetchProfile()
