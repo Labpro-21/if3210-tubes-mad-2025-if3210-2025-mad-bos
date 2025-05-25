@@ -509,11 +509,6 @@ class MusicService : MediaSessionService() {
             "${song.id}-${now}"
         }
 
-        if (song.creatorId == null) {
-            Log.e("MusicService", "creatorId is null for song ${song.title}")
-            return
-        }
-
         activeSession = ListeningSession(
             songId = song.id,
             title = song.title,
