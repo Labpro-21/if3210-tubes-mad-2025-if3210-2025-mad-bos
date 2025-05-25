@@ -66,47 +66,55 @@ Aplikasi Purrytify adalah platform streaming musik yang memudahkan pengguna untu
 ---
 
 ## Screenshot Aplikasi
-**Login**  
-![Login](Screenshots/Login.jpg)
+# Login
+![Login](Screenshots/MainPage/Login.jpg)
 
-**Home**  
-![Home](Screenshots/Home.jpg)
+# Home
+![Home](Screenshots/MainPage/Home.jpg)
 
-**Lbrary**  
-![Library](Screenshots/Library.jpg)
+# Library
+![Library](Screenshots/MainPage/Library.jpg)
 
 # Profile  
 ![Profile](Screenshots/Profile/Profile_Page.jpg)
+![Profile](Screenshots/Profile/Profile_Photo.jpg)
 ![Profile](Screenshots/Profile/Location_GPS.jpg)
 ![Profile](Screenshots/Profile/Location_Link.jpg)
 ![Profile](Screenshots/Profile/Location_Selection.jpg)
 
-**Add Song**  
+# Add Song
 ![AddSong](Screenshots/AddSong.jpg)
 
-**FullPlayer**  
-![FullPlayer](Screenshots/FullPlayer.jpg)
+# Full Player  
+![FullPlayer](Screenshots/Player/FullPlayer.jpg)
+![FullPlayer](Screenshots/Player/FullPlayer_Share.jpg)
+![FullPlayer](Screenshots/Player/Notification.jpg)
 
-**Edit Song**  
+# Top Songs and Recommendation
+![Recommendations](Screenshots/Recommendations/Top_Country.jpg)
+![Recommendations](Screenshots/Recommendations/Top_Global.jpg)
+![Recommendations](Screenshots/Recommendations/Top_Recommendation.jpg)
+
+# Edit Song
 ![Edit](Screenshots/Edit.jpg)
 
-**LikedSong**  
+# Like Song 
 ![Liked](Screenshots/Liked.jpg)
 
-**Queue**  
+# Queue
 ![Queue](Screenshots/Queue.jpg)
 
-**No Network**  
+# Offline
 ![Offline](Screenshots/Offline.jpg)
 
-**Online again**  
+# Back Online
 ![Online](Screenshots/Online.jpg)
 
 --- 
 
 ## Pembagian Kerja Anggota Kelompok
 
-
+### Milestone 1
 | No | Bagian/Fitur            | Anggota (PIC) | 
 |----|-------------------------|---------------|
 | 1  | Header dan Navbar       | 13522117      | 
@@ -125,6 +133,25 @@ Aplikasi Purrytify adalah platform streaming musik yang memudahkan pengguna untu
 | 14 | OWASP                   |13522019     |
 | 15 | Pencarian               | 13522117     | 
 | 16 | Accessibility Testing   | 13522019    | 
+
+### Milestone 2
+| No | Bagian/Fitur                                              | Anggota (PIC)  |
+| -- | --------------------------------------------------------- | ---------------|
+| 1  | Online Songs                                              | 13522117       |
+| 2  | Download Online Songs                                     | 13522117       |
+| 3  | Sound Capsule (Analytics) & Export                        | 13522077       |
+| 4  | Notification Controls                                     | 13522117       |
+| 5  | Audio Routing and Output Device                           | 13522077       |
+| 6  | Share Songs via URL                                       | 13522019       |
+| 7  | Share Songs via QR                                        | 13522019       |
+| 8  | Halaman Responsive                                        | Seluruh Anggota|
+| 9  | Edit Profile                                              | 13522019       |
+| 10 | Rekomendasi Lagu                                          | 13522077       |
+| 11 | Share Sound Capsule                                       | 13522077       |
+| 12 | Add Server Songs to Recently Played/Liked & Sound Capsule | 13522117       |
+| 13 | Caching                                                   | 13522077       |
+| 14 | OWASP                                                     | 13522019       |
+| 15 | Accessibility Testing                                     | 13522019       |
 
 
 ---
