@@ -52,8 +52,8 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MusicService : MediaSessionService() {
     private var mediaSession: MediaSession? = null
-
-    private var activeSession: ListeningSession? = null
+    private val _activeSession = MutableStateFlow<ListeningSession?>(null)
+    private val activeSession: StateFlow<ListeningSession?> get() = _activeSession
 
     private var currentlyPlayed: Boolean = false
 
@@ -461,16 +461,16 @@ class MusicService : MediaSessionService() {
     }
 
     private fun startListeningSession(song: Song) {
-        val existing = activeSession
+        val existing = _activeSession.value
         currentlyPlayed = true
 
-        android.util.Log.d("debug", "startListeningSession: "+existing)
+        Log.d("debug", "startListeningSession: $existing")
 
         if (existing != null && existing.songId == song.id) {
             serviceScope.launch {
                 val now = System.currentTimeMillis()
-                activeSession = existing.copy(lastKnownTimestamp = now)
-                playerPreferences.saveListeningSession(activeSession!!)
+                _activeSession.value = existing.copy(lastKnownTimestamp = now)
+                playerPreferences.saveListeningSession(_activeSession.value!!)
             }
             return
         }
@@ -482,26 +482,33 @@ class MusicService : MediaSessionService() {
             "${song.id}-${now}"
         }
 
-        activeSession = ListeningSession(
+        Log.d("debug", "Creating session: title=${song.title}, artist=${song.artist}, id=${song.id}, sessionId=$sessionId")
+
+        val newSession = ListeningSession(
             songId = song.id,
-            title = song.title,
-            artist = song.artist,
+            title = song.title ?: "Unknown Title",
+            artist = song.artist ?: "Unknown Artist",
             sessionId = sessionId,
             startTimestamp = existing?.startTimestamp ?: now,
             lastKnownTimestamp = now,
-            coverUrl = song.coverUrl,
+            coverUrl = song.coverUrl
         )
 
+        _activeSession.value = newSession
+
         serviceScope.launch {
-            playerPreferences.saveListeningSession(activeSession!!)
+            try {
+                playerPreferences.saveListeningSession(newSession)
+            } catch (e: Exception) {
+                Log.e("MusicService", "Failed to save session", e)
+            }
         }
     }
 
-
     private fun stopListeningSession() {
-        val session = activeSession ?: return
+        val session = _activeSession.value ?: return
 
-        android.util.Log.d("debug", "ststopListeningSessionop: "+session)
+        Log.d("debug", "stopListeningSession: $session")
 
         val now = System.currentTimeMillis()
         val duration = (now - session.lastKnownTimestamp).coerceAtLeast(0L)
@@ -515,7 +522,6 @@ class MusicService : MediaSessionService() {
             val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
             val existing = listeningRecordRepository.getRecordBySessionId(session.sessionId)
-
             if (existing != null) {
                 val updated = existing.copy(durationListened = existing.durationListened + duration)
                 listeningRecordRepository.updateRecord(updated)
@@ -533,14 +539,15 @@ class MusicService : MediaSessionService() {
                 listeningRecordRepository.insertRecord(record)
             }
 
-            activeSession = session.copy(lastKnownTimestamp = now)
-            playerPreferences.saveListeningSession(activeSession!!)
+            val updatedSession = session.copy(lastKnownTimestamp = now)
+            _activeSession.value = updatedSession
+            playerPreferences.saveListeningSession(updatedSession)
         }
     }
 
-    private fun clearListeningSession(){
-        android.util.Log.d("debug", "clearListeningSession: ")
-        activeSession = null
+    private fun clearListeningSession() {
+        Log.d("debug", "clearListeningSession")
+        _activeSession.value = null
         serviceScope.launch {
             playerPreferences.clearListeningSession()
         }
@@ -551,6 +558,7 @@ class MusicService : MediaSessionService() {
         if (session != null) {
             val now = System.currentTimeMillis()
             val duration = (now - session.lastKnownTimestamp).coerceAtLeast(0L)
+
             if (duration >= 5000) {
                 val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
                 val existing = listeningRecordRepository.getRecordBySessionId(session.sessionId)
@@ -572,6 +580,8 @@ class MusicService : MediaSessionService() {
                     listeningRecordRepository.insertRecord(record)
                 }
             }
+
+            _activeSession.value = null
             playerPreferences.clearListeningSession()
         }
     }
