@@ -8,9 +8,13 @@ import com.example.tubesmobdev.data.local.dao.SongDao
 import com.example.tubesmobdev.data.local.database.SongDatabase
 import com.example.tubesmobdev.data.local.preferences.AuthPreferences
 import com.example.tubesmobdev.data.local.preferences.IAuthPreferences
+import com.example.tubesmobdev.data.local.preferences.IOnlineSongPreference
 import com.example.tubesmobdev.data.local.preferences.IPlayerPreferences
+import com.example.tubesmobdev.data.local.preferences.IProfilePreferences
 import com.example.tubesmobdev.data.local.preferences.IServicePreferences
+import com.example.tubesmobdev.data.local.preferences.OnlineSongPreference
 import com.example.tubesmobdev.data.local.preferences.PlayerPreferences
+import com.example.tubesmobdev.data.local.preferences.ProfilePreferences
 import com.example.tubesmobdev.data.local.preferences.ServicePreferences
 import com.example.tubesmobdev.data.remote.api.AuthApi
 import com.example.tubesmobdev.data.remote.api.ProfileApi
@@ -28,7 +32,6 @@ import com.example.tubesmobdev.manager.PlayerManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.UnstableApi
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
@@ -79,6 +82,18 @@ object AppModule {
 
     @Singleton
     @Provides
+    fun provideOnlineSongPreferences(@ApplicationContext context: Context): IOnlineSongPreference {
+        return OnlineSongPreference(context)
+    }
+
+    @Singleton
+    @Provides
+    fun provideProfilePreferences(@ApplicationContext context: Context): IProfilePreferences {
+        return ProfilePreferences(context)
+    }
+
+    @Singleton
+    @Provides
     fun providePlayerPreferences(@ApplicationContext context: Context): IPlayerPreferences {
         return PlayerPreferences(context)
     }
@@ -112,8 +127,8 @@ object AppModule {
     }
     @Provides
     @Singleton
-    fun provideProfileRepository(profileApi: ProfileApi): ProfileRepository {
-        return ProfileRepository(profileApi)
+    fun provideProfileRepository(profileApi: ProfileApi, profilePreferences: IProfilePreferences): ProfileRepository {
+        return ProfileRepository(profileApi, profilePreferences)
     }
 
     @Provides
@@ -178,9 +193,10 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideOnlineSongRepository(apiService: SongApi): OnlineSongRepository {
-        return OnlineSongRepository(apiService)
+    fun provideOnlineSongRepository(apiService: SongApi, songPreference: IOnlineSongPreference): OnlineSongRepository {
+        return OnlineSongRepository(apiService, songPreference)
     }
+
 
     @Provides
     @Singleton

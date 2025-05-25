@@ -248,34 +248,50 @@ fun TopSongsScreen(
                 }
             }
 
-            if (connectivityStatus == ConnectivityStatus.Available) {
-                itemsIndexed(songs) { _, song ->
-                    SongListItem(
-                        number = song.rank,
-                        song = song,
-                        onClick = {
-                            viewModel.convertToLocalSongs(listOf(song)) { localSongs ->
-                                onSongClick(localSongs.first(), localSongs)
+            itemsIndexed(songs) { _, song ->
+                SongListItem(
+                    number = song.rank,
+                    song = song,
+                    onClick = {
+                        viewModel.convertToLocalSongs(listOf(song)) { localSongs ->
+                            onSongClick(localSongs.first(), localSongs)
+                        }
+                    },
+                    onDownloadClick = {
+                        viewModel.downloadAndInsertSong(context, song) { result -> val message = if (result.isSuccess) {
+                            "Lagu berhasil diunduh"
+                            } else {
+                                result.exceptionOrNull()?.message ?: "Gagal mengunduh lagu"
                             }
-                        },
-                        onDownloadClick = {
-                            viewModel.downloadAndInsertSong(context, song) { result -> val message = if (result.isSuccess) {
-                                "Lagu berhasil diunduh"
-                                } else {
-                                    result.exceptionOrNull()?.message ?: "Gagal mengunduh lagu"
-                                }
-                                onShowSnackbar(message)
-                                if (currentSong != null) {
-                                    if (currentSong.serverId == song.id){
-                                        updateSongAfterDownload()
-                                    }
+                            onShowSnackbar(message)
+                            if (currentSong != null) {
+                                if (currentSong.serverId == song.id){
+                                    updateSongAfterDownload()
                                 }
                             }
+                        }
 
-                        },
-                        isDownloading = downloadingSongs[song.id] == true,
-                        isDownloaded = downloadedSongIds.contains(song.id)
-                    )
+                    },
+                    isDownloading = downloadingSongs[song.id] == true,
+                    isDownloaded = downloadedSongIds.contains(song.id)
+                )
+            }
+
+            if (songs.isEmpty() && !isLoading && error == null) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No song found",
+                            color = Color.LightGray,
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }

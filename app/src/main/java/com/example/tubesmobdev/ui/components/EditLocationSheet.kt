@@ -30,6 +30,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.ui.Alignment
 import com.google.accompanist.permissions.isGranted
+import java.io.IOException
 import java.lang.SecurityException
 import java.util.Locale
 
@@ -106,12 +107,24 @@ fun EditLocationSheet(
                         com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, null
                     ).addOnSuccessListener { location ->
                         if (location != null) {
-                            val geocoder = Geocoder(context, Locale.getDefault())
-                            val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
-                            countryCode.value = addresses?.firstOrNull()?.countryCode
+                            try {
+                                val geocoder = Geocoder(context, Locale.getDefault())
+                                val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+                                countryCode.value = addresses?.firstOrNull()?.countryCode
+                                    ?: run {
+                                        Log.w("EditLocation", "No address found")
+                                        null
+                                    }
+                            } catch (e: IOException) {
+                                Log.e("EditLocation", "Geocoder IOException: ${e.localizedMessage}")
+                                gpsResolutionStatus.value = LocationStatus.Failed
+                            }
                         } else {
                             gpsResolutionStatus.value = LocationStatus.Failed
                         }
+                    }.addOnFailureListener { e ->
+                        Log.e("EditLocation", "Location fetch failed: ${e.localizedMessage}")
+                        gpsResolutionStatus.value = LocationStatus.Failed
                     }
                 } catch (e: SecurityException) {
                     Log.e("EditLocation", "SecurityException: ${e.localizedMessage}")
