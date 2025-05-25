@@ -119,6 +119,10 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
         navigationViewModel.navigateToSongId.collect { songId ->
             Log.d("MainLayout", "Received deep link to songId: $songId")
             try {
+                if (connectivityStatus == ConnectivityStatus.Unavailable){
+                    Toast.makeText(context, "Can play online song no internet", Toast.LENGTH_SHORT).show()
+                    return@collect
+                }
                 val onlineSong = onlineSongViewModel.getOnlineSongById(songId)
                 val song = onlineSongViewModel.convertToLocalSong(onlineSong)
                 playerViewModel.playSong(song)
@@ -234,6 +238,10 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                     navController = navController,
                                     isCompact = isCompact,
                                     onHomeSongClick = {song, songs ->
+                                        if (connectivityStatus == ConnectivityStatus.Unavailable && song.isOnline){
+                                            Toast.makeText(context, "Can play online song no internet", Toast.LENGTH_SHORT).show()
+                                            return@HomeScreen
+                                        }
                                         playerViewModel.clearCurrentQueue()
                                         playerViewModel.setCurrentQueue(songs)
                                         playerViewModel.playSong(song)
@@ -241,6 +249,10 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
 
                                     },
                                     onSongClick = { song, songs ->
+                                        if (connectivityStatus == ConnectivityStatus.Unavailable && song.isOnline){
+                                            Toast.makeText(context, "Can play online song no internet", Toast.LENGTH_SHORT).show()
+                                            return@HomeScreen
+                                        }
                                         playerViewModel.clearCurrentQueue()
                                         playerViewModel.setCurrentQueue(songs)
                                         playerViewModel.playSong(song)
@@ -262,6 +274,10 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                 RecomendationSongScreen(
                                     chartCode = "recomendation",
                                     onSongClick = { song, songs ->
+                                        if (connectivityStatus == ConnectivityStatus.Unavailable && song.isOnline){
+                                            Toast.makeText(context, "Can play online song no internet", Toast.LENGTH_SHORT).show()
+                                            return@RecomendationSongScreen
+                                        }
                                         playerViewModel.clearCurrentQueue()
                                         playerViewModel.setCurrentQueue(songs)
                                         playerViewModel.playSong(song)
@@ -301,6 +317,10 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                 TopSongsScreen(
                                     chartCode = chartCode,
                                     onSongClick = { song, songs ->
+                                        if (connectivityStatus == ConnectivityStatus.Unavailable && song.isOnline){
+                                            Toast.makeText(context, "Can play online song no internet", Toast.LENGTH_SHORT).show()
+                                            return@TopSongsScreen
+                                        }
                                         playerViewModel.clearCurrentQueue()
                                         playerViewModel.setCurrentQueue(songs)
                                         playerViewModel.playSong(song)
@@ -339,6 +359,10 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                 LibraryScreen(
                                     navController,
                                     onSongClick = { song, songs ->
+                                        if (connectivityStatus == ConnectivityStatus.Unavailable && song.isOnline){
+                                            Toast.makeText(context, "Can play online song no internet", Toast.LENGTH_SHORT).show()
+                                            return@LibraryScreen
+                                        }
                                         playerViewModel.clearCurrentQueue()
                                         playerViewModel.setCurrentQueue(songs)
                                         playerViewModel.playSong(song)
@@ -547,6 +571,10 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                 SearchLibraryScreen(
                                     query = searchQuery,
                                     onSongClick = { song, songs ->
+                                        if (connectivityStatus == ConnectivityStatus.Unavailable && song.isOnline){
+                                            Toast.makeText(context, "Can play online song no internet", Toast.LENGTH_SHORT).show()
+                                            return@SearchLibraryScreen
+                                        }
                                         playerViewModel.clearCurrentQueue()
                                         playerViewModel.playSong(song)
                                     },
@@ -573,6 +601,10 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                         if (songId != null) {
                                             CoroutineScope(Dispatchers.Main).launch {
                                                 try {
+                                                    if (connectivityStatus == ConnectivityStatus.Unavailable){
+                                                        Toast.makeText(context, "Can play online song no internet", Toast.LENGTH_SHORT).show()
+                                                        return@launch
+                                                    }
                                                     val onlineSong = onlineSongViewModel.getOnlineSongById(songId.toString())
                                                     val song = onlineSongViewModel.convertToLocalSong(onlineSong)
                                                     playerViewModel.playSong(song)
@@ -609,9 +641,13 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                 TopListScreen(
                                     bulanTahun  = month,
                                     type        = type,
-                                    onItemClick =
-                                        {playerViewModel.clearCurrentQueue()
-                                            playerViewModel.playSong(it)},
+                                    onItemClick = {
+                                        if (connectivityStatus == ConnectivityStatus.Unavailable && it.isOnline){
+                                            Toast.makeText(context, "Can play online song no internet", Toast.LENGTH_SHORT).show()
+                                            return@TopListScreen
+                                        }
+                                        playerViewModel.clearCurrentQueue()
+                                        playerViewModel.playSong(it)},
                                 )
                             }
                             composable("timeListened/{month}") { backStackEntry ->
