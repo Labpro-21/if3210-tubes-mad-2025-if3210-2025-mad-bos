@@ -157,6 +157,64 @@ fun FullPlayerScreen(
                         .padding(vertical = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Text(
+                        text = song.title,
+                        color = Color.White,
+                        fontSize = 24.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = song.artist,
+                        color = Color.LightGray,
+                        fontSize = 16.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = { showAudioDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Speaker,
+                                contentDescription = "Ganti Output Audio",
+                                tint = Color.White
+                            )
+                        }
+
+                        if (song.serverId != null) {
+                            IconButton(onClick = { isShareSheetOpen = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Share,
+                                    contentDescription = "Share Song",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                        }
+
+                        IconButton(onClick = onAddClicked) {
+                            Icon(
+                                imageVector = if (song.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = "Like/Unlike",
+                                tint = Color.White,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     SeekSlider(
                         progress        = progress,
                         durationMillis  = totalDurationMillis,
@@ -169,11 +227,20 @@ fun FullPlayerScreen(
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment     = Alignment.CenterVertically
                     ) {
-                        IconButton(onClick = onSkipPrevious) {
+                        IconButton(onClick = onToggleShuffle) {
+                            Icon(
+                                imageVector = Icons.Default.Shuffle,
+                                contentDescription = "Shuffle",
+                                tint = if (isShuffle) Color.Yellow else Color.White
+                            )
+                        }
+
+                        IconButton(onClick = onSkipPrevious, enabled = hasPrev) {
                             Icon(
                                 Icons.Default.SkipPrevious,
                                 contentDescription = "Previous",
-                                tint               = Color.White
+                                tint = if (hasPrev) Color.White else Color.Gray,
+                                modifier = Modifier.size(32.dp)
                             )
                         }
                         IconButton(
@@ -192,12 +259,32 @@ fun FullPlayerScreen(
                                 modifier           = Modifier.size(32.dp)
                             )
                         }
-                        IconButton(onClick = onSkipNext) {
+                        IconButton(onClick = onSkipNext, enabled = hasNext) {
                             Icon(
                                 Icons.Default.SkipNext,
                                 contentDescription = "Next",
-                                tint               = Color.White,
-                                modifier           = Modifier.size(32.dp)
+                                tint = if (hasNext) Color.White else Color.Gray,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+
+                        IconButton(onClick = onCycleRepeat) {
+                            val repeatIcon = when (repeatMode) {
+                                RepeatMode.REPEAT_ONE -> Icons.Default.RepeatOne
+                                else -> Icons.Default.Repeat
+                            }
+
+                            val repeatIconColor = when (repeatMode) {
+                                RepeatMode.NONE -> Color.Gray
+                                RepeatMode.REPEAT_ALL -> Color.White
+                                RepeatMode.REPEAT_ONE -> Color(0xFF4CAF50)
+                            }
+
+                            Icon(
+                                imageVector = repeatIcon,
+                                contentDescription = "Repeat",
+                                tint = repeatIconColor,
+                                modifier = Modifier.size(32.dp)
                             )
                         }
                     }
