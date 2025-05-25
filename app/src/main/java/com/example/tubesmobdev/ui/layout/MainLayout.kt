@@ -131,6 +131,8 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                 }
                 val onlineSong = onlineSongViewModel.getOnlineSongById(songId)
                 val song = onlineSongViewModel.convertToLocalSong(onlineSong)
+                playerViewModel.clearCurrentQueue()
+                playerViewModel.setCurrentQueue(listOf(song))
                 playerViewModel.playSong(song)
                 navController.navigate("fullplayer")
             } catch (e: Exception) {
