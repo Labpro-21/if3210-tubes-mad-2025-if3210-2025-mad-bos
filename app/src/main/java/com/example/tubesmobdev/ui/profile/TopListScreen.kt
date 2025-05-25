@@ -140,6 +140,9 @@ fun TopListScreen(
                 )
 
             }
+            item {
+                Spacer(modifier = Modifier.height(96.dp)) // atau sesuaikan tinggi MiniPlayer
+            }
         }
     }
 }

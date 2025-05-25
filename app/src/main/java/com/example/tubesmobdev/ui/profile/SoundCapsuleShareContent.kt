@@ -55,6 +55,7 @@ fun SoundCapsuleShareContent(data: SoundCapsuleShareData, modifier: Modifier = M
                         model = ImageRequest.Builder(context)
                             .data(imageUrl)
                             .crossfade(true)
+                            .allowHardware(false)
                             .build(),
                         imageLoader = imageLoader,
                         contentDescription = null,
