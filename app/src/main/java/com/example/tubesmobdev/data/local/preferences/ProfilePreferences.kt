@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.tubesmobdev.data.remote.response.ProfileResponse
+import com.example.tubesmobdev.util.EncryptionManager
 import com.google.gson.Gson
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
@@ -18,20 +19,26 @@ class ProfilePreferences @Inject constructor(
     @ApplicationContext private val context: Context
 ) : IProfilePreferences {
 
+    private val encryptionManager = EncryptionManager(context)
     private val PROFILE_KEY = stringPreferencesKey("cached_profile")
+    private val gson = Gson()
 
     override suspend fun saveProfile(profile: ProfileResponse) {
-        val json = Gson().toJson(profile)
+        val json = gson.toJson(profile)
+        val encrypted = encryptionManager.encrypt(json)
         context.profileDataStore.edit { preferences ->
-            preferences[PROFILE_KEY] = json
+            preferences[PROFILE_KEY] = encrypted
         }
     }
 
     override suspend fun getCachedProfile(): ProfileResponse? {
         val preferences = context.profileDataStore.data.first()
-        val json = preferences[PROFILE_KEY]
-        return json?.let {
-            Gson().fromJson(it, ProfileResponse::class.java)
+        val encrypted = preferences[PROFILE_KEY] ?: return null
+        return try {
+            val decrypted = encryptionManager.decrypt(encrypted)
+            gson.fromJson(decrypted, ProfileResponse::class.java)
+        } catch (e: Exception) {
+            null
         }
     }
 
