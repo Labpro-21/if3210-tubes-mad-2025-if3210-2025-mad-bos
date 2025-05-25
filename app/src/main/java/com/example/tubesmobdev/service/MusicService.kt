@@ -25,6 +25,8 @@ import com.example.tubesmobdev.R
 import com.example.tubesmobdev.data.local.dao.ListeningRecordDao
 import com.example.tubesmobdev.data.local.preferences.AuthPreferences
 import com.example.tubesmobdev.data.local.preferences.PlayerPreferences
+import com.example.tubesmobdev.data.model.ListeningRecord
+import com.example.tubesmobdev.data.model.ListeningSession
 import com.example.tubesmobdev.data.model.Song
 import com.example.tubesmobdev.data.repository.ListeningRecordRepository
 import com.example.tubesmobdev.util.SongEventBus
@@ -36,6 +38,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 
@@ -43,6 +48,8 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MusicService : MediaSessionService() {
     private var mediaSession: MediaSession? = null
+
+    private var activeSession: ListeningSession? = null
 
     private var currentQueue: List<Song> = emptyList()
     private val serviceScope = CoroutineScope(Dispatchers.Main)
@@ -188,9 +195,6 @@ class MusicService : MediaSessionService() {
 
         Log.d("Restore", "create")
 
-//        playerPreferences = PlayerPreferences(applicationContext)
-//        listeningRepo = ListeningRecordRepository(ListeningRecordDao(), AuthPreferences(applicationContext))
-
         val player = ExoPlayer.Builder(this).build()
 
         player.addListener(object : Player.Listener {
@@ -199,45 +203,27 @@ class MusicService : MediaSessionService() {
                 val index = player.currentMediaItemIndex
                 if (index >= 0 && index < currentQueue.size) {
                     val song = currentQueue[index]
+
+                    if (player.isPlaying) {
+                        stopListeningSession()
+                    } else {
+                        clearListeningSession()
+                    }
+
                     emitSongChange(song)
                     updateCustomButton(song)
 
                 }
             }
 
-//            override fun onPlaybackStateChanged(playbackState: Int) {
-//                super.onPlaybackStateChanged(playbackState)
-//                if (playbackState == Player.STATE_ENDED) {
-//
-//                    val index = player.currentMediaItemIndex
-//                    val nextIndex = when {
-//                        player.repeatMode == REPEAT_MODE_ONE -> index
-//                        index < currentQueue.size - 1 -> index + 1
-//                        player.repeatMode == REPEAT_MODE_ALL -> 0
-//                        else -> -1
-//                    }
-//
-//                    if (nextIndex >= 0 && nextIndex < currentQueue.size) {
-//                        val nextSong = currentQueue[nextIndex]
-//
-//                        emitSongChange(nextSong)
-//                    }
-//                }
-//            }
-
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 val index = player.currentMediaItemIndex
-                var cusong: Song? = null
-                if (index >= 0 && index < currentQueue.size) {
-                    cusong = currentQueue[index]
-                }
-                if (cusong != null){
+                val song = currentQueue.getOrNull(index)
+                if (song != null) {
                     if (isPlaying) {
-                        Log.d("PlayerViewModel", "Playback started")
-                        emitSongStarted(cusong)
+                        emitSongStarted(song)
                     } else {
-                        Log.d("PlayerViewModel", "Playback paused or stopped")
-                        emitSongPaused(cusong)
+                        emitSongPaused(song)
                     }
                 }
             }
@@ -248,19 +234,9 @@ class MusicService : MediaSessionService() {
                 reason: Int
             ) {
                 val index = player.currentMediaItemIndex
-                var csong: Song? = null
-                if (index >= 0 && index < currentQueue.size) {
-                    csong = currentQueue[index]
-                }
-                if (csong != null){
-                    if (reason == Player.DISCONTINUITY_REASON_SEEK) {
-                        Log.d(
-                            "PlayerViewModel",
-                            "User seeked from ${oldPosition.positionMs} to ${newPosition.positionMs}"
-                        )
-
-                        emitSongSeeked(csong, oldPosition.positionMs, newPosition.positionMs)
-                    }
+                val song = currentQueue.getOrNull(index) ?: return
+                if (reason == Player.DISCONTINUITY_REASON_SEEK) {
+                    emitSongSeeked(song, oldPosition.positionMs, newPosition.positionMs)
                 }
             }
         })
@@ -279,6 +255,10 @@ class MusicService : MediaSessionService() {
             )
             .setCallback(CustomCallback())
             .build()
+
+        serviceScope.launch {
+            restoreUnfinishedListeningSession()
+        }
 
     }
 
@@ -335,6 +315,7 @@ class MusicService : MediaSessionService() {
             }
 
             ACTION_STOP -> {
+                stopListeningSession()
                 stopSelf()
             }
 
@@ -404,6 +385,7 @@ class MusicService : MediaSessionService() {
 
     private fun emitSongStarted(song: Song) {
         serviceScope.launch {
+            startListeningSession(song)
             SongEventBus.emitSongStarted(song)
             Log.d("MusicService", "Emitted song started via EventBus")
         }
@@ -411,6 +393,7 @@ class MusicService : MediaSessionService() {
 
     private fun emitSongPaused(song: Song) {
         serviceScope.launch {
+            stopListeningSession()
             SongEventBus.emitSongPaused(song)
             Log.d("MusicService", "Emitted song paused via EventBus")
         }
@@ -436,14 +419,6 @@ class MusicService : MediaSessionService() {
             Log.d("MusicService", "Emitted song like via EventBus ")
         }
     }
-//
-//    private fun emitStopApp() {
-//        serviceScope.launch {
-//            SongEventBus.emitStopApp()
-//            Log.d("MusicService", "Emitted song like via EventBus ")
-//        }
-//    }
-
     private fun emitToggleShuffle(isShuffle: Boolean) {
         serviceScope.launch {
             SongEventBus.emitShuffleToggled(isShuffle)
@@ -459,6 +434,8 @@ class MusicService : MediaSessionService() {
 
     override fun onDestroy() {
         Log.d("Restore", "Destroyed")
+        stopListeningSession()
+        clearListeningSession()
         mediaSession?.run {
             player.stop()
             player.release()
@@ -473,6 +450,7 @@ class MusicService : MediaSessionService() {
 
         serviceScope.launch {
             try {
+                stopListeningSession()
                 if (currentQueue.isNotEmpty()) {
                     playerPreferences.saveLastQueue(currentQueue)
                 }
@@ -514,4 +492,104 @@ class MusicService : MediaSessionService() {
         }
     }
 
+    private fun startListeningSession(song: Song) {
+        val existing = activeSession
+
+        if (existing != null && existing.songId == song.id) {
+            serviceScope.launch {
+                val now = System.currentTimeMillis()
+                activeSession = existing.copy(lastKnownTimestamp = now)
+                playerPreferences.saveListeningSession(activeSession!!)
+            }
+            return
+        }
+
+        val now = System.currentTimeMillis()
+        val sessionId = existing?.sessionId ?: "${song.id}-${now}"
+
+        activeSession = ListeningSession(
+            songId = song.id,
+            title = song.title,
+            artist = song.artist,
+            creatorId = song.creatorId,
+            sessionId = sessionId,
+            startTimestamp = existing?.startTimestamp ?: now,
+            lastKnownTimestamp = now
+        )
+
+        serviceScope.launch {
+            playerPreferences.saveListeningSession(activeSession!!)
+        }
+    }
+
+
+    private fun stopListeningSession() {
+        val session = activeSession ?: return
+
+        val now = System.currentTimeMillis()
+        val duration = (now - session.lastKnownTimestamp).coerceAtLeast(0L)
+
+        if (duration < 5000) {
+            Log.d("MusicService", "Durasi terlalu pendek, tidak disimpan")
+            return
+        }
+
+        serviceScope.launch {
+            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+            val existing = listeningRecordRepository.getRecordBySessionId(session.sessionId)
+
+            if (existing != null) {
+                val updated = existing.copy(durationListened = existing.durationListened + duration)
+                listeningRecordRepository.updateRecord(updated)
+            } else {
+                val record = ListeningRecord(
+                    sessionId = session.sessionId,
+                    songId = session.songId,
+                    title = session.title,
+                    artist = session.artist,
+                    creatorId = session.creatorId,
+                    date = today,
+                    durationListened = duration
+                )
+                listeningRecordRepository.insertRecord(record)
+            }
+
+            activeSession = session.copy(lastKnownTimestamp = now)
+            playerPreferences.saveListeningSession(activeSession!!)
+        }
+    }
+
+    private fun clearListeningSession(){
+        activeSession = null
+    }
+
+    private suspend fun restoreUnfinishedListeningSession() {
+        val session = playerPreferences.getListeningSession()
+        if (session != null) {
+            val now = System.currentTimeMillis()
+            val duration = (now - session.lastKnownTimestamp).coerceAtLeast(0L)
+            if (duration >= 5000) {
+                val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                val existing = listeningRecordRepository.getRecordBySessionId(session.sessionId)
+
+                if (existing != null) {
+                    val updated = existing.copy(durationListened = existing.durationListened + duration)
+                    listeningRecordRepository.updateRecord(updated)
+                } else {
+                    val record = ListeningRecord(
+                        sessionId = session.sessionId,
+                        songId = session.songId,
+                        title = session.title,
+                        artist = session.artist,
+                        creatorId = session.creatorId,
+                        date = today,
+                        durationListened = duration
+                    )
+                    listeningRecordRepository.insertRecord(record)
+                }
+            }
+            playerPreferences.clearListeningSession()
+        }
+    }
 }

@@ -46,15 +46,11 @@ class PlayerViewModel @OptIn(UnstableApi::class)
 @Inject constructor(
     private val app: Application,
     private val songRepository: SongRepository,
-    private val listeningRecordRepository: ListeningRecordRepository,
     private val playerRepository: PlayerPreferencesRepository,
     private val playerManager: PlayerManager,
     private val playbackConnection: PlaybackConnection,
     private val playerPreferences: PlayerPreferences
 ) : AndroidViewModel(app) {
-
-    private var listeningStartTime: Long? = null
-
     private val _currentSong = MutableStateFlow<Song?>(null)
     val currentSong: StateFlow<Song?> = _currentSong
 
@@ -130,9 +126,6 @@ class PlayerViewModel @OptIn(UnstableApi::class)
                         }
                     }
 
-//                    is SongEvent.StopApp -> {
-//
-//                    }
                     is SongEvent.SongPaused -> {
                         Log.d("PlayerViewModel", "Song paused: ${event.song}")
                     }
@@ -193,40 +186,11 @@ class PlayerViewModel @OptIn(UnstableApi::class)
 
     private fun onSongChanged(song: Song) {
         viewModelScope.launch {
-            saveListeningDuration()
-            Log.d("debug", "onSongChanged: ")
             _currentSong.value = song
-            listeningStartTime = System.currentTimeMillis()
-
             songRepository.updateLastPlayed(song, System.currentTimeMillis())
-
             checkHasNext()
             checkHasPrev()
         }
-    }
-
-    private suspend fun saveListeningDuration() {
-        val song = _currentSong.value ?: return
-        val startTime = listeningStartTime ?: return
-        val endTime = System.currentTimeMillis()
-        val listenedMs = endTime - startTime
-
-        Log.d("debug", "saveListeningDuration: "+ song.isOnline + listenedMs)
-
-        if (listenedMs >= 5000) {
-            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-            val record = ListeningRecord(
-                songId = song.id,
-                title = song.title,
-                artist = song.artist,
-                creatorId = song.creatorId,
-                date = today,
-                durationListened = listenedMs
-            )
-            listeningRecordRepository.insertRecord(record)
-        }
-
-        listeningStartTime = null
     }
 
     fun playSong(song: Song) {

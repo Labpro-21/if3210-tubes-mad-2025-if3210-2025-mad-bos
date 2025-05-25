@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RawQuery
+import androidx.room.Update
 import androidx.sqlite.db.SupportSQLiteQuery
 import com.example.tubesmobdev.data.model.DailyListeningEntry
 import com.example.tubesmobdev.data.model.ListeningRecord
@@ -178,6 +179,19 @@ abstract class ListeningRecordDao {
         userId: Long,
         monthYear: String
     ): Flow<List<TopSong>>
+    
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    abstract suspend fun insert(record: ListeningRecord): Long
+
+    @Update
+    abstract suspend fun update(record: ListeningRecord)
+
+    @Query("SELECT * FROM listening_records WHERE sessionId = :sessionId LIMIT 1")
+    abstract suspend fun getBySessionId(sessionId: String): ListeningRecord?
+
+    @Query("UPDATE listening_records SET durationListened = durationListened + :increment WHERE sessionId = :sessionId")
+    abstract suspend fun incrementDurationBySessionId(sessionId: String, increment: Long)
+
 
     @RawQuery(observedEntities = [ListeningRecord::class])
     abstract fun getMonthlyTopStreakRaw(query: SupportSQLiteQuery): Flow<List<StreakEntry>>

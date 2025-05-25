@@ -9,7 +9,7 @@ import com.example.tubesmobdev.data.model.Song
 
 @Database(
     entities = [Song::class, ListeningRecord::class],
-    version = 4
+    version = 5
 )
 abstract class SongDatabase : RoomDatabase() {
     abstract fun songDao(): SongDao

@@ -159,4 +159,17 @@ class ListeningRecordRepository @Inject constructor(
             flowOf(emptyList())
         }
     }
+    suspend fun getRecordBySessionId(sessionId: String): ListeningRecord? {
+        return dao.getBySessionId(sessionId)
+    }
+
+    suspend fun updateRecord(record: ListeningRecord): Result<Unit> {
+        return try {
+            dao.update(record)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("ListeningRepo", "Failed to update record", e)
+            Result.failure(e)
+        }
+    }
 }

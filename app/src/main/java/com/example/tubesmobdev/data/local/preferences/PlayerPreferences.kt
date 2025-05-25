@@ -5,11 +5,13 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.tubesmobdev.data.model.ListeningSession
 import com.example.tubesmobdev.data.model.Song
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -26,14 +28,14 @@ class PlayerPreferences @Inject constructor(
         private val KEY_LAST_QUEUE = stringPreferencesKey("last_queue")
         private val KEY_LAST_PLAYED_SONG = stringPreferencesKey("last_played_song")
         private val KEY_LAST_POSITION = stringPreferencesKey("last_position")
+        private val KEY_LISTENING_SESSION = stringPreferencesKey("listening_session")
     }
 
     override suspend fun saveLastQueue(queue: List<Song>) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_LAST_QUEUE] = Gson().toJson(queue)
+        context.dataStore.edit { prefs ->
+            prefs[KEY_LAST_QUEUE] = Gson().toJson(queue)
         }
     }
-
 
     override suspend fun saveLastPosition(position: Long) {
         context.dataStore.edit { prefs ->
@@ -50,8 +52,8 @@ class PlayerPreferences @Inject constructor(
     }
 
     override suspend fun saveLastPlayedSong(song: Song) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_LAST_PLAYED_SONG] = Gson().toJson(song)
+        context.dataStore.edit { prefs ->
+            prefs[KEY_LAST_PLAYED_SONG] = Gson().toJson(song)
         }
     }
 
@@ -60,33 +62,45 @@ class PlayerPreferences @Inject constructor(
     }
 
     override suspend fun saveQueue(queue: List<Song>) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_QUEUE] = Gson().toJson(queue)
+        context.dataStore.edit { prefs ->
+            prefs[KEY_QUEUE] = Gson().toJson(queue)
         }
     }
 
-    override val getLastQueue: Flow<List<Song>> = context.dataStore.data.map { preferences ->
-        val json = preferences[KEY_LAST_QUEUE]
+    override val getLastQueue: Flow<List<Song>> = context.dataStore.data.map { prefs ->
+        val json = prefs[KEY_LAST_QUEUE]
         if (json.isNullOrEmpty()) emptyList()
         else Gson().fromJson(json, object : TypeToken<List<Song>>() {}.type)
     }
 
-    override val getLastPlayedSong: Flow<Song?> = context.dataStore.data.map { preferences ->
-        val json = preferences[KEY_LAST_PLAYED_SONG]
-        json?.let { Gson().fromJson(it, Song::class.java) }
+    override val getLastPlayedSong: Flow<Song?> = context.dataStore.data.map { prefs ->
+        prefs[KEY_LAST_PLAYED_SONG]?.let { Gson().fromJson(it, Song::class.java) }
     }
 
-
-    override val getQueue: Flow<List<Song>> = context.dataStore.data.map { preferences ->
-        val json = preferences[KEY_QUEUE]
-        if (json.isNullOrEmpty()) {
-            emptyList()
-        } else {
-            Gson().fromJson(json, object : TypeToken<List<Song>>() {}.type)
-        }
+    override val getQueue: Flow<List<Song>> = context.dataStore.data.map { prefs ->
+        val json = prefs[KEY_QUEUE]
+        if (json.isNullOrEmpty()) emptyList()
+        else Gson().fromJson(json, object : TypeToken<List<Song>>() {}.type)
     }
 
     override suspend fun clearQueue() {
-        context.dataStore.edit { it.remove(KEY_QUEUE) }
+        context.dataStore.edit { prefs -> prefs.remove(KEY_QUEUE) }
+    }
+
+    suspend fun saveListeningSession(session: ListeningSession) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_LISTENING_SESSION] = Gson().toJson(session)
+        }
+    }
+
+    suspend fun getListeningSession(): ListeningSession? {
+        val json = context.dataStore.data.first()[KEY_LISTENING_SESSION] ?: return null
+        return Gson().fromJson(json, ListeningSession::class.java)
+    }
+
+    suspend fun clearListeningSession() {
+        context.dataStore.edit { prefs ->
+            prefs.remove(KEY_LISTENING_SESSION)
+        }
     }
 }

@@ -2,7 +2,7 @@ package com.example.tubesmobdev.data.model
 
 data class TopSong(
     val songId: Int,
-    val monthYear: String,   // misal "2024-05"
+    val monthYear: String,
     val title    : String,
     val coverUrl : String?,
     val artist: String?,
