@@ -257,8 +257,13 @@ class MusicService : MediaSessionService() {
 
 
                         clearListeningSession()
+                        Log.d("checkapalah", "next:8")
+
                         emitSongChange(newSong)
+                        Log.d("checkapalah", "next:9")
+
                         updateCustomButton(newSong)
+                        Log.d("checkapalah", "next:10")
                     }
                 }
             }

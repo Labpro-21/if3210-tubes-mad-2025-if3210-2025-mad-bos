@@ -44,16 +44,18 @@ fun Song.toOnlineSong(): OnlineSong {
 }
 
 fun Song.toMediaItem(): MediaItem {
+    val metadataBuilder = MediaMetadata.Builder()
+        .setTitle(this.title)
+        .setArtist(this.artist)
+
+    if (!this.coverUrl.isNullOrEmpty()) {
+        metadataBuilder.setArtworkUri(Uri.parse(this.coverUrl))
+    }
+
     return MediaItem.Builder()
         .setMediaId(this.title)
         .setUri(this.filePath)
-        .setMediaMetadata(
-            MediaMetadata.Builder()
-                .setTitle(this.title)
-                .setArtist(this.artist)
-                .setArtworkUri(Uri.parse(this.coverUrl))
-                .build()
-        )
+        .setMediaMetadata(metadataBuilder.build())
         .build()
 }
 

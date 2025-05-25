@@ -100,6 +100,8 @@ class PlayerPreferences @Inject constructor(
     suspend fun clearListeningSession() {
         context.dataStore.edit { prefs ->
             prefs.remove(KEY_LISTENING_SESSION)
+            android.util.Log.d("checkapalah", "clearListeningSession: ")
+
         }
     }
 }

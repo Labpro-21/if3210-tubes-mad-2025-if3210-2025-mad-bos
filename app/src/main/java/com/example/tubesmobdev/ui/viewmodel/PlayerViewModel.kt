@@ -108,6 +108,8 @@ class PlayerViewModel @OptIn(UnstableApi::class)
                     is SongEvent.SongChanged -> {
                         Log.d("PlayerViewModel", "Song changed: ${event.song.title}")
                         onSongChanged(event.song)
+                        Log.d("checkapalah", "next:16")
+
                     }
                     is SongEvent.SongLiked -> {
                         Log.d("PlayerViewModel", "Song liked toggle: id=${event.songId}")
@@ -195,10 +197,21 @@ class PlayerViewModel @OptIn(UnstableApi::class)
 
     private fun onSongChanged(song: Song) {
         viewModelScope.launch {
+            Log.d("checkapalah", "next:11")
+
             _currentSong.value = song
+
+            Log.d("checkapalah", "next:12")
+
             songRepository.updateLastPlayed(song, System.currentTimeMillis())
+            Log.d("checkapalah", "next:13")
+
             checkHasNext()
+            Log.d("checkapalah", "next:14")
+
             checkHasPrev()
+            Log.d("checkapalah", "next:15")
+
         }
     }
 
