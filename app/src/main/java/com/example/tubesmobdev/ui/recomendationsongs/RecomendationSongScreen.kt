@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.tubesmobdev.R
 import com.example.tubesmobdev.data.model.Song
+import com.example.tubesmobdev.data.remote.response.parseDuration
 import com.example.tubesmobdev.service.ConnectivityStatus
 import com.example.tubesmobdev.ui.components.SongListItem
 import com.example.tubesmobdev.ui.viewmodel.ConnectionViewModel
@@ -71,16 +72,29 @@ fun RecomendationSongScreen(
         else -> (12 + (screenWidth.value - 320) / (600 - 320) * (16 - 12)).sp
     }
 
+    LaunchedEffect(Unit) {
+        snapshotFlow { connectivityStatus }
+            .collect { status ->
+                if (status == ConnectivityStatus.Available) {
+                    viewModel.fetchSongs(chartCode)
+                }
+            }
+    }
+
 
     LaunchedEffect(chartCode) {
         viewModel.fetchSongs(chartCode)
     }
 
 
-    val songs = onlineSongs.sortedBy { it.rank }
+    val songs = onlineSongs
+    val totalDurationMillis = songs.sumOf { parseDuration(it.duration) }
+    val hours = totalDurationMillis / (1000 * 60 * 60)
+    val minutes = (totalDurationMillis / (1000 * 60)) % 60
+    val durationFormatted = "${hours}h ${minutes}min"
 
     val backgroundGradient = Brush.verticalGradient(
-        colors = if (connectivityStatus == ConnectivityStatus.Available) {
+        colors = if (connectivityStatus == ConnectivityStatus.Available || (connectivityStatus == ConnectivityStatus.Unavailable && songs.isNotEmpty())) {
             if (chartCode == "global")
                 listOf(Color(0xFF1d7d75), Color(0xFF1d4c6a), Color(0xFF1e3264), Color(0xFF121212))
             else if (chartCode == "recomendation"){
@@ -94,7 +108,7 @@ fun RecomendationSongScreen(
     )
 
     val cardGradient = Brush.verticalGradient(
-        colors = if (connectivityStatus == ConnectivityStatus.Available) {
+        colors = if (connectivityStatus == ConnectivityStatus.Available || (connectivityStatus == ConnectivityStatus.Unavailable && songs.isNotEmpty())) {
             if (chartCode == "global")
                 listOf(Color(0xFF1d7d75), Color(0xFF1d4c6a), Color(0xFF1e3264))
             else if (chartCode == "recomendation"){
@@ -142,7 +156,7 @@ fun RecomendationSongScreen(
                         }
                     }
 
-                    if (connectivityStatus == ConnectivityStatus.Available) {
+                    if (connectivityStatus == ConnectivityStatus.Available || (connectivityStatus == ConnectivityStatus.Unavailable && songs.isNotEmpty())) {
                         Text(
                             text = "Fresh picks just for you. Dive into your daily mix of the most played tracks.",
                             style = MaterialTheme.typography.bodyMedium,
@@ -164,7 +178,7 @@ fun RecomendationSongScreen(
                                     .padding(end = 4.dp)
                             )
                             Text(
-                                text = "By Purrity • Apr 2025 • 2h 55min",
+                                text = "By Purrity • Apr 2025 • $durationFormatted",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = Color.LightGray
                             )
@@ -225,7 +239,7 @@ fun RecomendationSongScreen(
                 }
             }
 
-            if (connectivityStatus == ConnectivityStatus.Available) {
+            if (connectivityStatus == ConnectivityStatus.Available || (connectivityStatus == ConnectivityStatus.Unavailable && songs.isNotEmpty())) {
                 itemsIndexed(songs) { i, song ->
                     SongListItem(
                         number = i+1,
@@ -251,7 +265,7 @@ fun RecomendationSongScreen(
 
                         },
                         isDownloading = downloadingSongs[song.id] == true,
-                        isDownloaded = downloadedSongIds.contains(song.id)
+                        isDownloaded = if (song.id != 0) downloadedSongIds.contains(song.id) else true
                     )
                 }
             }

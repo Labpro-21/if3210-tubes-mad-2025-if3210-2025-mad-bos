@@ -211,11 +211,20 @@ class MusicService : MediaSessionService() {
                 if (index >= 0 && index < currentQueue.size) {
                     val song = currentQueue[index]
 
-                    stopListeningSession()
-                    clearListeningSession()
-                    emitSongChange(song)
-                    updateCustomButton(song)
+                    serviceScope.launch {
+                        var newSong = song.copy()
+                        if (song.isOnline){
+                            newSong = songRepo.findSongByServerId(song.serverId!!) ?: song.copy()
+                            val updatedList = currentQueue.toMutableList()
+                            updatedList[index] = newSong
+                            currentQueue = updatedList
+                        }
 
+                        stopListeningSession()
+                        clearListeningSession()
+                        emitSongChange(newSong)
+                        updateCustomButton(newSong)
+                    }
                 }
             }
 

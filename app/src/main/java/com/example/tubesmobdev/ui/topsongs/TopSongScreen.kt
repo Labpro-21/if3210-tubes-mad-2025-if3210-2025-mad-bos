@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.tubesmobdev.R
 import com.example.tubesmobdev.data.model.Song
+import com.example.tubesmobdev.data.remote.response.parseDuration
 import com.example.tubesmobdev.service.ConnectivityStatus
 import com.example.tubesmobdev.ui.components.SongListItem
 import com.example.tubesmobdev.ui.viewmodel.ConnectionViewModel
@@ -72,14 +73,27 @@ fun TopSongsScreen(
     }
 
 
+    LaunchedEffect(Unit) {
+        snapshotFlow { connectivityStatus }
+            .collect { status ->
+                if (status == ConnectivityStatus.Available) {
+                    viewModel.fetchSongs(chartCode)
+                }
+            }
+    }
+
     LaunchedEffect(chartCode) {
         viewModel.fetchSongs(chartCode)
     }
 
     val songs = onlineSongs.sortedBy { it.rank }
+    val totalDurationMillis = songs.sumOf { parseDuration(it.duration) }
+    val hours = totalDurationMillis / (1000 * 60 * 60)
+    val minutes = (totalDurationMillis / (1000 * 60)) % 60
+    val durationFormatted = "${hours}h ${minutes}min"
 
     val backgroundGradient = Brush.verticalGradient(
-        colors = if (connectivityStatus == ConnectivityStatus.Available || (connectivityStatus == ConnectivityStatus.Unavailable && onlineSongs.isNotEmpty())) {
+        colors = if (connectivityStatus == ConnectivityStatus.Available || (connectivityStatus == ConnectivityStatus.Unavailable && songs.isNotEmpty())) {
             if (chartCode == "global")
                 listOf(Color(0xFF1d7d75), Color(0xFF1d4c6a), Color(0xFF1e3264), Color(0xFF121212))
             else if (chartCode == "recomendation"){
@@ -93,7 +107,7 @@ fun TopSongsScreen(
 
     Log.d("Gradien", chartCode)
     val cardGradient = Brush.verticalGradient(
-        colors = if (connectivityStatus == ConnectivityStatus.Available || (connectivityStatus == ConnectivityStatus.Unavailable && onlineSongs.isNotEmpty())) {
+        colors = if (connectivityStatus == ConnectivityStatus.Available || (connectivityStatus == ConnectivityStatus.Unavailable && songs.isNotEmpty())) {
             if (chartCode == "global")
                 listOf(Color(0xFF1d7d75), Color(0xFF1d4c6a), Color(0xFF1e3264))
             else if (chartCode == "recomendation"){
@@ -129,7 +143,7 @@ fun TopSongsScreen(
                                 modifier = Modifier.padding(16.dp)
                             ) {
                                 Text(
-                                    text = if (connectivityStatus == ConnectivityStatus.Available || (connectivityStatus == ConnectivityStatus.Unavailable && onlineSongs.isNotEmpty())) {
+                                    text = if (connectivityStatus == ConnectivityStatus.Available || (connectivityStatus == ConnectivityStatus.Unavailable && songs.isNotEmpty())) {
                                         if (chartCode == "global") "Top 50" else "Top 10"
                                     } else  {
                                         "No Internet"
@@ -142,7 +156,7 @@ fun TopSongsScreen(
                                     textAlign = TextAlign.Center
                                 )
 
-                                if (connectivityStatus == ConnectivityStatus.Available || (connectivityStatus == ConnectivityStatus.Unavailable && onlineSongs.isNotEmpty())) {
+                                if (connectivityStatus == ConnectivityStatus.Available || (connectivityStatus == ConnectivityStatus.Unavailable && songs.isNotEmpty())) {
                                     Spacer(modifier = Modifier.height(20.dp))
                                     HorizontalDivider(
                                         modifier = Modifier
@@ -163,7 +177,7 @@ fun TopSongsScreen(
                         }
                     }
 
-                    if (connectivityStatus == ConnectivityStatus.Available || (connectivityStatus == ConnectivityStatus.Unavailable && onlineSongs.isNotEmpty())) {
+                    if (connectivityStatus == ConnectivityStatus.Available || (connectivityStatus == ConnectivityStatus.Unavailable && songs.isNotEmpty())) {
                         Text(
                             text = "Your daily update of the most played tracks right now – ${chartCode.uppercase()}.",
                             style = MaterialTheme.typography.bodyMedium,
@@ -185,7 +199,7 @@ fun TopSongsScreen(
                                     .padding(end = 4.dp)
                             )
                             Text(
-                                text = "By Purrity • Apr 2025 • 2h 55min",
+                                text = "By Purrity • Apr 2025 • $durationFormatted",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = Color.LightGray
                             )

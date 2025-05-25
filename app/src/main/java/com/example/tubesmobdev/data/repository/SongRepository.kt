@@ -37,6 +37,15 @@ class SongRepository @Inject constructor(
             flowOf(emptyList())
         }
     }
+
+    suspend fun getLocalSongs(): Flow<List<Song>> {
+        val userId = authPreferences.getUserId()
+        return if (userId != null) {
+            songDao.getLocalSongs(userId)
+        } else {
+            flowOf(emptyList())
+        }
+    }
     suspend fun getPlayedSongsCount(): Flow<Int> {
         val userId = authPreferences.getUserId()
         return if (userId != null) {
@@ -191,7 +200,7 @@ class SongRepository @Inject constructor(
 
     suspend fun getRecommendedSongs(): List<Song> {
         val userId = authPreferences.getUserId()
-        val hourSeed = getCurrentHourSeed() // e.g., "2025-05-25-15"
+        val hourSeed = getCurrentHourSeed()
         if (userId != null) {
             val smartSongs = songDao.getRecommendedSongs(userId, hourSeed)
             return if (smartSongs.isNotEmpty()) smartSongs

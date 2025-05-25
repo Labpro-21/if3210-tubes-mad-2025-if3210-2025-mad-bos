@@ -96,6 +96,12 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
 
     val isCompact = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact
 
+    LaunchedEffect(Unit) {
+        playerViewModel.toastMessage.collect { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
     LaunchedEffect(snackbarMessage) {
         snackbarMessage?.let {
             snackbarHostState.showSnackbar(it, withDismissAction = true)
@@ -256,7 +262,8 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                         playerViewModel.clearCurrentQueue()
                                         playerViewModel.setCurrentQueue(songs)
                                         playerViewModel.playSong(song)
-                                    }
+                                    },
+                                    connectionViewModel = connectionViewModel
                                 )
                             }
 
@@ -288,7 +295,8 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                         Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
                                     },
                                     updateSongAfterDownload = { playerViewModel.updateCurrentSongAfterDownload() },
-                                    currentSong = currentSong
+                                    currentSong = currentSong,
+                                    connectionViewModel = connectionViewModel
                                 )
                             }
 
@@ -331,7 +339,8 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                         Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
                                     },
                                     updateSongAfterDownload = { playerViewModel.updateCurrentSongAfterDownload() },
-                                    currentSong = currentSong
+                                    currentSong = currentSong,
+                                    connectionViewModel = connectionViewModel
                                 )
                             }
 
@@ -408,9 +417,9 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                             composable("profile") {
                                 topBarContent = {}
                                 if (isCompact){
-                                    ProfileScreen(navController=navController)
+                                    ProfileScreen(navController=navController, connectionViewModel = connectionViewModel)
                                 }else{
-                                    ProfileScreen(navController=navController)
+                                    ProfileScreen(navController=navController, connectionViewModel = connectionViewModel)
                                 }
                             }
                             composable("fullplayer") {

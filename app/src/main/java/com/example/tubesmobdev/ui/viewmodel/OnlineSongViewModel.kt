@@ -49,6 +49,9 @@ class OnlineSongViewModel @Inject constructor(
     private val _downloadedSongIds = MutableStateFlow<Set<Int>>(emptySet())
     val downloadedSongIds: StateFlow<Set<Int>> = _downloadedSongIds
 
+    private val _localSongIds = MutableStateFlow<Set<Int>>(emptySet())
+    val localSongIds: StateFlow<Set<Int>> = _localSongIds
+
 
     private val _downloadingSongs = MutableStateFlow<Map<Int, Boolean>>(emptyMap())
     val downloadingSongs: StateFlow<Map<Int, Boolean>> = _downloadingSongs
@@ -62,8 +65,16 @@ class OnlineSongViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            songRepository.getDownloadedSongs().collect { songs ->
-                _downloadedSongIds.value = songs.mapNotNull { it.serverId }.toSet()
+            launch {
+                songRepository.getDownloadedSongs().collect { songs ->
+                    _downloadedSongIds.value = songs.mapNotNull { it.serverId }.toSet()
+                }
+            }
+
+            launch {
+                songRepository.getLocalSongs().collect { songs ->
+                    _localSongIds.value = songs.mapNotNull { it.serverId }.toSet()
+                }
             }
         }
     }
@@ -256,6 +267,7 @@ class OnlineSongViewModel @Inject constructor(
                 }else {
                     onlineSongRepository.getTopSongsByCountry(code)
                 }
+                Log.d("Change124", result.toString())
                 _songs.value = result
                 _error.value = null
             } catch (e: Exception) {

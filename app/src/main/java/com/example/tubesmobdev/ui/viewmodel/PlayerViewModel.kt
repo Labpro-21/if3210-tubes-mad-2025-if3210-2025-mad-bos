@@ -33,13 +33,17 @@ import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 import android.content.Context
+import android.net.Uri
 import android.widget.Toast
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tubesmobdev.data.local.preferences.PlayerPreferences
 import com.example.tubesmobdev.data.model.toMediaItem
 import com.example.tubesmobdev.service.generateQRCodeUrl
 import com.google.gson.Gson
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.first
+import java.io.File
 
 @HiltViewModel
 class PlayerViewModel @OptIn(UnstableApi::class)
@@ -74,12 +78,19 @@ class PlayerViewModel @OptIn(UnstableApi::class)
     private val _hasPrev = MutableStateFlow(false)
     val hasPrev: StateFlow<Boolean> = _hasPrev
 
+    private val _toastMessage = MutableSharedFlow<String>()
+    val toastMessage: SharedFlow<String> = _toastMessage
 
     init {
         observePlaybackState()
         observeSongEvents()
     }
 
+    fun showToast(message: String) {
+        viewModelScope.launch {
+            _toastMessage.emit(message)
+        }
+    }
 
     override fun onCleared() {
         super.onCleared()
@@ -199,7 +210,21 @@ class PlayerViewModel @OptIn(UnstableApi::class)
 
         _currentQueue.value = queue
 
+        val uri = Uri.parse(song.filePath)
+        val exists = if (uri.scheme == "content") {
+            isContentUriExists(app.applicationContext, uri)
+        } else {
+            File(song.filePath).exists()
+        }
+
+
+
         viewModelScope.launch {
+
+            if (!song.isOnline && !exists){
+                showToast("File song not exist!!")
+                return@launch
+            }
             playerManager.play(
                 song = song,
                 queue = queue,
@@ -208,9 +233,18 @@ class PlayerViewModel @OptIn(UnstableApi::class)
             )
 
             songRepository.updateLastPlayed(song, System.currentTimeMillis())
+            onSongChanged(song)
         }
 
-        onSongChanged(song)
+    }
+
+    private fun isContentUriExists(context: Context, uri: Uri): Boolean {
+        return try {
+            context.contentResolver.openAssetFileDescriptor(uri, "r")?.close()
+            true
+        } catch (e: Exception) {
+            false
+        }
     }
 
     @OptIn(UnstableApi::class)
