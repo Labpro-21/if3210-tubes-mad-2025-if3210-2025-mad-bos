@@ -456,5 +456,4 @@ class PlayerViewModel @OptIn(UnstableApi::class)
             playerPreferences.clearLastSession()
         }
     }
-
 }

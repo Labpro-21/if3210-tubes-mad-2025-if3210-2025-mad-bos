@@ -108,7 +108,7 @@ fun TopSongSection(
                     title = "Your Mix",
                     subtitle = "Updated daily for you",
                     gradient = Brush.verticalGradient(
-                        colors = listOf(Color(0xFFf16975), Color(0xFFec1e32))
+                        colors = listOf(Color(0xFF6A1B9A), Color(0xFF4A148C), Color(0xFF311B92))
                     ),
                     onClick = { onChartClick("recomendation") }
                 )

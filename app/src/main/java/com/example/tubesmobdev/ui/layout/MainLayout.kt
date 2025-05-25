@@ -228,7 +228,7 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                             startDestination = startDestination
                         ) {
                             composable("home") {
-//                                topBarContent = { ScreenHeader("Charts") }
+                                topBarContent = { }
                                 HomeScreen(
                                     customTopBar = {ScreenHeader("New Songs", isCompact = isCompact)  },
                                     navController = navController,
@@ -255,11 +255,7 @@ fun MainLayout(startDestination: String = "home",  navigationViewModel: Navigati
                                         title = "Song Recomendations",
                                         isMainMenu = false,
                                         onBack = { navController.popBackStack() },
-                                        dominantColor = if (connectivityStatus != ConnectivityStatus.Available) {
-                                            Color(0xFFB0B0B0)
-                                        } else {
-                                            Color(0xFFf16975)
-                                        }
+                                        dominantColor = Color(0xFF6A1B9A)
                                     )
                                 }
 

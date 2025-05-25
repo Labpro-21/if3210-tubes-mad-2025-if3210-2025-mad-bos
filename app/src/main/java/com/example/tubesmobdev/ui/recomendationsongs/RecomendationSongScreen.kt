@@ -83,6 +83,9 @@ fun RecomendationSongScreen(
         colors = if (connectivityStatus == ConnectivityStatus.Available) {
             if (chartCode == "global")
                 listOf(Color(0xFF1d7d75), Color(0xFF1d4c6a), Color(0xFF1e3264), Color(0xFF121212))
+            else if (chartCode == "recomendation"){
+                listOf(Color(0xFF6A1B9A), Color(0xFF4A148C), Color(0xFF311B92), Color(0xFF121212))
+            }
             else
                 listOf(Color(0xFFf16975), Color(0xFFec1e32), Color(0xFF121212))
         } else {
@@ -94,6 +97,9 @@ fun RecomendationSongScreen(
         colors = if (connectivityStatus == ConnectivityStatus.Available) {
             if (chartCode == "global")
                 listOf(Color(0xFF1d7d75), Color(0xFF1d4c6a), Color(0xFF1e3264))
+            else if (chartCode == "recomendation"){
+                listOf(Color(0xFF6A1B9A), Color(0xFF4A148C), Color(0xFF311B92))
+            }
             else
                 listOf(Color(0xFFf16975), Color(0xFFec1e32))
         } else {
@@ -220,9 +226,9 @@ fun RecomendationSongScreen(
             }
 
             if (connectivityStatus == ConnectivityStatus.Available) {
-                itemsIndexed(songs) { _, song ->
+                itemsIndexed(songs) { i, song ->
                     SongListItem(
-                        number = song.rank,
+                        number = i+1,
                         song = song,
                         onClick = {
                             viewModel.convertToLocalSongs(listOf(song)) { localSongs ->

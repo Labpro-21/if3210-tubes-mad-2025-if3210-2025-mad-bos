@@ -22,26 +22,36 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import com.example.tubesmobdev.MainActivity
 import com.example.tubesmobdev.R
+import com.example.tubesmobdev.data.local.dao.ListeningRecordDao
+import com.example.tubesmobdev.data.local.preferences.AuthPreferences
 import com.example.tubesmobdev.data.local.preferences.PlayerPreferences
 import com.example.tubesmobdev.data.model.Song
+import com.example.tubesmobdev.data.repository.ListeningRecordRepository
 import com.example.tubesmobdev.util.SongEventBus
 import com.google.common.reflect.TypeToken
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.gson.Gson
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 
 @UnstableApi
+@AndroidEntryPoint
 class MusicService : MediaSessionService() {
     private var mediaSession: MediaSession? = null
 
     private var currentQueue: List<Song> = emptyList()
     private val serviceScope = CoroutineScope(Dispatchers.Main)
 
-    private lateinit var playerPreferences: PlayerPreferences
+    @Inject
+    lateinit var listeningRecordRepository: ListeningRecordRepository
+
+    @Inject
+    lateinit var playerPreferences: PlayerPreferences
 
     private val customCommandLike = SessionCommand(ACTION_TOGGLE_LIKE, Bundle.EMPTY)
     private val customCommandShuffle = SessionCommand(ACTION_TOGGLE_SHUFFLE, Bundle.EMPTY)
@@ -143,16 +153,15 @@ class MusicService : MediaSessionService() {
                 updateCustomButton(song)
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
             } else if (customCommand.customAction == ACTION_DISMISS) {
+                savePlayerState()
+                player.stop()
+                stopSelf()
                 val exitIntent = Intent(applicationContext, MainActivity::class.java).apply {
                     putExtra("EXIT_AND_REMOVE", true)
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 }
                 applicationContext.startActivity(exitIntent)
-                savePlayerState()
-                player.stop()
-                stopSelf()
                 return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
-            } else if (customCommand.commandCode == 1){
             }
             return super.onCustomCommand(session, controller, customCommand, args)
         }
@@ -179,7 +188,8 @@ class MusicService : MediaSessionService() {
 
         Log.d("Restore", "create")
 
-        playerPreferences = PlayerPreferences(applicationContext)
+//        playerPreferences = PlayerPreferences(applicationContext)
+//        listeningRepo = ListeningRecordRepository(ListeningRecordDao(), AuthPreferences(applicationContext))
 
         val player = ExoPlayer.Builder(this).build()
 
@@ -223,10 +233,10 @@ class MusicService : MediaSessionService() {
                 }
                 if (cusong != null){
                     if (isPlaying) {
-                        Log.d("PlayerListener", "Playback started")
+                        Log.d("PlayerViewModel", "Playback started")
                         emitSongStarted(cusong)
                     } else {
-                        Log.d("PlayerListener", "Playback paused or stopped")
+                        Log.d("PlayerViewModel", "Playback paused or stopped")
                         emitSongPaused(cusong)
                     }
                 }
@@ -245,7 +255,7 @@ class MusicService : MediaSessionService() {
                 if (csong != null){
                     if (reason == Player.DISCONTINUITY_REASON_SEEK) {
                         Log.d(
-                            "PlayerListener",
+                            "PlayerViewModel",
                             "User seeked from ${oldPosition.positionMs} to ${newPosition.positionMs}"
                         )
 
